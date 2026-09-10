@@ -6,7 +6,7 @@ Static analysis, linters and a green unit suite all passed on a production shop 
 
 ## The defect classes it hunts: cross-boundary invariant violations
 
-These are **cross-boundary invariant violations**: integration-level, emergent defects where every function is correct and the bug lives between them. Each sweep in section 0.9 names one:
+These are **cross-boundary invariant violations**: integration-level, emergent defects where every function is correct and the bug lives between them. Each sweep in section 0.9 names one; every finding states its defect class and its boundary location as `producer → consumer`:
 
 | Term | Meaning |
 |---|---|
@@ -19,6 +19,8 @@ These are **cross-boundary invariant violations**: integration-level, emergent d
 | **Deferred-work residue** | a "follow-up commit" comment that never landed |
 | **Rename residue** | a consumer still bound to the old name |
 | **Diagnosis without probe** | a cause concluded from an error message, not a direct check |
+| **Boundary schema drift** | a payload acted on before its shape and type are validated |
+| **Cascade / retry storm** | one step's failure or retry becomes a crash, duplicate write, or orphaned side effect |
 
 Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
 
@@ -27,10 +29,14 @@ Prompt with any of those terms, or "audit the wiring and runtime behaviour, not 
 Given a repository, the skill:
 
 1. **Discovers the project's runtime bindings itself** (test runner, canonical environment, dev server, credentials file) and announces them before judging anything.
-2. **Runs ten mandatory sweeps (§0.9)** that catch the defect classes a green suite cannot: snapshot-vs-live reread, select-then-act predicate loss, catch-block failure posture, external field semantics against the source spec, admin control to runtime consumer, deferred-work comments, skipped tests, written-but-unrun tests, rename residue, environment truth before diagnosis.
+2. **Runs twelve mandatory sweeps (§0.9)** that catch the defect classes a green suite cannot: snapshot-vs-live reread, select-then-act predicate loss, catch-block failure posture, external field semantics against the source spec, admin control to runtime consumer, deferred-work comments, skipped tests, written-but-unrun tests, rename residue, environment truth before diagnosis.
 3. **Applies a universal integrity doctrine**: evidence grading, context discovery, a Viable System Model governance pass, a universal test matrix from happy path through recovery, a domain checklist, and a severity model.
 4. **Executes the six-step pre-launch protocol (§0.6) autonomously**: fast lint and scope tests, doctrine audit, full suite in the canonical environment, runtime walk in a real browser or CLI, fix-or-escalate, numbered report with explicit deferrals.
 5. **Never green-lights on partial evidence.** Every skipped step carries the reason and the exact command the owner must run. Skipped DB tests are reported as unverified, never as green.
+
+## AI / LLM components (§0.10, conditional)
+
+When the project calls a model (SDK in the lockfile, prompt files, agent loop, vector store), every model call is treated as a boundary and four more modes run: schema drift at the model boundary, cascade and latency across steps, state accumulation and memory poisoning, agentic loop and tool execution safety (iteration caps, idempotency keys on side-effecting tools, human-in-the-loop gates). Skipped with a one-line note when no AI component exists.
 
 ## Autonomy contract (§0.8)
 
