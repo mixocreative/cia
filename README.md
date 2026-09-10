@@ -1,8 +1,41 @@
 # cia — Code Integrity Auditor
 
-A skill for Claude Code and OpenAI Codex that hunts **cross-boundary invariant violations**, also called **integration-level defects** or **emergent defects**: bugs where every function is correct and the failure lives between them. It audits **how a system actually behaves and is wired**, not how its code reads.
+A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable system** in Stafford Beer's sense, and hunts the defect class that only such a view can see: **cross-boundary invariant violations**, also called **integration-level** or **emergent defects**.
 
-Static analysis, linters and a green unit suite all passed on a production shop while four money-path defects sat between correctly written functions: an expiry worker that lost its deadline check between SELECT and UPDATE, a payment page that re-read live settings against a frozen reservation, a callback parser that read the wrong vendor field for non-card methods, and an admin toggle nothing consumed. A second auditor found them by tracing state across time and following every control to its consumer. This skill encodes that discipline so one auditor does it every time.
+## The theory
+
+Beer's Viable System Model (*Brain of the Firm*, 1972; *The Heart of Enterprise*, 1979) states that anything which stays alive in a changing environment has the same five-part structure, repeated at every level of recursion:
+
+| System | Role | In a codebase |
+|---|---|---|
+| **1** | does the work | request handlers, domain services, workers |
+| **2** | damps oscillation between the parts of System 1 | locks, queues, deadlines, idempotency keys, ordering |
+| **3** | commands and allocates resources to System 1 | settings, feature flags, admin pages, config files |
+| **3\*** | audits System 1 directly, bypassing its own reports | test suites, probes, reconciliation scripts |
+| **4** | faces the environment and the future | vendor specs, external APIs, webhooks, callbacks |
+| **5** | identity and policy; receives the algedonic (pain) signal | defaults, catch-block posture, kill switches, fail-closed rules |
+
+The systems are joined by **channels**. Ashby's Law of Requisite Variety says a channel must carry as much variety as the thing it regulates, otherwise the control it claims to exercise is fictional. Beer's diagnosis of a failing organisation is almost never "a department is incompetent"; it is "a channel is missing, saturated, or bypassed".
+
+Software fails the same way. Every function can be correct and the system still not viable, because a channel between two correct pieces is broken: a System 3 setting no System 1 code reads, a System 3\* suite that reports green because the tests touching the store never ran, a System 4 field interpreted against the code's belief rather than the vendor's definition, a System 1 step that re-reads System 3 live after an earlier step froze a snapshot. Static analysis, linters and unit suites inspect one piece at a time and therefore cannot see a channel by construction.
+
+This skill was built after exactly that happened on a production shop: four money-path defects, all between correctly written functions, all invisible to a green suite, all found by a second auditor who traced channels instead of reading functions.
+
+## The stance this skill takes from Beer
+
+- **The purpose of a system is what it does** (POSIWID). Not what the docs, the comments or the admin screen say it does. An audit reads behaviour, and treats the written intent as a hypothesis to test against the running system.
+- **Recursion.** Every System 1 unit is itself a viable system with its own 1–5. A payment module has its own control, its own audit, its own policy; the audit descends one level and asks the same five questions again.
+- **Variety engineering.** Complexity is not removed, it is absorbed or amplified. Every guard, validator, idempotency key and state machine is a variety attenuator; every default and fallback is an amplifier of whatever the environment throws in. Ask of each: does it match the variety of what it faces?
+- **Autonomy with cohesion.** System 1 must be free to act without asking System 3 on every step (a checkout that blocks on live config on every request is not autonomous), yet System 3 must still be able to command it (a toggle nothing reads is not cohesion). Both failures are channel failures.
+- **The auditor is System 3\*.** This skill is the channel that bypasses the system's own reports. A green suite is System 3's report about itself; the audit exists precisely because that report can be vacuous.
+- **Algedonic signals must reach System 5.** A pain signal that stops in a log file has not reached policy. Every alert, every catch block, every refund path is traced to the point where identity decides.
+
+## How the theory becomes procedure
+
+1. **Map the codebase onto Systems 1–5 first** (§0.9 step 0) and report the table: every component, its primary system, its channels as `producer → consumer`.
+2. **Walk the channels** with twelve mandatory sweeps (§0.9); each defect class below is a named kind of broken channel, and each sweep enumerates its sites from the map rather than from grep.
+3. **Grade viability, not just correctness**: §2 asks whether each of the five systems exists, whether System 3\* is independent of System 3, whether an algedonic path reaches System 5, whether variety is matched.
+4. **Report structurally**: every finding names its defect class and the VSM channel it sits on.
 
 ## The defect classes it hunts: cross-boundary invariant violations
 
@@ -24,9 +57,9 @@ These are **cross-boundary invariant violations**: integration-level, emergent d
 
 Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
 
-## Structure first: the codebase mapped onto Beer's Viable System Model
+## Which channel each sweep walks
 
-Before any sweep runs, the skill maps every component of the audited codebase onto Stafford Beer's VSM and reports the table: System 1 operations (the code that does the work), System 2 coordination (locks, queues, deadlines, idempotency), System 3 control (settings, flags, admin pages, config), System 3* independent audit (test suites, probes, reconciliation), System 4 environment (vendor specs, external APIs, callbacks), System 5 policy (defaults, catch-block posture, kill switches). Each defect class above is a broken channel between two of those systems, and each sweep walks the channels of the map rather than grepping the tree:
+Each defect class above is a broken channel between two VSM systems; the sweeps are organised by channel, not by file:
 
 | Channel | Sweeps that walk it |
 |---|---|
