@@ -402,6 +402,20 @@ Example:
 
 Assign each system component to a primary VSM role. Components may participate in multiple systems.
 
+## 1.4 External facts are fetched fresh, and their location is recorded
+
+Before deciding anything that depends on a third party — a vendor field's meaning, an API
+limit, a protocol rule, a price — look for the vendor's latest official document first (on
+disk, then the vendor's own site), cite the version and the date read, and record where it
+was found in the project's reference file (`docs/integrations/vendor-doc-locations.md` or the
+project's equivalent: portal URL, document name + version on disk, fetch quirks such as a
+required browser User-Agent, date last seen). A fact from memory, from a code comment, from an
+old screenshot or from a third-party rendering while the original is reachable is unverified.
+For a vendor the project has never recorded, search for its official portal (own domain, then
+its GitHub organisation, then a regulator or standards page) and record it before use. A newer
+document than the one the code was audited against is not a defect; not having diffed its
+changelog against what the code sends and parses is.
+
 ## System 1 — Primary Operations
 
 Autonomous execution of core user/application workflow.
