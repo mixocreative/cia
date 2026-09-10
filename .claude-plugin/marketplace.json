@@ -7,7 +7,7 @@
       "name": "cia",
       "source": "./",
       "description": "Audits a codebase as a Viable System (Stafford Beer VSM): maps modules onto Systems 1-5, walks the channels, finds cross-boundary invariant violations a green test suite cannot see.",
-      "version": "1.2.0"
+      "version": "1.2.1"
     }
   ]
 }
