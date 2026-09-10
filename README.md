@@ -1,5 +1,7 @@
 # cia — Code Integrity Auditor
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
+
 A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable system** in Stafford Beer's sense, and hunts the defect class that only such a view can see: **cross-boundary invariant violations**, also called **integration-level** or **emergent defects**.
 
 ## The theory
@@ -91,19 +93,30 @@ The agent runs every step itself. A five-rung ladder decides what it may do alon
 
 ## Install
 
-Claude Code:
+**Claude Code, as a plugin (recommended):**
+
+```
+claude plugin marketplace add mixocreative/cia
+claude plugin install cia@mixocreative
+```
+
+Or inside a session: `/plugin` → marketplaces → add `mixocreative/cia` → install `cia`.
+
+**Claude Code, as a bare skill file:**
 
 ```
 mkdir -p ~/.claude/skills/cia
-curl -o ~/.claude/skills/cia/SKILL.md https://raw.githubusercontent.com/mixocreative/cia/main/SKILL.md
+curl -o ~/.claude/skills/cia/SKILL.md https://raw.githubusercontent.com/mixocreative/cia/main/skills/cia/SKILL.md
 ```
 
-Codex:
+**OpenAI Codex:**
 
 ```
 mkdir -p ~/.codex/skills/cia
-curl -o ~/.codex/skills/cia/SKILL.md https://raw.githubusercontent.com/mixocreative/cia/main/SKILL.md
+curl -o ~/.codex/skills/cia/SKILL.md https://raw.githubusercontent.com/mixocreative/cia/main/skills/cia/SKILL.md
 ```
+
+Install the companion [ecommerce-cia](https://github.com/mixocreative/ecommerce-cia) alongside it; the protocol invokes both, separately.
 
 ## Use
 
@@ -117,7 +130,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 
 [ecommerce-cia](https://github.com/mixocreative/ecommerce-cia) — the same execution spine plus checkout, payment, inventory, refund, digital-entitlement and Taiwan-gateway (ECPay / NewebPay) doctrine.
 
-## Structure of SKILL.md
+## Structure of skills/cia/SKILL.md
 
 | Section | Purpose |
 |---|---|

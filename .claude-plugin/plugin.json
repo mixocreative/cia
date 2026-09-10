@@ -1,0 +1,11 @@
+{
+  "name": "cia",
+  "displayName": "Code Integrity Auditor",
+  "version": "1.0.0",
+  "description": "Audits a codebase as a Viable System (Stafford Beer VSM): maps modules onto Systems 1-5, walks the channels, finds cross-boundary invariant violations a green test suite cannot see.",
+  "author": { "name": "mixocreative", "url": "https://github.com/mixocreative" },
+  "homepage": "https://github.com/mixocreative/cia",
+  "repository": "https://github.com/mixocreative/cia",
+  "license": "MIT",
+  "keywords": ["claude-code", "codex", "skill", "code-audit", "viable-system-model", "cybernetics"]
+}

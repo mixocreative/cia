@@ -1,0 +1,13 @@
+{
+  "name": "mixocreative",
+  "description": "Mixocreative skills for Claude Code and Codex",
+  "owner": { "name": "mixocreative", "url": "https://github.com/mixocreative" },
+  "plugins": [
+    {
+      "name": "cia",
+      "source": "./",
+      "description": "Audits a codebase as a Viable System (Stafford Beer VSM): maps modules onto Systems 1-5, walks the channels, finds cross-boundary invariant violations a green test suite cannot see.",
+      "version": "1.0.0"
+    }
+  ]
+}
