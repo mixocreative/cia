@@ -1,10 +1,10 @@
 # cia — Code Integrity Auditor
 
-A skill for Claude Code and OpenAI Codex that audits **how a system actually behaves and is wired**, not how its code reads.
+A skill for Claude Code and OpenAI Codex that hunts **cross-boundary invariant violations**, also called **integration-level defects** or **emergent defects**: bugs where every function is correct and the failure lives between them. It audits **how a system actually behaves and is wired**, not how its code reads.
 
 Static analysis, linters and a green unit suite all passed on a production shop while four money-path defects sat between correctly written functions: an expiry worker that lost its deadline check between SELECT and UPDATE, a payment page that re-read live settings against a frozen reservation, a callback parser that read the wrong vendor field for non-card methods, and an admin toggle nothing consumed. A second auditor found them by tracing state across time and following every control to its consumer. This skill encodes that discipline so one auditor does it every time.
 
-## The defect classes it hunts
+## The defect classes it hunts: cross-boundary invariant violations
 
 These are **cross-boundary invariant violations**: integration-level, emergent defects where every function is correct and the bug lives between them. Each sweep in section 0.9 names one:
 

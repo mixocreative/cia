@@ -1,9 +1,22 @@
 ---
 name: cia
-description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'wiring audit', 'trace state across time', 'control to consumer', 'TOCTOU', 'temporal coupling', 'dead control', 'fail-open', 'vacuous pass', 'cross-boundary invariant', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
+description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'wiring audit', 'cross-boundary invariant violation', 'integration-level defect', 'emergent defect', 'trace state across time', 'control to consumer', 'TOCTOU', 'temporal coupling', 'dead control', 'fail-open', 'vacuous pass', 'cross-boundary invariant', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
 ---
 
 # SKILL: Code Integrity Auditor
+
+> **PRIMARY TARGET: CROSS-BOUNDARY INVARIANT VIOLATIONS.**
+> Also called **integration-level defects** or **emergent defects**. These are bugs where every
+> function is individually correct and the failure exists only in the relationship between two
+> correct pieces: across time (a value frozen at step A, re-read live at step B), across a layer
+> (an admin control with no runtime consumer), across a process boundary (a predicate checked at
+> SELECT and dropped at UPDATE), or across an organisation boundary (code that reads a vendor field
+> the vendor's spec defines differently). Static analysis, linters and a green unit suite cannot
+> see them by construction, because each of those tools inspects one piece at a time. This skill
+> exists to find them. Reading functions is not auditing; tracing one value from every writer to
+> every reader, and one control from the screen to the line that obeys it, is. Section 0.9 is the
+> mandatory sweep list for this class and runs before any other doctrine.
+
 
 # 0. Skill Identity and Routing — HARD RULES
 
@@ -126,7 +139,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 **Step 1 — Fast lint + scope tests (5–10 min).** Run the fast-suite command; the static analyser; the style linter; the dependency vulnerability audit. Fail-stop on red architecture / contract tests before proceeding. Follow the project's `fix-red-tests` protocol memory if one exists — reds are the next task, not a footnote.
 
-**Step 2 — Universal integrity audit (this skill's doctrine).** Execute, in order: FIRST the ten mandatory sweeps in §0.9 (S1–S10), each with its own report line; THEN `# 1` Fundamental Audit Doctrine (evidence grading), `# 3` Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — pick the matching `# 4`–`# 6` context template if one fits), `# 2` VSM Governance Model (Systems 1–5 against that profile), `# 7` Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and `# 8` Domain Audit Checklist. Write every finding in the `# 9` format and grade it on the `# 10` severity model. Grade against the invariant stated in-line, not against generic "what if". **If §0.3 commerce detection was positive:** this step's report line must tell the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own. Do not auto-import it.
+**Step 2 — Universal integrity audit (this skill's doctrine).** Execute, in order: FIRST the ten mandatory sweeps in §0.9 (S1–S10) for cross-boundary invariant violations (integration-level / emergent defects), each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `# 1` Fundamental Audit Doctrine (evidence grading), `# 3` Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — pick the matching `# 4`–`# 6` context template if one fits), `# 2` VSM Governance Model (Systems 1–5 against that profile), `# 7` Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and `# 8` Domain Audit Checklist. Write every finding in the `# 9` format and grade it on the `# 10` severity model. Grade against the invariant stated in-line, not against generic "what if". **If §0.3 commerce detection was positive:** this step's report line must tell the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own. Do not auto-import it.
 
 **Step 3 — Full test suite in the project's canonical environment (60–150 min). THE AGENT RUNS THIS.** Complete run, no group exclusions, on the canonical environment (docker for docker-first projects, native otherwise). If the environment is down, bring it up per §0.8 (rung 1). Run it in the background and keep working Steps 4–5 while it executes; collect the result before Step 6. Non-parallel with any other suite (DB contention). **Never green-light without a full-suite result on the latest HEAD.** A result with skipped DB/network/browser tests is "N unverified", not green (§0.9 S7); every test added this session must show its real run line (§0.9 S8). Only an exhausted §0.8 ladder produces a ⏭, and that line names the rung reached.
 
@@ -139,7 +152,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 ```
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
 2. /cia universal integrity: ✅ 0 findings  (or ❌ N findings — see below)  [commerce detected → user must also run /ecommerce-cia]
-2a. §0.9 sweeps S1–S10: one line each — "swept, 0 findings, N sites" or ❌ finding ref. Missing line = sweep not done.
+2a. §0.9 cross-boundary invariant sweeps S1–S10 (integration-level / emergent defects): one line each — "swept, 0 findings, N sites" or ❌ finding ref. Missing line = sweep not done.
 3. Full test suite: ✅ N/M tests green on HEAD {sha}  (or ⏭ §0.8 ladder stopped at rung R: <reason + the one command the owner must run>)
 4. Runtime walk: ✅ every flow/route clean, K artefacts  (or ❌ finding at flow/route)  (or ⏭ §0.8 rung R: …)
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
@@ -188,7 +201,7 @@ Rungs 1–4 require no owner input. Only rung 5 asks, and it asks with the answe
 
 **On a fresh machine with nothing installed,** the expected shape is: rung 1 brings up the stack → rung 2 installs deps + browsers from lockfiles → rung 4 copies documented config → all six steps run → Step 6 lists zero rung-5 escalations. If that shape isn't reachable, the report says exactly which rung stopped and the one thing the owner must do.
 
-## 0.9 Mandatory Sweeps — Failure Classes a Green Suite Does Not Catch
+## 0.9 Mandatory Sweeps — Cross-Boundary Invariant Violations (Integration-Level / Emergent Defects) a Green Suite Does Not Catch
 
 Each item below is a real defect class that survived a green fast suite, a clean static analyser and a clean linter, and was found only by a second auditor reading the code by hand. Each sweep produces either a numbered finding or an explicit "swept, 0 findings, N sites inspected" line in the Step 6 report. No line means the sweep was not done.
 
