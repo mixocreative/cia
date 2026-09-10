@@ -24,12 +24,26 @@ These are **cross-boundary invariant violations**: integration-level, emergent d
 
 Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
 
+## Structure first: the codebase mapped onto Beer's Viable System Model
+
+Before any sweep runs, the skill maps every component of the audited codebase onto Stafford Beer's VSM and reports the table: System 1 operations (the code that does the work), System 2 coordination (locks, queues, deadlines, idempotency), System 3 control (settings, flags, admin pages, config), System 3* independent audit (test suites, probes, reconciliation), System 4 environment (vendor specs, external APIs, callbacks), System 5 policy (defaults, catch-block posture, kill switches). Each defect class above is a broken channel between two of those systems, and each sweep walks the channels of the map rather than grepping the tree:
+
+| Channel | Sweeps that walk it |
+|---|---|
+| System 3 → System 1 (control to consumer) | dead control, deferred-work residue, stale snapshot |
+| System 1 → System 1 across time | TOCTOU race, rename residue |
+| System 4 ↔ environment | semantic drift, boundary schema drift |
+| System 3* → System 3 | vacuous pass, diagnosis without probe |
+| System 5 defaults | fail-open, cascade / retry storm |
+
+A channel on the map with no sweep site named against it is reported as unswept.
+
 ## What it does
 
 Given a repository, the skill:
 
 1. **Discovers the project's runtime bindings itself** (test runner, canonical environment, dev server, credentials file) and announces them before judging anything.
-2. **Runs twelve mandatory sweeps (§0.9)** that catch the defect classes a green suite cannot: snapshot-vs-live reread, select-then-act predicate loss, catch-block failure posture, external field semantics against the source spec, admin control to runtime consumer, deferred-work comments, skipped tests, written-but-unrun tests, rename residue, environment truth before diagnosis.
+2. **Maps the codebase onto the VSM (§0.9 step 0), then runs twelve mandatory sweeps (§0.9)** along that map's channels, catching the defect classes a green suite cannot: snapshot-vs-live reread, select-then-act predicate loss, catch-block failure posture, external field semantics against the source spec, admin control to runtime consumer, deferred-work comments, skipped tests, written-but-unrun tests, rename residue, environment truth before diagnosis.
 3. **Applies a universal integrity doctrine**: evidence grading, context discovery, a Viable System Model governance pass, a universal test matrix from happy path through recovery, a domain checklist, and a severity model.
 4. **Executes the six-step pre-launch protocol (§0.6) autonomously**: fast lint and scope tests, doctrine audit, full suite in the canonical environment, runtime walk in a real browser or CLI, fix-or-escalate, numbered report with explicit deferrals.
 5. **Never green-lights on partial evidence.** Every skipped step carries the reason and the exact command the owner must run. Skipped DB tests are reported as unverified, never as green.
