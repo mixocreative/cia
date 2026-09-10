@@ -1,6 +1,6 @@
 ---
 name: cia
-description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
+description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'wiring audit', 'trace state across time', 'control to consumer', 'TOCTOU', 'temporal coupling', 'dead control', 'fail-open', 'vacuous pass', 'cross-boundary invariant', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
 ---
 
 # SKILL: Code Integrity Auditor
@@ -192,25 +192,41 @@ Rungs 1–4 require no owner input. Only rung 5 asks, and it asks with the answe
 
 Each item below is a real defect class that survived a green fast suite, a clean static analyser and a clean linter, and was found only by a second auditor reading the code by hand. Each sweep produces either a numbered finding or an explicit "swept, 0 findings, N sites inspected" line in the Step 6 report. No line means the sweep was not done.
 
-**S1 — Snapshot-vs-live reread.** For every value persisted at one moment (deadline, quota, reservation, computed price, cached permission, offered options), enumerate every later reader of the same concept and classify it as "reads the snapshot" or "re-reads live config". A later reader that re-reads live while an earlier writer froze a snapshot is a finding: the two disagree after any config change.
+**These are cross-boundary invariant violations (integration-level, emergent defects).** No single function is wrong; the defect lives in the relationship between two correct pieces, across time or across a layer. Code review sees functions and misses them by construction. Finding them requires behavioural tracing: follow one value from where it is written to every place it is later read, and follow one control from the admin screen or config file to the line of code that obeys it. Name the class in every finding:
 
-**S2 — Select-then-act predicate loss.** For every worker or batch that SELECTs candidates and mutates them one by one, the per-row UPDATE/DELETE must re-state the full selection predicate, not only the status column. A predicate checked at SELECT and dropped at UPDATE is a time-of-check/time-of-use finding.
+| Term | Meaning | Sweep |
+|---|---|---|
+| **TOCTOU race** (time-of-check to time-of-use) | a predicate checked at one step and silently dropped at the step that acts | S2 |
+| **Temporal coupling / stale snapshot** | a value frozen at one moment while a later reader re-reads live state | S1 |
+| **Semantic drift** | code's understanding of an external field diverges from the vendor's source of truth | S4 |
+| **Dead control / broken control-to-consumer wiring** | an admin toggle, flag or setting that no runtime path reads | S5 |
+| **Fail-open default** | an error path that proceeds as if the failed read had succeeded | S3 |
+| **Vacuous pass** | a suite that reports OK because the meaningful tests skipped or never ran | S7, S8 |
+| **Deferred-work residue** | a comment promising a follow-up that never landed | S6 |
+| **Rename residue** | a consumer still bound to the old name after a rename | S9 |
+| **Diagnosis without probe** | concluding a cause from an error message instead of a direct check | S10 |
 
-**S3 — Catch-block failure posture.** For every `catch` on a critical path, write one line: what is caught, what happens next, fail-open or fail-closed. Fail-open on a configuration, permission, or feature-flag read is a finding unless an owner decision or ADR names that exact choice and its reason.
+When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term above, the sweeps are the first thing that runs, before any function-level reading.
 
-**S4 — External field semantics from the source document.** For every third-party field the code branches on (API status, webhook type, protocol sub-code), cite the vendor spec page or RFC section that defines it. A mapper comment is not evidence. If the spec distinguishes a family field from a subtype field, confirm the parser reads the one present in every case. No spec read → report line says "field semantics unverified".
+**S1 — Snapshot-vs-live reread (temporal coupling / stale snapshot).** For every value persisted at one moment (deadline, quota, reservation, computed price, cached permission, offered options), enumerate every later reader of the same concept and classify it as "reads the snapshot" or "re-reads live config". A later reader that re-reads live while an earlier writer froze a snapshot is a finding: the two disagree after any config change.
 
-**S5 — Control to consumer.** For every admin toggle, feature flag, or settings row, grep for the runtime consumer in the user-facing path. A control with no consumer, or a consumer still reading the legacy source the control was meant to replace, is a finding.
+**S2 — Select-then-act predicate loss (TOCTOU race).** For every worker or batch that SELECTs candidates and mutates them one by one, the per-row UPDATE/DELETE must re-state the full selection predicate, not only the status column. A predicate checked at SELECT and dropped at UPDATE is a time-of-check/time-of-use finding.
 
-**S6 — Deferred-work comments are open gaps.** Grep critical roots for `TODO`, `FIXME`, `follow-up`, `until then`, `for now`, `temporary`, `pre-migration`. Each hit is closed with a cited commit or listed as an open gap.
+**S3 — Catch-block failure posture (fail-open default).** For every `catch` on a critical path, write one line: what is caught, what happens next, fail-open or fail-closed. Fail-open on a configuration, permission, or feature-flag read is a finding unless an owner decision or ADR names that exact choice and its reason.
 
-**S7 — Skipped tests are unverified, never green.** `Skipped: N` on DB-, network-, or browser-backed tests is reported as "N unverified". Confirm the backing service is up and env vars are exported in the runner's shell before running; a suite that skips because they are unset prints a meaningless `OK`.
+**S4 — External field semantics from the source document (semantic drift).** For every third-party field the code branches on (API status, webhook type, protocol sub-code), cite the vendor spec page or RFC section that defines it. A mapper comment is not evidence. If the spec distinguishes a family field from a subtype field, confirm the parser reads the one present in every case. No spec read → report line says "field semantics unverified".
 
-**S8 — A written test is not a run test.** Every test added or changed this session appears in the report with its exact command and the exact `Tests: N, Assertions: M` line from real execution against the real backing store. Expect first real runs of unrun tests to fail: they encode the author's assumption, not the system's behaviour.
+**S5 — Control to consumer (dead control / control-to-consumer wiring).** For every admin toggle, feature flag, or settings row, grep for the runtime consumer in the user-facing path. A control with no consumer, or a consumer still reading the legacy source the control was meant to replace, is a finding.
+
+**S6 — Deferred-work comments are open gaps (deferred-work residue).** Grep critical roots for `TODO`, `FIXME`, `follow-up`, `until then`, `for now`, `temporary`, `pre-migration`. Each hit is closed with a cited commit or listed as an open gap.
+
+**S7 — Skipped tests are unverified, never green (vacuous pass).** `Skipped: N` on DB-, network-, or browser-backed tests is reported as "N unverified". Confirm the backing service is up and env vars are exported in the runner's shell before running; a suite that skips because they are unset prints a meaningless `OK`.
+
+**S8 — A written test is not a run test (vacuous pass).** Every test added or changed this session appears in the report with its exact command and the exact `Tests: N, Assertions: M` line from real execution against the real backing store. Expect first real runs of unrun tests to fail: they encode the author's assumption, not the system's behaviour.
 
 **S9 — Rename residue.** For every symbol, selector, template, route or config key renamed since the last audit, grep both sides in every consumer type (code, templates, styles, scripts, tests, docs). Parity guard tests stay red-visible; never whitelist to make the suite pass.
 
-**S10 — Environment truth before diagnosis.** Before concluding "not installed" / "data missing" / "blocked", run the cheapest direct probe (container list, TCP connect, health endpoint) and record it. An application error plus a port timeout is consistent with a stopped service; it is not evidence of lost data. Never provision, reset, or reinstall on an error message alone.
+**S10 — Environment truth before diagnosis (diagnosis without probe).** Before concluding "not installed" / "data missing" / "blocked", run the cheapest direct probe (container list, TCP connect, health endpoint) and record it. An application error plus a port timeout is consistent with a stopped service; it is not evidence of lost data. Never provision, reset, or reinstall on an error message alone.
 
 # 1. Fundamental Audit Doctrine
 

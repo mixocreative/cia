@@ -4,6 +4,24 @@ A skill for Claude Code and OpenAI Codex that audits **how a system actually beh
 
 Static analysis, linters and a green unit suite all passed on a production shop while four money-path defects sat between correctly written functions: an expiry worker that lost its deadline check between SELECT and UPDATE, a payment page that re-read live settings against a frozen reservation, a callback parser that read the wrong vendor field for non-card methods, and an admin toggle nothing consumed. A second auditor found them by tracing state across time and following every control to its consumer. This skill encodes that discipline so one auditor does it every time.
 
+## The defect classes it hunts
+
+These are **cross-boundary invariant violations**: integration-level, emergent defects where every function is correct and the bug lives between them. Each sweep in section 0.9 names one:
+
+| Term | Meaning |
+|---|---|
+| **TOCTOU race** | a predicate checked at one step, dropped at the step that acts |
+| **Temporal coupling / stale snapshot** | a value frozen at one moment, re-read live by a later reader |
+| **Semantic drift** | code's reading of an external field diverges from the vendor spec |
+| **Dead control** | an admin toggle or flag no runtime path consumes |
+| **Fail-open default** | an error path that proceeds as if the read succeeded |
+| **Vacuous pass** | a suite that says OK because the meaningful tests skipped or never ran |
+| **Deferred-work residue** | a "follow-up commit" comment that never landed |
+| **Rename residue** | a consumer still bound to the old name |
+| **Diagnosis without probe** | a cause concluded from an error message, not a direct check |
+
+Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
+
 ## What it does
 
 Given a repository, the skill:
