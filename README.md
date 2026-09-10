@@ -105,12 +105,12 @@ This skill was built after exactly that happened on a production shop: four mone
 ## How the theory becomes procedure｜從理論轉化為實際稽核流程
 
 1. **Map the codebase onto Systems 1–5 first** (§0.9 step 0) and report the table: every component, its primary system, its channels as `producer → consumer`.
-2. **Walk the channels** with twelve mandatory sweeps (§0.9); each defect class below is a named kind of broken channel, and each sweep enumerates its sites from the map rather than from grep.
+2. **Walk the channels** with fourteen mandatory sweeps (§0.9); each defect class below is a named kind of broken channel, and each sweep enumerates its sites from the map rather than from grep.
 3. **Grade viability, not just correctness**: §2 asks whether each of the five systems exists, whether System 3\* is independent of System 3, whether an algedonic path reaches System 5, whether variety is matched.
 4. **Report structurally**: every finding names its defect class and the VSM channel it sits on.
 
 > 1. **將程式碼對應至 System 1–5 架構**（§0.9 第 0 步），輸出結構化地圖：標示每個元件、其所屬的主要系統，以及對應的傳輸通道（`producer → consumer`）。
-> 2. **沿著通道進行深度排查**：執行十二項強制掃描（§0.9）。後續列出的每種缺陷類型，本質上都是某種具名的通道中斷狀況；每個掃描檢查點皆建構自架構地圖，而非盲目使用 Grep 搜尋。
+> 2. **沿著通道進行深度排查**：執行十四項強制掃描（§0.9）。後續列出的每種缺陷類型，本質上都是某種具名的通道中斷狀況；每個掃描檢查點皆建構自架構地圖，而非盲目使用 Grep 搜尋。
 > 3. **評估標準為「系統能否持續存活」，而非僅看「語法是否正確」**：§2 負責確認五個系統層級是否完備、System 3\* 是否獨立於 System 3 運作、痛覺傳導路徑是否能抵達 System 5，以及系統承載的多樣性變化量是否匹配。
 > 4. **產出結構化稽核報告**：每個發現的漏洞皆須明確標註其缺陷類型以及對應的 VSM 通道位置。
 
@@ -161,7 +161,7 @@ A channel on the map with no sweep site named against it is reported as unswept.
 Given a repository, the skill:
 
 1. **Discovers the project's runtime bindings itself** (test runner, canonical environment, dev server, credentials file) and announces them before judging anything.
-2. **Maps the codebase onto the VSM (§0.9 step 0), then runs twelve mandatory sweeps (§0.9)** along that map's channels, catching the defect classes a green suite cannot.
+2. **Maps the codebase onto the VSM (§0.9 step 0), then runs fourteen mandatory sweeps (§0.9)** along that map's channels, catching the defect classes a green suite cannot.
 3. **Applies a universal integrity doctrine**: evidence grading, context discovery, a Viable System Model governance pass, a universal test matrix from happy path through recovery, a domain checklist, and a severity model.
 4. **Executes the six-step pre-launch protocol (§0.6) autonomously**: fast lint and scope tests, doctrine audit, full suite in the canonical environment, runtime walk in a real browser or CLI, fix-or-escalate, numbered report with explicit deferrals.
 5. **Never green-lights on partial evidence.** Every skipped step carries the reason and the exact command the owner must run. Skipped DB tests are reported as unverified, never as green.
@@ -169,7 +169,7 @@ Given a repository, the skill:
 > 提供一個 Repository 給它，它會自動執行以下流程：
 >
 > 1. **自動探索專案的運作機制**（包含測試指令、正式環境、開發伺服器、憑證設定檔），並在做出任何判斷前先明確宣告已知資訊。
-> 2. **先繪製 VSM 架構圖（§0.9 第 0 步），接著沿著通道執行十二項強制掃描（§0.9）**，精準抓出全綠測試也無法察覺的深層缺陷。
+> 2. **先繪製 VSM 架構圖（§0.9 第 0 步），接著沿著通道執行十四項強制掃描（§0.9）**，精準抓出全綠測試也無法察覺的深層缺陷。
 > 3. **嚴格套用通用完整性教條**：包含證據等級分類、情境探索、VSM 治理檢查、從正常路徑到災難復原的通用測試矩陣、領域檢查清單，以及嚴謹的嚴重度評估模型。
 > 4. **自主執行六階段部署前稽核流程（§0.6）**：包含快速 Lint 與範圍測試、教條稽核、正式環境完整測試、真實瀏覽器或 CLI 實測、能自動修復就修復否則立即上報，最後產出附帶明確保留項目的編號報告。
 > 5. **證據不足時絕不盲目放行。** 每個被跳過的步驟都會附上原因，以及需要管理者手動執行的指令。被跳過的資料庫測試一律標記為「未驗證」，絕不給予綠燈標籤。
