@@ -304,6 +304,7 @@ A channel on the map with no sweep site named against it is unswept; say so in t
 | **Control with an off-system enforcement point** | a local setting claims to constrain a decision the user makes on a third party's surface, where the request cannot express the restriction and the provider's own back-office decides | S17 | System 3 control whose System 1 lies outside the map |
 | **Sampled where it should have been enumerated** | a sweep reported clean from a sample; a finding later confirmed in that class proves the method rather than the instance was wrong | S18 | System 3\* measuring a subset and reporting on the whole |
 | **Environment constraint never crossed** | a dependency's requirement on the host (fixed egress IP, persistent disk, cron granularity, inbound reachability) and the chosen host's capabilities are both documented, and nobody multiplied them — usually because the requirement was filed as a human checklist task | S19 | System 4 reading the environment, never compared with System 3's plan for it |
+| **Service-variant confusion** | one provider's several variants of the same feature treated as one — different endpoints, templates, caps and fees — so a check that passed on one is filed as passing for all | S18 | System 4 read at brand resolution when the environment distinguishes services |
 | **Blind instrument / dead watchdog** | a detector that examined nothing reports identically to one that examined everything and found nothing; or a scheduled check stopped running and nothing noticed | S20 | System 3\* with no liveness signal — the channel that reports on the others, unmonitored itself |
 
 When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term above, the sweeps are the first thing that runs, before any function-level reading.
@@ -409,6 +410,42 @@ This is the sweep that makes the other seventeen honest. Every one of them can b
 5. **Report the matrix itself**, not a summary of it. The reader must be able to see which cell was checked against what.
 
 **Grading.** A cell that contradicts the authority: graded on its own consequence. A class re-walked after a confirmed finding, turning up more of the same: each on its own consequence, and the original finding is raised one level because it was systemic rather than isolated. A matrix with unverified cells: not a finding in itself — but reporting it as clean is.
+
+### S18 addendum, 2026-09-12 — the manual is not the only authority, and often not the best one
+
+Three failures found in one afternoon of actually *using* a provider's tooling, none of them
+visible in the manual that had already been read:
+
+1. **The vendor's own validator knows rules the vendor never documented.** An import wizard
+   rejected a row with 「姓名不可超過五個中文字」 — a five-character cap on a name field, stated in
+   no manual, no FAQ and no field table, and one that silently decides which of our customers can
+   use the feature at all. **Where a provider offers a validator, a sandbox, a preview step or a
+   dry run, run it and read its refusals.** Its error messages are a specification you cannot get
+   any other way, and they cost one afternoon rather than one incident.
+
+2. **The artefact the provider produces outranks the documentation about it.** A printed label
+   said the payment deadline was four days; the FAQ said seven. The label is what the counter
+   obeys. **Rank authorities explicitly: the thing the system emits (label, receipt, callback
+   payload, generated file) > the integration manual > the help centre > our own docblock.** When
+   two disagree, the lower one is not a second opinion, it is a stale copy.
+
+3. **One provider is several services, and they are not interchangeable.** The same vendor offered
+   three variants of one feature, each with its own page, its own upload template, its own caps and
+   its own fee table — and the correct file on the wrong variant's page failed with a generic
+   format error that suggested nothing of the kind. **Enumerate variants, not providers.** Each
+   variant is its own row of this matrix, carrying its own limits, its own endpoint or page, and
+   its own money.
+
+Two rules that fall out, and both belong to every S18 run:
+
+- **A list you display is a promise.** When a picker, dropdown or option set is fed from a
+  provider's directory, filter it by *the capability being offered*, not by existence. The
+  directory listed branches that do not offer the service in question; offering one is a failure
+  that happens to a person standing at a counter, not to a log file.
+- **When the authority contradicts itself, surface both and decide with the owner.** The same page
+  capped one value at 1,000 in one section and 10,000 in another. Recording the convenient number,
+  averaging them, or picking the one that makes the feature work is how a documented limit becomes
+  an undocumented incident. Contradiction is a finding with a citation on each side.
 
 Report line format: `S18 — subject, authority cited; N cells enumerated, M verified against the document, U unverified; matrix in the report. Re-walks triggered by findings this run: K.`
 
