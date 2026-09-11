@@ -337,6 +337,33 @@ When the user asks for "code integrity", "audit", "review the wiring", "trace st
 
 **S14 — Scope shadow.** State the scope of this run in the first line of the report: whole system, one subsystem, or one diff. When it is narrower than the VSM map, list the System 1 domains on the map that were **not** walked this run and the date of the last run that did walk them (from the handoff or the register). A narrow-scope report that omits this list reads as whole-system green and is itself a finding against the audit. Never let "0 findings" stand without the scope beside it.
 
+**S14 addendum, 2026-09-12 — the plan is a scope claim, and an unmarked plan is a false one.**
+S14 above governs the *audit's* scope. The same failure lives one level up, in the document the
+team steers by, and it is more expensive because that document is trusted without being re-read.
+
+Three rules, each from a plan that was believed while being wrong:
+
+1. **Enumerate tracks, not phases.** A launch plan ran six phases covering correctness and deploy,
+   and silently omitted two whole tracks — the content and data migration, and the design work that
+   *gated every test in phase four*. Neither is code, so neither appeared in a plan written by
+   reading code. **Ask what has to be true for this to be finished that no file in the repository
+   would ever mention**: migrations of content, third-party account states, physical or manual
+   steps, someone else's sign-off. A plan missing a track is worse than no plan, because it is
+   trusted.
+2. **Every item carries a mark, and there are only three.** Done, open, or waiting-on-someone-named
+   — with the evidence for *done* and the blocked-thing for *waiting*. Unmarked items are read as
+   done by whoever skims it next. "Nearly finished", "mostly works" and an item with no test and no
+   citation are all **open**.
+3. **A dated external wait is not a task.** When progress genuinely depends on another party,
+   record who was asked, when, what it blocks, and where the answer will land. An unrecorded wait
+   is indistinguishable from work nobody did, and it is the item that will be discovered last.
+
+And the drift check, which costs one pass: **a prerequisite outlives the decision that created it.**
+One plan required assets to be pruned before work could start; a later decision forbade deleting
+those assets outright. Both sentences were live, in different files, and the older one was still
+gating work. **When a decision reverses an assumption, grep the plans for the gate it created** —
+the reversal is recorded where the decision was made, never where the gate sits.
+
 **S15 — The four-corner end-to-end walk. THE HIGHEST-VALUE DATA IN THE SYSTEM IS THE DATA THAT CROSSES ALL FOUR CORNERS.** For a system that moves money or goods, the four corners are **the customer surface**, **the operator / admin surface**, **the fulfilment or logistics provider**, and **the payment provider**, with the database as the fifth point that all four claim to describe. Every other sweep looks at one channel; this one walks one *object* — an order, a booking, a shipment, a subscription period — through every corner it touches, in sequence, and asks at each state: **can all four corners answer what is true right now, and do their answers agree?** A state where one corner cannot answer, or answers differently, is a finding even when every function on the path is correct.
 
 Method, per money-or-goods flow (do not summarise this from the code's docblocks; trace it):
