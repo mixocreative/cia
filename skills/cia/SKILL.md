@@ -1,6 +1,6 @@
 ---
 name: cia
-description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'wiring audit', 'cross-boundary invariant violation', 'integration-level defect', 'emergent defect', 'trace state across time', 'control to consumer', 'TOCTOU', 'temporal coupling', 'dead control', 'fail-open', 'vacuous pass', 'cross-boundary invariant', 'VSM map', 'Viable System Model', 'map the codebase onto VSM', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
+description: Universal Code Integrity Auditor for software codebases. Use for code-integrity reviews, architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, and cross-module correctness. ALSO auto-selects on the pre-launch vocabulary 'run test', 'run the tests', 'test suite', 'pre-launch', 'prepare for handoff', 'handoff', 'green-light', 'ready for launch', 'audit', 'security audit', 'wiring audit', 'cross-boundary invariant violation', 'integration-level defect', 'emergent defect', 'trace state across time', 'control to consumer', 'TOCTOU', 'temporal coupling', 'dead control', 'fail-open', 'vacuous pass', 'cross-boundary invariant', 'four-corner walk', 'customer admin shipment gateway', 'end-to-end data interaction', 'VSM map', 'Viable System Model', 'map the codebase onto VSM', 'code review the whole thing' on ANY software project (see section 0.3); on a transactional commerce project it still runs, but tells the user to ALSO invoke /ecommerce-cia for the commerce-domain doctrine it does not own. Explicit /cia invocation selects this skill only. Do not substitute, merge, or auto-load ecommerce-cia or any commerce-specific auditor unless the user explicitly requests that separate skill.
 ---
 
 # SKILL: Code Integrity Auditor
@@ -166,7 +166,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 **Step 1 — Fast lint + scope tests (5–10 min).** Run the fast-suite command; the static analyser; the style linter; the dependency vulnerability audit. Fail-stop on red architecture / contract tests before proceeding. Follow the project's `fix-red-tests` protocol memory if one exists — reds are the next task, not a footnote.
 
-**Step 2 — Universal integrity audit (this skill's doctrine).** Execute, in order: FIRST the VSM map of the codebase (§0.9 step 0: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN the fourteen mandatory sweeps in §0.9 (S1–S14) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `# 1` Fundamental Audit Doctrine (evidence grading), `# 3` Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — pick the matching `# 4`–`# 6` context template if one fits), `# 2` VSM Governance Model (Systems 1–5 against that profile), `# 7` Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and `# 8` Domain Audit Checklist. Write every finding in the `# 9` format and grade it on the `# 10` severity model. Grade against the invariant stated in-line, not against generic "what if". **If §0.3 commerce detection was positive:** this step's report line must tell the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own. Do not auto-import it.
+**Step 2 — Universal integrity audit (this skill's doctrine).** Execute, in order: FIRST the VSM map of the codebase (§0.9 step 0: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN the fifteen mandatory sweeps in §0.9 (S1–S15, of which **S15 is the highest-value sweep in any system that moves money or goods** and runs first when time is short) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `# 1` Fundamental Audit Doctrine (evidence grading), `# 3` Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — pick the matching `# 4`–`# 6` context template if one fits), `# 2` VSM Governance Model (Systems 1–5 against that profile), `# 7` Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and `# 8` Domain Audit Checklist. Write every finding in the `# 9` format and grade it on the `# 10` severity model. Grade against the invariant stated in-line, not against generic "what if". **If §0.3 commerce detection was positive:** this step's report line must tell the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own. Do not auto-import it.
 
 **Step 3 — Full test suite in the project's canonical environment (60–150 min). THE AGENT RUNS THIS.** Complete run, no group exclusions, on the canonical environment (docker for docker-first projects, native otherwise). If the environment is down, bring it up per §0.8 (rung 1). Run it in the background and keep working Steps 4–5 while it executes; collect the result before Step 6. Non-parallel with any other suite (DB contention). **Never green-light without a full-suite result on the latest HEAD.** A result with skipped DB/network/browser tests is "N unverified", not green (§0.9 S7); every test added this session must show its real run line (§0.9 S8). Only an exhausted §0.8 ladder produces a ⏭, and that line names the rung reached.
 
@@ -180,7 +180,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
 2. /cia universal integrity: ✅ 0 findings  (or ❌ N findings — see below)  [commerce detected → user must also run /ecommerce-cia]
 2b. VSM map (§0.9 step 0): N components → Systems 1–5 / 3*, M channels (table in report). Missing = sweeps had no site list.
-2a. §0.9 cross-boundary invariant sweeps S1–S14 (integration-level / emergent defects): one line each — "swept, 0 findings, N sites" or ❌ finding ref. Missing line = sweep not done.
+2a. §0.9 cross-boundary invariant sweeps S1–S15 (integration-level / emergent defects): one line each — "swept, 0 findings, N sites" or ❌ finding ref. Missing line = sweep not done. **S15 (four-corner end-to-end walk) carries its own table and cannot be reported as a single line.**
 3. Full test suite: ✅ N/M tests green on HEAD {sha}  (or ⏭ §0.8 ladder stopped at rung R: <reason + the one command the owner must run>)
 4. Runtime walk: ✅ every flow/route clean, K artefacts  (or ❌ finding at flow/route)  (or ⏭ §0.8 rung R: …)
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
@@ -250,7 +250,8 @@ Every sweep then enumerates its sites from the map's channels, and each defect c
 - every **System 5 default** (catch block, fallback, absent kill switch) is a site for S3 and S12;
 - every rename or refactor is a **System 1 ↔ System 1 binding** and a site for S9.
 - every **design document, master plan, handoff note or migration** that names a component, table or control is a **System 3 → System 1 promise** and a site for S13;
-- every audit whose scope is narrower than the map (one diff, one module) is a **System 3\* channel narrower than the system** and a site for S14.
+- every audit whose scope is narrower than the map (one diff, one module) is a **System 3\* channel narrower than the system** and a site for S14;
+- every object that crosses **customer → operator → fulfilment provider → payment provider** (an order, a shipment, a refund) is the site for S15, and it is the site that matters most: the four corners are four Systems 1/3/4 that each hold a partial truth about one thing.
 
 A channel on the map with no sweep site named against it is unswept; say so in the report line rather than omitting it.
 
@@ -271,6 +272,7 @@ A channel on the map with no sweep site named against it is unswept; say so in t
 | **Cascade / retry storm** | one step's failure or retry propagates as crash, duplicate write, or orphaned side effect | S12 | System 2 anti-oscillation absent, System 5 no circuit breaker | System 2 anti-oscillation absent, System 5 no circuit breaker |
 | **Orphan capability / designed-but-unbuilt** | a class, table, column, admin control or design document that exists with no caller, no writer, no page and no gap-register row — capability promised, channel never built | S13 | System 3 capability with no System 1 consumer and no System 3\* register entry |
 | **Scope shadow** | an audit run on one diff or subsystem whose report reads as whole-system green | S14 | System 3\* channel narrower than the map it reports on |
+| **Corner disagreement / unreachable capability** | the customer, the operator, the fulfilment provider and the payment provider describe one object differently, or a built capability is not reachable under the shipped configuration | S15 | System 1 ↔ System 3 ↔ System 4, all four corners of one object |
 
 When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term above, the sweeps are the first thing that runs, before any function-level reading.
 
@@ -302,7 +304,36 @@ When the user asks for "code integrity", "audit", "review the wiring", "trace st
 
 **S14 — Scope shadow.** State the scope of this run in the first line of the report: whole system, one subsystem, or one diff. When it is narrower than the VSM map, list the System 1 domains on the map that were **not** walked this run and the date of the last run that did walk them (from the handoff or the register). A narrow-scope report that omits this list reads as whole-system green and is itself a finding against the audit. Never let "0 findings" stand without the scope beside it.
 
+**S15 — The four-corner end-to-end walk. THE HIGHEST-VALUE DATA IN THE SYSTEM IS THE DATA THAT CROSSES ALL FOUR CORNERS.** For a system that moves money or goods, the four corners are **the customer surface**, **the operator / admin surface**, **the fulfilment or logistics provider**, and **the payment provider**, with the database as the fifth point that all four claim to describe. Every other sweep looks at one channel; this one walks one *object* — an order, a booking, a shipment, a subscription period — through every corner it touches, in sequence, and asks at each state: **can all four corners answer what is true right now, and do their answers agree?** A state where one corner cannot answer, or answers differently, is a finding even when every function on the path is correct.
 
+Method, per money-or-goods flow (do not summarise this from the code's docblocks; trace it):
+
+1. **List the states** the object can occupy, from first click to terminal (paid / delivered / refunded / cancelled / returned).
+2. **For each state, fill four cells**: what the customer sees, what the operator sees and can *do*, what the fulfilment provider believes, what the payment provider believes. Cite file:line for the first two, the vendor field or callback for the last two.
+3. **Mark the disagreements.** A customer page that says "pay at the counter" while the parcel is already collected; an operator queue that filters on a status the object no longer has; a provider that has moved on while the local row has not. Each is a finding with the class named (usually stale snapshot, dead control, or status-symmetry gap).
+4. **Mark the unanswerables.** A state where the operator has no control, no queue row and no instruction is a finding: the system can enter a state a human cannot leave.
+5. **Mark the reachability.** Walk the flow against the configuration production will actually run (the seed, the migration defaults, the flags as shipped) rather than a test fixture. A feature that is built, tested and unreachable under the shipped configuration is **CRITICAL** and is reported as such: every document says it is done and no customer can use it.
+6. **Name the settlement evidence.** For every state that claims money moved, say which artefact proves it (a verified callback, a reconciliation query, an operator-recorded reference) and confirm no other signal is allowed to set it.
+
+**Test consequence — this changes what a test is allowed to be.** Every test written for a flow that crosses corners must say which corners it covers, and the suite must hold at least one test per money path that walks **all four**, end to end, with the provider side faked at its own boundary (a signed callback body, a provider query response) rather than by calling the local method that would have handled it. A suite made only of single-corner tests can be entirely green while the corners disagree — that is the exact shape this sweep exists to catch. When the project ships an end-to-end walk harness (headless scripts, browser walks, a scenario matrix), its coverage and its *unwritten* scenarios are part of this sweep's report line, not a separate concern.
+
+Report line format: `S15 — walked N flows × M states; four-corner table in the report; K disagreements, J unanswerable states, R reachability findings.`
+
+
+
+## 0.11 Escalation — a finding that reaches a file and not a person has not been escalated
+
+Beer's algedonic rule, applied to the auditor itself: **a pain signal that stops in a log has not reached System 5.** A register row, a report section and a commit are storage, not escalation. The owner reads the conversation.
+
+Binding, for every run of this skill:
+
+1. **Say CRITICAL and HIGH findings in the conversation at the moment they are confirmed**, in one or two sentences each, before continuing the sweep. Not at the end of the audit, not only in the report, not only in the register.
+2. **Say the blocked thing.** Escalate the consequence, not the classification: "the pickup feature cannot be reached in production under the shipped seed" beats "S1-02, HIGH, dead control".
+3. **Say what the owner must decide**, with the options, when the fix is a decision rather than a patch.
+4. **If the audit discovers that something the user asked for cannot be done** — a suite that does not exist, a walk matrix that is mostly unwritten, an environment that cannot reach the provider — say so **first, in the opening message of the session**, not after the work around it is finished.
+5. **Keep a single owner-facing block at the top of the project's register or handoff** ("open owner decisions"), listing every unanswered HIGH with what it blocks, and point every session at it. Written escalation is the backup of the spoken one, never its replacement.
+
+A run that ends with the owner learning a HIGH finding by asking "what is left?" has failed step 5 of §0.6 regardless of how complete the report is.
 
 ## 0.10 AI / LLM Component Boundary Audit (conditional)
 
