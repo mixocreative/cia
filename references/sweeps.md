@@ -319,6 +319,13 @@ visible in the manual that had already been read:
    binds to the wrong code or to nothing at all. A table read without it is a table you
    have not read, and the `UNVERIFIED` it produces is an artefact of your tooling rather
    than a fact about the document.
+   **And when `-layout` and the raw extract disagree, the raw one preserves row order — read both.**
+   `-layout` keeps columns but can shift a cell one row on a multi-line table; the raw extract
+   loses columns but never reorders rows. A column-shifted `-layout` read once put a 4-hour lockout
+   sentence beside the wrong error code and was one step from "correcting" a code that was already
+   right in shipped software. For any code-to-meaning binding you are about to act on, confirm it
+   in the raw extract — or, best, find the vendor's own prose that names both together, which a
+   manual's FAQ usually does.
 
 Three rules that fall out, and all three belong to every S18 run:
 
