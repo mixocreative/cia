@@ -11,7 +11,7 @@ Linters, type checkers and unit tests inspect one piece at a time. The defects t
 ## Use it
 
 ```bash
-git clone https://github.com/<you>/cia ~/.claude/skills/cia      # or ~/.codex/skills/cia
+git clone https://github.com/mixocreative/cia ~/.claude/skills/cia      # or ~/.codex/skills/cia
 # in any project:
 #   "pre-launch audit, Screen tier"      -> the six-step protocol
 #   "run tests"                          -> runs the tests, reports counts, offers the audit
