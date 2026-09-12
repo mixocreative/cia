@@ -1,5 +1,7 @@
 # cia — Code Integrity Auditor
 
+[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
+
 **An AI coding skill that audits the *wiring* of a codebase, not its functions: the setting nothing reads, the predicate checked at SELECT and dropped at UPDATE, the catch that fails open, the watchdog that prints "0 problems" while it examined nothing, the state no screen can show. Built on Stafford Beer's Viable System Model. Works on any software; the commerce half lives in the sibling [`ecommerce-cia`](../ecommerce-cia).**
 
 [繁體中文 README](README.md) · Claude Code · Codex · Cursor · any agent that reads `SKILL.md`

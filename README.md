@@ -1,5 +1,7 @@
 # cia — 程式碼完整性審查 Skill（Code Integrity Auditor）
 
+[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
+
 **這是一款 AI 程式助理的 skill，專門審查程式碼庫的「元件串接與骨幹架構」（wiring），而不是只看單一 function 做得對不對：像是寫了卻沒人讀的設定檔、`SELECT` 時有過濾但 `UPDATE` 時忘記加上去的條件、吞掉 Exception 還直接放行的 try-catch、明明什麼都沒檢查卻回報「0 錯誤」的 watchdog，或是前端畫面上根本長不出來的死角狀態。底層基於 Stafford Beer 的可行系統模型（Viable System Model, VSM）。適用於任何軟體專案；若需要電商/金物流相關的審查，請使用姐妹專案 [`ecommerce-cia`](../ecommerce-cia)。**
 
 [English README](README.en.md) · Claude Code · Codex · Cursor · 任何看得懂 `SKILL.md` 的 AI agent
