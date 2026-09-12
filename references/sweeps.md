@@ -326,6 +326,10 @@ visible in the manual that had already been read:
    right in shipped software. For any code-to-meaning binding you are about to act on, confirm it
    in the raw extract — or, best, find the vendor's own prose that names both together, which a
    manual's FAQ usually does.
+   **And count a table by its cells, never by a column read.** A `-layout` count of one column
+   once said 79 codes; the PDF's own ruling lines (`pymupdf` `find_tables`, or any extractor
+   that reads cell borders) said 125, because a fifth of the table was a second code column
+   the first read never saw. Extract cells, count rows, then cross-check the raw order.
 
 Three rules that fall out, and all three belong to every S18 run:
 
@@ -617,6 +621,17 @@ clean on a system whose every failure is invisible. **Score five columns, not th
 | **Raised** | if it needs follow-up, it reaches a **flag or badge on the screen the operator already opens** — not a log, not a digest, not an exit code | the silence this sweep exists for |
 | **Closable** | a person can **dismiss it, and the dismissal is recorded** — who, when, why. Dismissing is an act, not an absence | an alarm that cannot be cleared becomes wallpaper within a week, and wallpaper is the same as silence |
 | **Designed** | it has a visual form somebody chose: severity, colour, position, blocking or not | the operator cannot tell urgent from routine at a glance, so triage happens by reading everything |
+
+**Classifying a vendor's code table, the shape that works:** one label per row from a set of
+three — *customer retries* / *operator fixes* / *ours* — chosen in writing, with the customer
+sentence and the operator surface each label produces. Then four rules the table will force:
+**a default bucket** (the sandbox returns codes that are in no manual; unknown ⇒ ours, raised);
+**text-decided codes** (one code, several messages — the classifier takes both); **the customer
+never reads a parameter name** (ours and operator share one sentence); and **pre-checks beat
+refusals** (every amount or state rule the vendor publishes is a guard before the call). Expect
+*ours* to be the largest bucket — most of any gateway's table is malformed requests — and expect
+at least one already-distinguished code to have the wrong sentence, because a specific sentence
+is trusted and nobody re-reads it against the manual.
 
 **"Ignore" is a legitimate outcome and it must be expensive enough to be real.** The owner's
 formulation is exact: the admin may diffuse or ignore, *but it must be the admin's decision.* So a
