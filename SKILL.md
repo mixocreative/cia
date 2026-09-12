@@ -64,6 +64,11 @@ The generic pre-launch vocabulary below auto-selects `cia` on ANY software proje
 - **No commerce evidence** → `cia` is the only auditor. Run §0.6 in full.
 - **Commerce evidence found** → `cia` still runs §0.6 in full (universal integrity is never optional), AND Step 2 of the report instructs the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own. Never auto-import it (routing rules above). Announce the detection in the §0.5 discovery summary.
 
+**Two strengths of trigger, because the same words mean different things (a mode error, S22.6, if the skill ignores it):**
+
+- **Protocol words** — "pre-launch", "before launch", "ready for launch / to ship", "handoff", "green-light", "audit", "security audit", "integrity check", "code review the whole thing" — fire §0.6 directly, at the Screen tier unless the user names a deeper one.
+- **Test words alone** — "run test(s)", "test suite", "run test again" with no protocol word in the same request — mean *run the tests*. Run the project's test command first, report its real result (counts, not colour — S21), and only then offer the Screen-tier §0.6 in one line: "Full integrity audit available (`/cia`, ~2–4 h at Screen tier) — say the word." Do not start the protocol on a bare test request; a user who typed `run tests` and got a four-hour docker-and-browser run has been mode-errored by the auditor.
+
 Explicit `/cia` invocation bypasses all of this (§0.2 rules apply). The trigger gate governs AUTOMATIC selection only.
 
 ### 0.4 Commerce Boundary
@@ -101,7 +106,7 @@ The doctrine in this skill is universal; the runtime bindings that make it execu
 
 This section answers *how do I run and exercise this project* (test commands, dev server, credentials, known gaps). It is distinct from §3 Context Discovery (`references/doctrine.md`), which answers *what kind of system is this* (software type, state scope, concurrency model, failure tolerance). Do both: §0.5 first so the tools work, §3 next so the doctrine is applied to the right shape of system.
 
-**Discovery scan** — check these in the invoking project (relative to the shell's project root) plus the assistant's project memory directory (`~/.claude/projects/{project-slug}/memory/`):
+**Discovery scan** — check these in the invoking project (relative to the shell's project root) plus the assistant's project memory directory (`~/.claude/projects/{project-slug}/memory/`). **Runtime note:** on Codex (`$cia`) the Claude memory directory does not exist. Substitute `AGENTS.md` at the project root, `~/.codex/AGENTS.md`, and the project's `docs/` for every memory lookup below, and announce `memory: n/a on this runtime` in the discovery block rather than reporting the entries as absent.
 
 1. **Handoff docs** — `docs/handoff/CURRENT.md`, `docs/handoff/*.md`, `HANDOFF.md`, `CHANGELOG.md`. Most recent entry: prior findings, open gaps, environment quirks, current branch.
 2. **Gap / issue register** — `docs/GAP-REGISTER.md`, `KNOWN_ISSUES.md`, `TODO.md`. Known issues the audit already saw. Do not re-flag as fresh.
@@ -224,7 +229,7 @@ Rungs 1–4 require no owner input. Only rung 5 asks, and it asks with the answe
 
 ### 0.9 Mandatory Sweeps — Cross-Boundary Invariant Violations a Green Suite Does Not Catch
 
-**Full text: `references/sweeps.md` — read it in full at Step 2, every run.** Each item there is a real defect class that survived a green fast suite, a clean static analyser and a clean linter. None is optional. Each sweep produces either a numbered finding or an explicit "swept, 0 findings, sites: …" line in the Step 6 report; a sweep with no line in the report was not done. Each sweep line names its sites, not a count: a path list (`path:line` or `path` per site) that the reader can open. `swept, 0 findings, 14 sites` is a claim; the fourteen paths are the evidence, and a line without them is the vacuous pass this skill exists to catch (S8), filed by the auditor. The sweeps run **before any function-level reading**, and they are not a grep list: **step 0 maps the codebase onto Systems 1–5 / 3\*** (`references/theory.md`), and every sweep enumerates its sites from that map's channels.
+**Full text: `references/sweeps.md` — read it in full at Step 2, every run.** Each item there is a real defect class that survived a green fast suite, a clean static analyser and a clean linter. None is optional. Each sweep produces either a numbered finding or an explicit "swept, 0 findings, sites: …" line in the Step 6 report; a sweep with no line in the report was not done. Each sweep line names its sites, not a count: a path list (`path:line` or `path` per site) that the reader can open. `swept, 0 findings, 14 sites` is a claim; the fourteen paths are the evidence, and a line without them is the vacuous pass this skill exists to catch (S8), filed by the auditor. **Add one quoted line from one of those sites** — the predicate, the catch, the setting read, verbatim with its `path:line` — as proof the site was read and not merely listed by a grep. The sweeps run **before any function-level reading**, and they are not a grep list: **step 0 maps the codebase onto Systems 1–5 / 3\*** (`references/theory.md`), and every sweep enumerates its sites from that map's channels.
 
 Index — the sweep, what it hunts, and the VSM channel it walks:
 
@@ -306,6 +311,8 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
 
 Step 2 order, restated: theory → sweeps (step 0 map, then S1–S22, S15 first when time is short) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting. Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
+
+**Testing this skill.** `tests/RUNBOOK.md` and `tests/fixture-service/` are the harness: a planted-defect, non-commerce service with an answer key that also tests the commerce gate and the bare `run tests` trigger. Any change to this file or to `references/` is run against it before it is committed (S8 applies to the skill). `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged, so a lesson that landed in one only is a decision, not an accident.
 
 ### 0.14 Paired Run With `ecommerce-cia` — explicit request only
 

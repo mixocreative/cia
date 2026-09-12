@@ -1,0 +1,5 @@
+# fixture-service runtime configuration
+retry_limit: 3            # maximum attempts per job before it is parked as failed
+alerts_enabled: true      # page the on-call when a job is stuck
+stuck_after_minutes: 30   # a running job older than this is stuck
+heartbeat_path: /var/run/fixture-service/heartbeat
