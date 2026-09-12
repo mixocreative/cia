@@ -11,7 +11,7 @@ Linter、型態檢查工具（type checker）和單元測試（unit test）一�
 ## 如何使用
 
 ```bash
-git clone https://github.com/<you>/cia ~/.claude/skills/cia      # 或 ~/.codex/skills/cia
+git clone https://github.com/mixocreative/cia ~/.claude/skills/cia      # 或 ~/.codex/skills/cia
 # 在任何專案中輸入：
 #   "pre-launch audit, Screen tier"      -> 執行六步驟審查協定
 #   "run tests"                          -> 執行測試、回報數量，並詢問是否進行審查
