@@ -463,7 +463,18 @@ visible in the manual that had already been read:
    variant is its own row of this matrix, carrying its own limits, its own endpoint or page, and
    its own money.
 
-Two rules that fall out, and both belong to every S18 run:
+4. **A citation that does not resolve is not a citation.** A page number from a PDF reader, the
+   folio printed in a footer, and a section number in a table of contents are three different
+   coordinates for the same paper, and vendor manuals routinely print a folio exactly one lower
+   than the PDF page. An audit whose whole method is *"a cell with no citation is UNVERIFIED"*
+   collapses the moment its own citations land on the wrong page: the next reader opens it, finds
+   something else there, and either re-derives the finding from scratch or quietly stops trusting
+   the register. **Say which coordinate system you are using, once, in the document. Verify every
+   citation by extracting that page and grepping it for the thing you claimed is on it. Prefer the
+   page where the several facts you are leaning on appear together** over the first page that
+   mentions any of them.
+
+Three rules that fall out, and all three belong to every S18 run:
 
 - **A list you display is a promise.** When a picker, dropdown or option set is fed from a
   provider's directory, filter it by *the capability being offered*, not by existence. The
@@ -473,6 +484,12 @@ Two rules that fall out, and both belong to every S18 run:
   capped one value at 1,000 in one section and 10,000 in another. Recording the convenient number,
   averaging them, or picking the one that makes the feature work is how a documented limit becomes
   an undocumented incident. Contradiction is a finding with a citation on each side.
+
+- **A wrong citation re-walks the citations, exactly as a confirmed finding re-walks its class.**
+  The rule is not suspended for the audit's own output. One page number found to be a folio means
+  every page number written in the same sitting was probably a folio; re-extract all of them,
+  correct the ones that moved, and say in the document that you did — including in any patch not
+  yet applied, so the docblock that eventually ships names a page that exists.
 
 Report line format: `S18 — subject, authority cited; N cells enumerated, M verified against the document, U unverified; matrix in the report. Re-walks triggered by findings this run: K.`
 
