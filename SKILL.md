@@ -170,7 +170,7 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 
 **Step 5 — Fix-or-escalate pass (variable).** Apply the §0.8 fix-vs-ask boundary to every finding from Steps 1–4. Autonomous fixes are committed one per finding with the test that proves them. Escalations carry the proposed patch, unapplied.
 
-**Step 6 — Numbered report + explicit deferral (5 min).** One line per step:
+**Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
 
 ```
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
@@ -322,6 +322,33 @@ Runs only when the user names both skills in one request ("run /cia and /ecommer
 2. **This skill contributes what the sibling does not have:** the extra §0.5 bindings (analyser / linter / dependency-audit configs, CI workflow file, fast-suite filter); its `references/sweeps.md` as the *universal* text of every sweep, read alongside the commerce text so each sweep runs once with the union of both texts' checks and emits one report line tagged `S<n> [cia + ecommerce-cia]`; §0.10 AI / LLM boundary sweeps when AI components are found; §3 context profiling with a matching context template; §7 universal test matrix on the non-commerce critical flows; §8 domain checklist. A finding both texts would raise is filed once, under the invariant of the more specific text.
 3. **One register, one ID sequence, one report,** in the sibling's Step 7 format, with lines added for this skill's §3 profile, §7 matrix, §8 checklist and §0.10 sweeps. One depth tier, declared once, binds both.
 4. **Paired on a non-commerce project** (the user asked for both anyway): this skill's §0.6 is the spine; `ecommerce-cia`'s §0.5 discovery reports that no payment integration, commerce schema or checkout route exists; its commerce sweep text adds no sites; say so in one line and run this skill's protocol.
+
+### 0.15 Plain-Language Contract — when the user is not an engineer
+
+Detect it, do not ask: the request is in everyday words ("怎麼開始", "my site broke after payment", "is it safe to launch"), the directory is empty or has no tests, the user has not used a technical term. Then, for the rest of the session, every user-facing message obeys:
+
+1. **One thing at a time.** One question, 2–4 choices, one-line consequence each. One next action at the end of every message, in bold.
+2. **Say what it means, not what it is called.** Sweep ids, section numbers, VSM systems and taxonomy terms stay in the report file; to the user, "a setting nothing reads, so switching it does nothing" — never "S5 dead control". The first use of any unavoidable term gets a six-word gloss.
+3. **Show the road.** The first reply draws the whole path as 4–6 numbered stops and says which stop we are at; every later reply says "stop N of M".
+4. **Never hand them a command you can run.** §0.8 applies doubly: the AI runs the probe, the fetch, the test, the tunnel. The user's own actions are only the ones the hard limits reserve for them (identity, passwords, account creation, console changes on a fresh yes), and each is one exact click with a link.
+5. **Errors are translated, not quoted.** A stack trace, an exit code or a vendor code comes back as: what happened, why, the one thing to do, who does it. The raw text appears once, in a collapsed block or brackets.
+6. **Waits are named.** Anything that depends on a vendor or a host is a line: who, what was asked, since when, what it blocks — on the readiness card, not in prose.
+7. **Money and identity get the slow voice.** Before any step that touches real money, a production console, or the user's identity, drop the shorthand: full sentences, what will happen, what cannot be undone, and an explicit yes.
+8. **Reports get an owner paragraph first.** Any audit or setup report opens with ≤ 5 plain lines: what is safe, what is not, what to do first — before the numbered lines (§0.6 Step 6).
+
+The doctrine does not change; only the voice does. A finding is still graded, cited and filed exactly as §0.9 and `reporting.md` require.
+
+### 0.16 Start Menu — the first reply on a fresh project
+
+When neither an explicit skill call nor a clear trigger word settles the mode, ask this once, with choices, and go:
+
+| The user's situation | Route |
+|---|---|
+| **"I have an idea, no code yet."** | Not an audit. If it is a shop, hand off to `ecommerce-cia` setup mode (§0.4 boundary); otherwise §3 profiling in plain words, then a build plan with tests first. |
+| **"I have code. Is it safe to ship?"** | Audit, Screen tier (§0.6), plain-language report (§0.15.8). |
+| **"Something broke."** | Step 1 fast tests + S10 probe-before-diagnosis; smallest fix with a test, per §0.8. |
+| **"Tests are red / CI is red."** | Step 1 with `fix-red-tests` posture: reds are the next task; S21 counts, not colours. |
+| **"Is this a shop?"** (commerce detected) | Say so, run §0.6 in full, and tell the user `ecommerce-cia` exists for the money doctrine (§0.3). |
 
 ---
 
