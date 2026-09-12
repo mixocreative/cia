@@ -474,6 +474,13 @@ visible in the manual that had already been read:
    page where the several facts you are leaning on appear together** over the first page that
    mentions any of them.
 
+   **And extract tables with the layout preserved** — `pdftotext -layout`, or whatever your
+   tool's equivalent is. Without it a two-column code/message table collapses into two
+   run-on paragraphs whose rows no longer line up, and the limit you are trying to cite
+   binds to the wrong code or to nothing at all. A table read without it is a table you
+   have not read, and the `UNVERIFIED` it produces is an artefact of your tooling rather
+   than a fact about the document.
+
 Three rules that fall out, and all three belong to every S18 run:
 
 - **A list you display is a promise.** When a picker, dropdown or option set is fed from a
