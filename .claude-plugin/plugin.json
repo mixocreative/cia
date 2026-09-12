@@ -1,0 +1,25 @@
+{
+  "name": "cia",
+  "displayName": "Code Integrity Auditor",
+  "version": "2.0.0",
+  "description": "Code Integrity Auditor: audits the wiring of any codebase on Stafford Beer's Viable System Model - dead controls, TOCTOU, fail-open, blind watchdogs, unrendered states - with a plain-language contract for owners and a fixture-tested protocol.",
+  "author": {
+    "name": "mixocreative",
+    "url": "https://github.com/mixocreative"
+  },
+  "homepage": "https://github.com/mixocreative/cia",
+  "repository": "https://github.com/mixocreative/cia",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "skill",
+    "code-audit",
+    "viable-system-model",
+    "cybernetics",
+    "code-review"
+  ],
+  "skills": [
+    "./"
+  ]
+}
