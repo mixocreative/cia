@@ -1,6 +1,6 @@
 # §0.9 Mandatory Sweeps — Cross-Boundary Invariant Violations a Green Suite Does Not Catch
 
-Loaded by `cia` at Step 2, read in full, every run. Sweeps S1–S22 each end in one report line; a sweep with no line in the report was not done.
+Loaded by `cia` at Step 2, read in full, every run. Sweeps S1–S22 each end in one report line; a sweep with no line in the report was not done. Each sweep line names its sites, not a count: a path list (`path:line` or `path` per site) that the reader can open. `swept, 0 findings, 14 sites` is a claim; the fourteen paths are the evidence, and a line without them is the vacuous pass this skill exists to catch (S8), filed by the auditor.
 
 Each item below is a real defect class that survived a green fast suite, a clean static analyser and a clean linter, and was found only by a second auditor reading the code by hand. Each sweep produces either a numbered finding or an explicit "swept, 0 findings, N sites inspected" line in the Step 6 report. No line means the sweep was not done.
 
@@ -25,7 +25,7 @@ Every sweep then enumerates its sites from the map's channels, and each defect c
 - every audit whose scope is narrower than the map (one diff, one module) is a **System 3\* channel narrower than the system** and a site for S14;
 - every object that crosses **customer → operator → fulfilment provider → payment provider** (an order, a shipment, a refund) is the site for S15, and it is the site that matters most: the four corners are four Systems 1/3/4 that each hold a partial truth about one thing.
 
-A channel on the map with no sweep site named against it is unswept; say so in the report line rather than omitting it.
+A channel on the map with no sweep site named against it is unswept; say so in the report line rather than omitting it. The reverse also holds: a sweep whose site set on the map is empty — no hosted surface for S17, no scheduled detector for S20, no operator screen for S22 in a library or CLI — reports `no sites on the map` in one line, with the map row that proves it, and does not spend the run proving an absence twice.
 
 ## Taxonomy
 
@@ -67,7 +67,7 @@ For every worker or batch that SELECTs candidates and mutates them one by one, t
 
 ## S3 — Catch-block failure posture (fail-open default)
 
-For every `catch` on a critical path, write one line: what is caught, what happens next, fail-open or fail-closed. Fail-open on a configuration, permission, or feature-flag read is a finding unless an owner decision or ADR names that exact choice and its reason. **A secret derived from the environment's identity is a time bomb.** Any salt, key or token with a computed fallback — `hash(hostname)`, `hash(__DIR__)`, the container id, an ephemeral machine name — silently changes when the environment is rebuilt, and everything hashed against it stops verifying with no error anywhere. Check three things for each: production fails closed when it is unset rather than computing one; the value survives a container recreation; and every process that reads it (web, CLI tool, worker, test) computes the *same* one. A password written by a host-side CLI that cannot verify inside the container is this defect, and it reads as "wrong password" forever.
+For every `catch` on a critical path, write one line: what is caught, what happens next, fail-open or fail-closed. Fail-open on a configuration, permission, or feature-flag read is a finding unless an owner decision or ADR names that exact choice and its reason. **A secret derived from the environment's identity is a time bomb.** Any salt, key or token with a computed fallback — `hash(hostname)`, `hash(__DIR__)`, the container id, an ephemeral machine name — silently changes when the environment is rebuilt, and everything hashed against it stops verifying with no error anywhere. Check three things for each: production fails closed when it is unset rather than computing one; the value survives a container recreation; and every process that reads it (web, CLI tool, worker, test) computes the *same* one. A password written by a host-side CLI that cannot verify inside the container is this defect, and it reads as "wrong password" forever. Fail-open is not one posture: name the axis. On a **display or read path** (a listing, a search, a recommendation) fail-open to an empty or degraded result may be the right System 5 policy, provided the degradation is visible on a screen (S22) and counted by a detector (S20). On a **money, entitlement, permission, or configuration path** fail-open is a finding unless an owner decision or ADR names that exact choice and its reason. Grade the two axes separately, and say which one each `catch` sits on.
 
 ## S4 — External field semantics from the source document (semantic drift)
 
