@@ -350,6 +350,19 @@ For each critical user/system flow, execute the full test matrix:
 
 # 8. Domain Audit Checklist
 
+## 8.0 The invariant register — written before grading, cited by every finding
+
+Before the checklist below is walked, write the system's invariants down as one numbered list in
+the report: the sentences that must be true at every instant, in the system's own vocabulary —
+*money in equals money recorded*, *one entitlement per paid line, never zero, never two*, *no state
+write without its audit row*, *every open exception has a screen and a person who can close it*,
+*a settled refund is never re-sent*. The commerce skill's doctrine §4 is the seed list for a shop;
+for any other system derive them from §3's profile and the map's channels. Then: **every finding
+names the invariant it breaks by number.** A finding that names none is an opinion about style and
+is not graded; a sweep that finds nothing against an invariant nobody wrote down has not looked.
+The register is also what S23 and S24 test against — an interleaving pair or a boundary fixture is
+judged by which invariant it can break, not by whether the code "looks racy".
+
 Choose relevant domains for your system:
 
 ## State Management & Data Integrity
