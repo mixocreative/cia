@@ -365,6 +365,29 @@ judged by which invariant it can break, not by whether the code "looks racy".
 
 Choose relevant domains for your system:
 
+
+## 8.1 The audit row carries the state before, not only the change
+
+Every mutation an operator or a job makes to a money- or rights-bearing row writes an audit row
+that holds **who, when, from where (client address), the state before and the state after, and
+the request's correlation id** — a delta alone cannot reconstruct a record at a moment an
+auditor names, and "after" without "before" is a diff with one side missing. Capture the before
+state inside the same transaction as the write. The application's database role should not be
+able to `DELETE` from the audit tables at all; where the host gives one role (shared cPanel),
+say so as an accepted limit rather than pretending the log is immutable. A review checklist
+line: a direct `UPDATE` on such a row that does not pass through the writer that audits it is a
+defect, not a shortcut. (From the financial-audit-trail guides, 2026-09-15; the shipped shop's
+credential audit and anomaly log carried actor and after-state and not before-state.)
+
+## 8.2 The payment page is its own security zone
+
+The route where a card or a wallet is entered — or the form that posts to the vendor — gets the
+strictest Content-Security-Policy on the site (nonce-based, no `'unsafe-inline'` for scripts),
+no analytics, chat or third-party widget of any kind, Subresource Integrity on any script that
+is not self-hosted, and a CSP report endpoint that reaches a person (S20.2). A shop that self-
+hosts every script and font has the easy half of this by construction; the audit still opens the
+page and reads the response headers.
+
 ## State Management & Data Integrity
 
 - Is authoritative state clearly identified?
