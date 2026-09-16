@@ -284,6 +284,30 @@ customer who was never told must be distinguishable from one somebody decided no
 checkbox writes *intent*; the sending stays with whatever durable sweep already sends, because a
 send-inside-the-click makes the customer's message depend on the operator's browser staying open.
 
+**S16.3 — a status that summarises children is resolved, never written (2026-09-17, from Sylius's
+order workflows).** A mature commerce engine keeps one machine per child row (each payment, each
+shipment) and *resolves* the parent's summary states — partially paid, partially shipped — from
+the children on every child transition, through listeners, never through a form. The generic
+rule: **any field that summarises other rows is a function of those rows, recomputed when they
+move; a code path that writes it directly is a finding**, because the first time a child moves
+without the parent following, two readers see two systems (S15). The same workflow reverses on
+cancel what placement did (a usage counter incremented on place is decremented on cancel) and
+snapshots at placement the facts a later reader must not see change. Ask of every counter which
+event decrements it, and of every printed fact whether it is the record's copy or a live join.
+
+**S16.4 — every transition names its preconditions, and every precondition has a sentence the
+person sees (2026-09-17, from Vendure's order process).** Vendure refuses each transition with a
+named reason — *cannot transition to payment when the order is empty / without a customer /
+without a shipping method / due to insufficient stock; cannot ship without settled payments;
+cannot cancel unless all fulfilments are cancelled* — and the shape generalises: the guard
+belongs on the **transition**, not on the button that usually triggers it (a guard on the button
+is S17 the moment a second caller exists), and every refusal carries a message the user reads
+(a guard with no sentence is a refusal met as a page that does nothing, S22). It also models
+*change after commitment* as a state of its own (`Modifying`, `ArrangingAdditionalPayment`) with a
+row that links the change to the money or the reversal it caused. Ask whether this system lets a
+committed record change; if it does, whether the change is a row with a link or an edit nobody
+can account for.
+
 ## S17 — Controls whose enforcement point is outside the system. A SETTING THAT CANNOT REACH THE PLACE THE DECISION IS MADE IS A LABEL, NOT A CONTROL
 
 The owner's question that defines this sweep: *"How do we restrict user use which chain by toggle? Or do we trust our toggle auto reflects payment gateway setting?"*
@@ -1164,6 +1188,15 @@ the sweep did not run on it; report `UNVERIFIED`, never "swept".
 ### S23 report line
 
 Report line format: `S23 — F flows diagrammed (of F' on the map); A external arrivals × 6 perturbations = N cells; handled H, UNHANDLED U, UNVERIFIED V; interleaving pairs P, order-independent Q, order-dependent D (each a finding)`.
+
+**S23.2 — the arrival vocabulary a request/response boundary needs (2026-09-17, from Saleor's
+transaction events).** For every action a system takes against an external party, the arrivals
+are a grid: the **request** (it can be sent twice), **success**, **failure**, **action required**
+(a state the user must be shown), and the **reversal after success** that arrives days later and
+must be recorded without pretending the success did not happen. A schema that has no name for
+"more was taken than was owed" will call it success; a status enum with no `expired` will hold a
+dead record open forever. Hold the S23 grid to the full vocabulary, and file the missing name as
+a finding before the missing handler.
 
 ## S24 — Contract tests at every boundary. A FAKE THAT AGREES WITH THE PARSER PROVES THE PARSER AGREES WITH ITSELF
 
