@@ -1,5 +1,7 @@
 # cia — Code Integrity Auditor｜程式碼完整性稽核 Skill
 
+**Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push that scores below the run before (RUNBOOK step 6).
+
 [![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install安裝) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install安裝) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
 
 **English 🇬🇧 · 繁體中文 🇹🇼** — every section is written in both, English first, 中文接在後面。

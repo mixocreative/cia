@@ -183,6 +183,7 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 4. Runtime walk: ✅ every flow/route clean, K artefacts  (or ❌ finding at flow/route)  (or ⏭ §0.8 rung R: …)
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
 6. Tier: Screen | Walk | Full — elapsed: N minutes (tier budget: 2–4 h | 1–2 d | open)
+7. Skill score: <the line `python tools/score.py` prints — this skill's own last scored fixture run, so the reader knows what the instrument found when it was last tested>
 ```
 
 Anything skipped → say why. Never claim "handoff ready" / "green-light" / "ready for launch" without listing what wasn't verified in this session. A ⏭ is not a failure; claiming green while a ⏭ exists IS a failure of the audit.
