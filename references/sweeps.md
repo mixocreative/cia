@@ -127,6 +127,22 @@ the idempotency key, compensate, or route to a human queue — S16; never an aut
 money). A row with an empty detection or surface cell is the finding, whatever the recovery says.
 The table goes in the report; the six perturbations of S23 feed its rows for every inbound arrival.
 
+**S12.2 — the failure shapes a cache and a chain of calls have names for (2026-09-17, from the
+Taobao architecture-evolution notes).** Wherever the map shows a cache in front of a store, ask
+for the four by name — **penetration** (a key that never existed, asked for forever, every miss a
+store read), **breakdown** (one hot key expiring while a thousand requests wait on it), **avalanche**
+(many keys expiring together because they were set together), **hotspot** (one key so hot that one
+node carries the site) — and for each, what the system does: a negative entry or a bloom filter,
+a single-flight rebuild, staggered TTLs, a local tier. A cache with none of these is a store with
+a delay in front of it. Wherever the map shows a chain of calls, ask two things the retry-storm
+text assumes and never states: **each hop's timeout is shorter than its caller's** (the reverse
+means the caller gives up first, the callee keeps working, and the work is wasted twice), and
+**concurrency toward a slow dependency is bounded** (a bulkhead), so one slow store cannot hold
+every worker. **And the degradation table**: for every external dependency on the map, one row —
+*it is down → what the user sees → what the operator sees → what still works*. A row whose first
+answer is "an error page" and whose last is "nothing" is a finding; a row nobody can fill is a
+dependency nobody has thought about failing.
+
 ## S13 — Orphan capability / designed-but-unbuilt
 
 Three greps, one table. (a) For every class under the admin, control, settings or catalogue roots, grep for a caller outside its own file and its tests; a control class with no page, controller or module that renders it is an orphan. (b) For every table column and enum added by a migration, grep for a writer in runtime code (not only a test); a column nobody writes is scaffolding, and scaffolding that a later reader treats as data is a finding. **Grep the identifier alone and read every hit — never the identifier plus an SQL keyword on the same line.** A column written by a multi-line `UPDATE … SET` whose `SET` sits six lines above the column name is invisible to `grep 'col.*SET'`, and most non-trivial SQL is multi-line. One pass reported a live column as having no writer anywhere and was one sentence from filing it as an orphan with five consumers treating it as scaffolding. **A false orphan costs exactly what a missed one does**, because it sends the next session to rebuild something that already works — so confirm an absence by reading the hits, not by trusting a narrower pattern that returned none. (c) For every design document, master plan or handoff note under `docs/` that names a component, check that the component exists on disk **or** that the gap register carries one row naming it as unbuilt with its blocker. Report each orphan with its three states — designed / coded / wired — and say which owner-side blocker, if any, stops it. A capability that is designed and coded but not wired, and whose absence the register does not record, is the most expensive shape of gap: it looks done from every direction except the customer's.
@@ -420,6 +436,19 @@ capacity nobody measured.
 
 Report line format: `S19 — R environment requirements extracted and cited; E environments crossed; satisfied/not-satisfied/unknown = A/B/C; table in the report.`
 
+**S19.2 — the next-stage ladder (2026-09-17).** The Taobao notes read as fourteen stages, each
+the answer to the previous stage's ceiling: one box → web and database apart → a cache → a
+distributed cache → read replicas → **stateless application with a shared session store** →
+load balancers and CDN → the store split by domain → services → discovery and a config centre
+→ queues and polyglot stores → containers → orchestration. The lesson for an auditor is not to
+recommend the ladder — a system at stage one that is pushed to stage nine is vanity engineering —
+but to **audit stage N against what stage N+1 will break.** Every design that only works because
+there is one process, one disk, one clock or one box is a finding *now* if the plan names a move:
+sessions locked in files (the checkout's double-submit guard on this shop, §8ax), a cache that is
+a PHP array, uploads on the local disk, a cron on one host, a lock that is a table row on one
+connection. Write the row with the stage that breaks it, and the plan's date for that stage; a
+finding with no such date is post-launch and says so.
+
 ## S20 — Liveness of the safety net itself. ZERO FINDINGS AND ZERO LOOKING ARE THE SAME REPORT UNLESS SOMEBODY DESIGNED THEM APART
 
 The First Law — *"Nothing should die silently!!"* — applied to the watchdogs themselves.
@@ -500,6 +529,16 @@ file's existence as the end fired thirty seconds into a seven-hour run. The star
 and the end of a marker are different facts — an empty file, a closing tag — and the watcher
 names which one it is waiting for.
 
+
+**S20.4 — liveness is not readiness (2026-09-17).** Orchestrators separate two probes for a
+reason, and a shop's safety net should too: **liveness** — the process is running and its
+heartbeat is fresh — and **readiness** — it may take work, because what it depends on is
+reachable. A worker that is alive and whose gateway is unreachable is *live and not ready*: the
+right response is to stop taking that work and say so, not to restart it and not to count it
+green. The maintenance door is the application's own readiness switch — closed on purpose — and a
+health page that says "up" while the door is closed, or "up" while the database is gone, is a
+liveness answer to a readiness question. For every detector and worker on the roll call, ask which
+of the two its signal is, and whether anything asks the other.
 
 Report line format: `S20 — D detectors enumerated; C report coverage separately from findings; H have a liveness signal something reads; E escalate to a human surface; outermost check: <named, or NONE>.`
 
