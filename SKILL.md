@@ -176,7 +176,7 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
 2. /cia universal integrity: ✅ 0 findings  (or ❌ N findings — see below)  [commerce detected → user must also run /ecommerce-cia]
 2b. VSM map (§0.9 step 0): N components → Systems 1–5 / 3*, M channels (table in report). Missing = sweeps had no site list.
-2a. §0.9 cross-boundary invariant sweeps S1–S24 (integration-level / emergent defects): one line each — "swept, 0 findings, sites: path, path, …" or ❌ finding ref, or "no sites on the map: <map row>". Missing line = sweep not done; a count with no paths = sweep not evidenced. **S15 (four-corner end-to-end walk) carries its own table and cannot be reported as a single line.** **S23 (sequence diagrams + the arrival × perturbation grid) and S24 (the boundary × test-class table) likewise carry their own tables; a single line for either means the sweep was not run.**
+2a. §0.9 cross-boundary invariant sweeps S1–S24 (integration-level / emergent defects): one line each — "swept, 0 findings, sites: path, path, …" or ❌ finding ref, or "no sites on the map: <map row>". Missing line = sweep not done; a count with no paths = sweep not evidenced. **S15 (four-corner end-to-end walk) carries its own table and cannot be reported as a single line.** **S23 (sequence diagrams + the arrival × perturbation grid) and S24 (the boundary × test-class plus external producer × consumer matrix) likewise carry their own tables; a single line for either means the sweep was not run.**
 2c. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S19's host-capability table is mandatory and gets its own line: `R dependency requirements × E target environments; satisfied/not-satisfied/unknown = A/B/C`. A deployment audit that never crossed what the dependencies require against what the target provides has not audited the deployment — and an `unknown` there is a finding, because it is the state in which a launch gets planned around a capability nobody confirmed.
 2d. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S20's detector table is mandatory and gets its own line: `D detectors; C report coverage separately from findings; H watched for liveness; E escalate to a human surface; outermost check: <named, or NONE>`. A green report from an instrument nobody has proved is looking is evidence of a report, not evidence of health — and that includes every earlier green this system has filed.
 3. Full test suite: ✅ N/M tests green on HEAD {sha}  (or ⏭ §0.8 ladder stopped at rung R: <reason + the one command the owner must run>)
@@ -258,7 +258,7 @@ Index — the sweep, what it hunts, and the VSM channel it walks:
 | **S21** The suite is an instrument too | vacuous or too-late proof, runner contamination, secrets in diffs, a codec proven only against itself | System 3\* itself |
 | **S22** Surface completeness: step × outcome × audience (+ S22.1–S22.8; S22.8 = the render-parameter diff) | unrendered / undesigned surface; caught ≠ handled | System 1 → operator / user screen |
 | **S23** Sequence and event-flow: every external arrival × duplicate / out-of-order / late / early / missing / malformed, interleaving pairs | order-dependent outcome; unhandled arrival | System 4 → System 1 in time, System 2 ordering |
-| **S24** Contract tests at every boundary: classes a–e per side, fixtures cited to the authority and version-pinned | self-agreeing fake; boundary with no contract test | System 3\* binding System 1 to System 4's actual contract |
+| **S24** Contract tests at every boundary: classes a–e per side, external producer × consumer matrix, fixtures cited to the authority and version-pinned | self-agreeing fake; boundary with no contract test; compatibility claim tested only against our own dialect | System 3\* binding System 1 to System 4's actual contract |
 
 When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term in the taxonomy, the sweeps are the first thing that runs.
 
@@ -378,4 +378,3 @@ For specific contexts:
 > disagree on what happened, does the system converge to truth?
 
 If the answer is **no**, the system is not yet cybernetically viable.
-
