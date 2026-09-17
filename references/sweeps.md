@@ -308,6 +308,18 @@ row that links the change to the money or the reversal it caused. Ask whether th
 committed record change; if it does, whether the change is a row with a link or an edit nobody
 can account for.
 
+*Two ratchets from the day it was first run whole-shop (2026-09-17).* **(a) A locale-coverage test
+keyed on the message table proves the table, not the code.** The shop's test walked every code in
+`codes()` through every locale and was green while eight reasons thrown under `src/` had no code at
+all and fell through to the developer's English. The ratchet that holds is keyed on the *throw
+sites*: scan the source for every `throw new <Refusal>('<reason>'` and assert each reason is in the
+table (exempting the ones that route through another table, by name, with the reason written
+next to the exemption). **(b) A compare-and-swap repeats every predicate of the query that chose
+the row.** The expiry sweep selected candidates on three conditions and claimed each with an UPDATE
+that re-checked one; the other two were the ones a concurrent writer could change (a pickup block,
+a vendor instruction row). Ask of every conditional claim: does its WHERE equal the SELECT's, or
+only the clause the author thought was racy?
+
 ## S17 — Controls whose enforcement point is outside the system. A SETTING THAT CANNOT REACH THE PLACE THE DECISION IS MADE IS A LABEL, NOT A CONTROL
 
 The owner's question that defines this sweep: *"How do we restrict user use which chain by toggle? Or do we trust our toggle auto reflects payment gateway setting?"*
