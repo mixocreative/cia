@@ -168,6 +168,29 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 
 **Step 4 — Runtime walk (5–15 min). THE AGENT DRIVES THIS.** Exercise the critical flows §0.5 / §3 identified, in the real running app, not just tests. For a web project: start the dev server per §0.8 if needed, drive the browser with the available automation (claude-in-chrome, Playwright MCP, `npx playwright` — install per §0.8 rung 2 if absent), log in with the project's documented dev credentials for authenticated routes, cover every locale and every critical route at desktop + mobile (390 × 844) breakpoints, screenshot each as an artefact. For a CLI / library / service: run the documented smoke commands or an equivalent scripted exercise. Check semantic HTML (`<h1>` per page), `aria-expanded` matches visible state, no console / stderr errors, no mobile horizontal overflow, focus rings visible, every form labelled. **Write the walks to `references/browser-walks.md`'s conventions** — page objects, session reuse, artefacts on failure only, no clock waits — or a theme change breaks every walk at once.
 
+**What the walk fetches, beyond the page (2026-09-18, from three misses in one morning).** A page
+that answers 200 with the right markup is not rendered until what it links arrives, so for every
+route walked: **(a)** fetch every `<link rel="stylesheet">` and `<script src>` the markup emits and
+hold each to a 200 — an admin served 200 pages and 403 stylesheets for six days because the
+install's root had moved and every derived asset URL landed under a denied directory; **(b)** fetch
+every `<img src>` and hold it to a 200 and a non-zero natural size; **(c)** read the application's
+error log before and after the walk and treat any growth as a finding with the route that caused
+it — two bookkeeping pages answered 500 on demo data because a dev seeder wrote a string no enum
+had, and no test runs the seeder; **(d)** where the project has a preview / theming / storybook
+surface, walk **every row of it**, logged in, and diff the stylesheet list the preview loads against
+the list the real template loads — 95 previews rendered the right page class inside the wrong
+shell, on the base stylesheet alone, and the parameter diff was green because the class was right.
+**(e)** A seeder or fixture loader that writes an enum-backed column is a writer under test (S21):
+the operator sees the seeder's rows, the suite sees its own. Ten minutes of script; none of it is
+visible to reading the source.
+
+**The walk is not optional at Screen tier.** Three defects above survived two Screen runs that
+enumerated every sweep from source and never made a request; the reports said "Screen" and no
+line said the walk was skipped. So the report carries a **runtime-walk receipt** (report line
+below): routes fetched, assets fetched, error-log delta, preview rows walked — or `SKIPPED:
+<reason>`, which downgrades the run to a code review in the first line. A Screen that never made a
+request is a code review.
+
 **Step 5 — Fix-or-escalate pass (variable).** Apply the §0.8 fix-vs-ask boundary to every finding from Steps 1–4. Autonomous fixes are committed one per finding with the test that proves them. Escalations carry the proposed patch, unapplied.
 
 **Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
@@ -184,6 +207,7 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
 6. Tier: Screen | Walk | Full — elapsed: N minutes (tier budget: 2–4 h | 1–2 d | open)
 7. Skill score: <the line `python tools/score.py` prints — this skill's own last scored fixture run, so the reader knows what the instrument found when it was last tested>
+8. Runtime walk receipt: <routes fetched N / assets fetched M, all 200 | which not> · error-log delta: <0 lines | the lines> · preview rows walked: <N of N | none exists> — or `SKIPPED: <reason>` (then the first line says code review, not Screen)
 ```
 
 Anything skipped → say why. Never claim "handoff ready" / "green-light" / "ready for launch" without listing what wasn't verified in this session. A ⏭ is not a failure; claiming green while a ⏭ exists IS a failure of the audit.
