@@ -8,7 +8,7 @@ It is **not** a commerce system. That is part of the test: `ecommerce-cia`'s §0
 FAIL here, `cia`'s §0.3 commerce detection must report *none*, and a bare `run tests` must run
 `python -m unittest` first and only then offer the Screen-tier audit.
 
-**Do not fix anything in this directory.** The answer key is `tests/EXPECTED.md`; the procedure
+**Do not fix anything in this directory.** The answer key is `../EXPECTED-fixture-service.md`, outside this directory; the procedure
 is `../RUNBOOK.md`.
 
 Layout:
