@@ -75,10 +75,26 @@ limit behind a proxy counts every visitor as one — read the proxy's client hea
 the placement, and it needs the identity it counts written down: account, verified phone, or
 card fingerprint.
 
+**Grading.** The dropped predicate is graded by what the race does to the unit of work, not by the
+size of the fix. Two workers executing one job, one writer overwriting another's terminal state, a
+paid record marked expired — the primary unit duplicated or lost **with nothing that detects it** —
+is **CRITICAL** (undetectable state divergence, `reporting.md` §10); the same race where a later
+check or a person would notice is **HIGH**. Three fixture runs graded this HIGH by reflex; the
+question to ask is "who finds out", and if the answer is nobody, it is CRITICAL.
+
 
 ## S3 — Catch-block failure posture (fail-open default)
 
 For every `catch` on a critical path, write one line: what is caught, what happens next, fail-open or fail-closed. Fail-open on a configuration, permission, or feature-flag read is a finding unless an owner decision or ADR names that exact choice and its reason. **A secret derived from the environment's identity is a time bomb.** Any salt, key or token with a computed fallback — `hash(hostname)`, `hash(__DIR__)`, the container id, an ephemeral machine name — silently changes when the environment is rebuilt, and everything hashed against it stops verifying with no error anywhere. Check three things for each: production fails closed when it is unset rather than computing one; the value survives a container recreation; and every process that reads it (web, CLI tool, worker, test) computes the *same* one. A password written by a host-side CLI that cannot verify inside the container is this defect, and it reads as "wrong password" forever. Fail-open is not one posture: name the axis. On a **display or read path** (a listing, a search, a recommendation) fail-open to an empty or degraded result may be the right System 5 policy, provided the degradation is visible on a screen (S22) and counted by a detector (S20). On a **money, entitlement, permission, or configuration path** fail-open is a finding unless an owner decision or ADR names that exact choice and its reason. Grade the two axes separately, and say which one each `catch` sits on.
+
+**Grading.** A `catch` on the primary path that answers success — returns `true`, returns the
+defaults, sends 200, stays silent — while the guarded operation did not complete is **CRITICAL**
+when the caller acts on that answer and nothing else will notice (the caller stops retrying, the
+record is now wrong): a verify that returns `true` on its own exception, a catch-all around a
+write that only ever meant to absorb the duplicate-key case. The same fail-open on a
+configuration or flag read, where the wrong value is at least visible in behaviour, is **HIGH**.
+File it here, under S3, even when the input that triggered the catch was malformed (that is S11's
+cause; the posture is S3's finding).
 
 ## S4 — External field semantics from the source document (semantic drift)
 
@@ -506,7 +522,7 @@ Method — apply to **every** component whose job is to notice:
 5. **Then ask the recursive question, and answer it once rather than forever.** Who watches the watcher? The regress terminates only by leaving the system: an exit code a scheduler mails, an external uptime probe, a dead-man's switch a third party trips when a ping stops arriving. **Name the outermost check and confirm it is outside the process it watches.** A monitor inside the thing it monitors shares its failures.
 6. **Test the blind case explicitly.** A detector's test suite must contain "it examined nothing and said so". That test is almost never written, because it feels like testing the absence of work — it is testing the difference between silence and safety.
 
-**Grading.** A detector on a money or safety path that cannot distinguish blind from clean: **HIGH** — every run it makes is uninterpretable, including the ones already filed as green. A scheduled money-critical job with no liveness signal: **HIGH**. A detector whose output reaches no human surface: **HIGH** (S16 rule six). No outermost check outside the system: **MEDIUM**, and it is the one to state plainly rather than grade, because it is an architectural choice the owner should make knowingly.
+**Grading.** A detector on a money or safety path that cannot distinguish blind from clean: **HIGH** — every run it makes is uninterpretable, including the ones already filed as green. A scheduled money-critical job with no liveness signal: **HIGH** — and a heartbeat that is written and read by nothing *is* no liveness signal (grade the job HIGH, not the missing reader MEDIUM). A detector whose output reaches no human surface: **HIGH** (S16 rule six). No outermost check outside the system: **MEDIUM**, and it is the one to state plainly rather than grade, because it is an architectural choice the owner should make knowingly.
 
 **The sentence to carry out of this sweep:** *a green report from an instrument nobody has proved is looking is not evidence of health — it is evidence of a report.*
 
@@ -592,7 +608,7 @@ S20 asks whether the detectors are looking. **S21 asks it of the test suite**, w
 
 Method: enumerate the tests that touch the system's real configuration or entry points; confirm each restores what it changed. For every suite that asserts emptiness, find the sibling that proves non-emptiness. Record the assertion count alongside the test count in every claim, because *"N tests pass"* and *"N tests ran and asserted M things"* are different reports. For every external protocol, name the vendor-published vector the suite reproduces, or write "none — round-trip only".
 
-**Grading.** A vacuous pass on a money path: **HIGH** — the code it was meant to cover has never been exercised. Environment contamination that reaches other tests: **HIGH** when the contaminating values are real credentials, **MEDIUM** otherwise. A live secret reachable in failure output: **HIGH**, and say it in the conversation with the rotation decision attached, per §0.11.
+**Grading.** A vacuous pass on the primary path or on a safety net (the monitor, the reconcile, the watchdog — anything whose job is to notice): **HIGH** — the code it was meant to cover has never been exercised, and a safety net that has never been shown to fire is a detector nobody has proved is looking (S20). "Money path" is the commerce special case; in a job runner the primary path is the job. Environment contamination that reaches other tests: **HIGH** when the contaminating values are real credentials, **MEDIUM** otherwise. A live secret reachable in failure output: **HIGH**, and say it in the conversation with the rotation decision attached, per §0.11.
 
 **The sentence to carry out of this sweep:** *green is a colour, not a measurement — quote the counts, and know which of them went up.*
 

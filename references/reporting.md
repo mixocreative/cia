@@ -16,18 +16,30 @@ Unique audit finding identifier (e.g., `BLA-001`, `ECOM-025`).
 - **LOW**: Edge case, maintainability, or minor inconsistency
 - **INFORMATIONAL**: Improvement or verified design note without identified defect
 
-**The floor, from two fixture runs (2026-09-15) that graded one level low on four of ten and three
-of sixteen rows:** a defect on a money or safety path is graded by **what happens to the money or
-the person when it fires**, not by how small the code is. *Money lost, doubled, or recorded as
-paid when it was not — with no notice* is **CRITICAL**, even when the fix is one predicate: an
-`UPDATE … WHERE id = ?` that lets a payment be overwritten as expired, a `catch` that answers the
-provider "received" while the write failed, a verify that returns true on its own exception. *A
-person cannot see or act on a money state* (an unrendered terminal state, an alarm that reaches
-a log) is **HIGH**, never MEDIUM. *A detector that cannot tell blind from clean* on a money path
-is **HIGH**. *A test that proves nothing* on a money path is **HIGH**, because every earlier green
-it produced was a claim. MEDIUM is for defects with a working fallback or a person already in the
-loop; LOW is for what costs nothing when it fires. When in doubt between two grades on a money
-path, the higher one is right — an under-graded money defect is the one that ships.
+**The primary path, named first.** Every system has one unit of work it exists to get right —
+the payment in a shop, the job execution in a runner, the record in a store, the message in a
+queue, the alert in a monitor — and one or more *safety nets* watching it (the monitor, the
+reconcile, the watchdog, the test suite). Name that unit in the invariant register before
+grading anything; the floor below is written against it. **This skill is universal: "primary
+path" is not a synonym for "money path".** Three fixture runs in a row (2026-09-15 to
+2026-09-19) graded the same two rows one level low on a job runner because the floor said
+"money" and the auditor could not see money.
+
+**The floor, from those runs:** a defect on the primary path or a safety net is graded by **what
+happens to the unit of work or the person when it fires**, not by how small the code is. *The
+unit lost, executed twice, or recorded as finished when it was not — with no notice* is
+**CRITICAL**, even when the fix is one predicate: an `UPDATE … WHERE id = ?` that lets two
+workers claim one job or a payment be overwritten as expired, a `catch` that answers "received"
+while the write failed, a verify that returns true on its own exception. A race whose divergence
+nothing detects is "undetectable state divergence" (§10), which is CRITICAL — "race condition
+leading to inconsistency" (HIGH) is the race a later check *would* notice. *A person cannot see
+or act on a primary-path state* (an unrendered terminal state, an alarm that reaches a log) is
+**HIGH**, never MEDIUM. *A detector that cannot tell blind from clean* on the primary path is
+**HIGH**. *A test that proves nothing* on the primary path **or on a safety net** — a monitor
+whose only test asserts it found nothing — is **HIGH**, because every earlier green it produced
+was a claim. MEDIUM is for defects with a working fallback or a person already in the loop; LOW
+is for what costs nothing when it fires. When in doubt between two grades on the primary path,
+the higher one is right — an under-graded primary-path defect is the one that ships.
 
 ## Confidence
 - **CONFIRMED**: Defect demonstrated from code, logs, or tests
@@ -104,8 +116,8 @@ Likely or demonstrated:
 
 Serious transactional or operational corruption under realistic conditions:
 - Partial data loss (recoverable with effort)
-- Race condition leading to inconsistency
-- Failed idempotency (duplicate operations produce different results)
+- Race condition leading to inconsistency **that a later check or a person would notice** (one nothing notices is CRITICAL — undetectable state divergence, above)
+- Failed idempotency (duplicate operations produce different results) — when the duplicate is the primary unit of work executed twice with no notice, CRITICAL
 - Unhandled third-party outage (no fallback or retry)
 - Missing audit trail for critical operations
 - Recovery procedure is manual and error-prone
