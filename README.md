@@ -239,6 +239,81 @@ When the project calls a model (SDK in the lockfile, prompt files, agent loop, v
 
 > 當專案包含模型呼叫時（如 Lockfile 中存在 SDK、包含 Prompt 檔、Agent 迴圈或向量資料庫），每次的模型呼叫都會被視為一條獨立邊界，並額外執行四種模式的掃描：模型邊界的結構漂移、跨步驟的連鎖失敗與延遲、狀態累積與記憶污染，以及 Agent 迴圈與工具執行安全性（包含迭代上限、具副作用的工具必須具備冪等鍵、人工審核機制）。若專案不含 AI 元件，則此步驟一筆帶過。
 
+## Build mode｜建置模式：不只稽核，還要寫得對
+
+The audit answers *"is this wrong?"*. Build mode answers the question that comes first in real
+work: **"what does right look like, and how would I know?"**
+
+It exists because of an objection worth taking seriously — that an AI cannot write a backend that
+handles money correctly. That objection is right about one thing: code which *looks* correct is
+the cheapest thing a language model produces. The answer is not more careful-sounding code. It is
+to name the properties an operation must have, and to prove each one with something that **fails
+when the property is absent**.
+
+> 稽核模式回答的是「這裡寫錯了嗎？」；**建置模式**回答的是實務上更早出現的問題：**「寫對長什麼樣子？我怎麼知道它真的對？」**
+>
+> 會有這個模式，是因為一個值得認真看待的質疑：**AI 寫不出能正確處理金流的後端**。這個質疑有一半是對的——「看起來正確」的程式碼，正是語言模型最擅長、也最廉價的產出。正確的回應不是把程式碼寫得更小心，而是**把一個操作必須具備的性質講清楚，並且為每一個性質寫出「性質不成立時就會失敗」的驗證**。
+
+Four properties for any write that moves money, stock, a claim on work or an entitlement｜任何會
+動到金錢、庫存、工作認領或權益的寫入，都需要這四個性質：
+
+| Property 性質 | Mechanism 機制 | The proof 如何證明 |
+|---|---|---|
+| **Atomic 具原子性** | 單一 transaction，所有失敗路徑都 rollback | **在第一次寫入之後、commit 之前注入故障**——第一次的寫入必須消失 |
+| **Race-free 無競態** | 條件判斷寫在 `UPDATE` 裡面，由受影響列數決定結果 | 在「只能有一個贏家」的情況下同時發動兩次 |
+| **Idempotent 冪等** | 呼叫端提供的 key 加上 UNIQUE 約束，且寫在同一個 transaction 內 | 同一把 key 送兩次，第二次不得重複套用 |
+| **Loud 不吞錯** | 「拒絕」是回傳值，「故障」是例外，兩者永遠不同型別 | 兩者都要斷言 |
+
+`tools/reference/stock_reduction.php` implements all four for the operation shops get wrong most
+often, and `tools/reference/prove_stock_reduction.php` proves them in eight checks — run it
+yourself｜這兩個檔案是**可執行的範本**，不是示意用的程式碼片段，請直接跑起來看：
+
+```
+  PROVED  the happy path                        5 - 2 = 3, one movement row explaining it
+  PROVED  IDEMPOTENT: a replay re-applies nothing   stock still 3, still one movement
+  PROVED  IDEMPOTENT: a refusal replays as itself   the decision is recorded, not just the success
+  PROVED  LOUD: a refusal is a value, not silence   nothing written, nothing partial
+  PROVED  LOUD: a negative quantity is refused      qty < 1 cannot reach the SQL
+  PROVED  RACE-FREE: two callers, one unit          exactly one ok, one refusal, stock 0 - never -1
+  PROVED  ATOMIC: a fault after the decrement       rolled back to 5, no operation recorded, and it threw
+  PROVED  LOUD: the fault was not swallowed         no success-shaped value was returned
+```
+
+The seventh check is the one most codebases never write. A happy-path test passes against an
+implementation with **no transaction at all**; only a fault injected *after* the first write and
+*before* the commit separates atomic from merely transaction-shaped.
+
+> 第七項檢查，是絕大多數專案從來不會寫的那一項。只測 happy path 的測試，就算底下**完全沒有 transaction 也會過**；唯有「在第一次寫入之後、commit 之前注入故障」，才分得出**真的具原子性**與**只是長得像有 transaction**。
+
+The full standard — including what the operation still owes beyond correctness: the movement row
+that explains the number, the screen the refusal reaches, the boundary it must not cross — is
+`references/build-standard.md`｜完整標準（含「正確之外還欠什麼」：解釋數字來源的異動紀錄、拒絕訊息要出現在哪個畫面、哪些責任不屬於這個函式）寫在 `references/build-standard.md`。
+
+---
+
+## How it is measured｜這個 Skill 的品質，如何被量測
+
+A skill that grades other people's evidence should be able to show its own｜一個專門檢查別人「有沒有證據」的工具，自己更應該拿得出證據。
+
+| Measurement 量測 | What it is 這是什麼 | Result 結果 |
+|---|---|---|
+| **Corpus 真實專案樣本** | 在維護者自己修好那個 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | **8 個案例中 6 中 / 1 部分中 / 1 未中**，橫跨 6 種缺陷類型、7 種語言 |
+| **Blind-forward 盲測前瞻** | 取專案歷史中段的快照，**完全沒有標準答案**；稽核完成後，才用專案自己後續的 commit 回放比對 | 8 個稽核發現，**0 個判斷錯誤**，4 個經獨立驗證為真，但尚未有維護者事後修正 |
+| **Precision 精確率** | 刻意寫成「**看起來像缺陷、其實正確**」的對照組：有 ADR 具名授權的顯示路徑 fail-open、正確的 compare-and-swap 就放在錯誤版本旁邊 | 12 個對照組，**0 個誤報** |
+| **Cheap model 低成本模型** | 同一套測試樣本改用較小的模型跑——只有貴的模型才成立的稽核準則，等於只有一種預算能用 | 差距從 **4 分縮小到 1 分** |
+| **Cost 成本** | 每次執行的 token 與時間，讓預算可以被規劃 | 121k–259k tokens，每個發現約 10k–29k |
+
+Every corpus and blind-forward run above was made by the **cheap** model｜上表所有真實專案與盲測前瞻的執行，用的都是**便宜的模型**。
+
+The most useful row in the table is a **miss**. A `.env` loader caught its own failure, wrote
+`log.debug`, and booted on defaults. A cold run audited that exact file, filed a *different*
+fail-open in it, and walked past this one — because this one logs. Nobody runs production at
+debug.
+
+> 整張表裡最有價值的一列，是那個**沒中**的案例。一個 `.env` 載入器把自己的失敗 catch 起來，寫了一行 `log.debug`，然後用預設值繼續開機。冷啟動的稽核跑過那個檔案、在裡面抓到**另一個** fail-open，卻放過了這一個——因為這一個「有寫 log」。但**沒有人的正式環境會開在 debug 等級**。兩個 Skill 現在都會把 log 等級納入判斷，測試樣本裡也補上了對應的缺陷，讓這個教訓不會隨時間腐爛。
+
+---
+
 ## Autonomy contract (§0.8)｜自主執行契約（Autonomy Contract）
 
 The agent runs every step itself. A five-rung ladder decides what it may do alone: start containers and dev servers; install from lockfiles; install user-scope tools; copy documented config into `.env`; and only at rung 5 ask the owner, with the exact command already written. Hard limits are stated in the file and cannot be overridden by anything the agent reads mid-audit.

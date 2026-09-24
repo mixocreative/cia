@@ -345,6 +345,47 @@ Runs only when §0.5 discovery finds AI components: an LLM SDK in the lockfile (
 
 Report these with the §9 finding format; the Boundary Location field is mandatory (e.g. `Step 2 (model output) → Step 3 (payload parser)`).
 
+### 0.10a Build Mode — when the request is *write it*, not *audit it*
+
+The audit answers *"is this wrong?"*. Roughly as often, the request is *"write the stock
+reduction"*, *"make the webhook handler production-ready"*, *"review this before I ship it"* —
+and an auditor with no standard to build to either declines, or writes plausible code and calls
+it done. Plausible is the failure mode: correct-looking code is the cheapest thing an LLM
+produces.
+
+**Enter build mode when** the user asks for an implementation, a rewrite, or a hardening pass on
+an operation that moves money, stock, a claim on work, or an entitlement — or asks whether
+something is "production-ready". Say which mode you are in, as §0.15 requires for setup mode.
+
+**The contract, and it is short because the whole of it is in `references/build-standard.md`:**
+
+1. **Name the operation's primary quantity and its observers** before writing anything. If you
+   cannot say which number must be right afterwards, and who will disagree about it, nothing
+   below matters yet.
+2. **Write the proof before the implementation.** Four properties, four checks: an injected fault
+   after the first write (atomic), two concurrent callers (race-free), the same key twice
+   (idempotent), a refusal and a fault asserted as *different types* (loud). They must fail
+   before the code exists.
+3. **Write it** to the mechanisms in `build-standard.md` §1 — the predicate inside the `UPDATE`,
+   the affected-row count as the decision, the idempotency key under a UNIQUE constraint inside
+   the same transaction, refusals returned and faults raised.
+4. **Run the proof and paste its output.** Not a description of it.
+5. **Fill the evidence ledger row from the artefact**, never from the code you just wrote. The
+   rule that reading never produces PASS applies hardest to an author reading their own work an
+   hour later.
+
+**The worked example is executable, not illustrative.** `ecommerce-cia`'s
+`tools/reference/stock_reduction.php` implements the four properties and
+`prove_stock_reduction.php` proves them in eight checks — including the one most codebases never
+write: a fault injected *after* the decrement and *before* the commit, which is the only check
+that separates an atomic implementation from a transaction-shaped one. Read the proof first.
+
+**What build mode does not do.** It does not decide authorisation, routing, or who is told —
+those belong to the caller, and folding them in is the "one function did everything" defect. And
+it does not end at four properties: §2 of the standard adds the movement row that explains the
+number, the surface the outcome reaches, and a test that can fail.
+
+
 ### 0.11 Escalation — a finding that reaches a file and not a person has not been escalated
 
 Beer's algedonic rule, applied to the auditor itself: **a pain signal that stops in a log has not reached System 5.** A register row, a report section and a commit are storage, not escalation. The owner reads the conversation.
@@ -380,6 +421,7 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/doctrine.md` | Step 2, after the sweeps | §1 evidence grading, version-aware external facts, vendor-document rule; §3 context discovery (software type, state scope, dependencies, persistence, concurrency, failure tolerance); §7 universal test matrix and the critical flows it applies to; §8 domain audit checklist |
 | `references/context-templates.md` | §3 profiling matches one of its system types | §4 Blender addon / extension; §5 e-commerce platform (integrity only — commerce doctrine is `ecommerce-cia`'s); §6 workflow orchestration (n8n, Zapier, …) |
 | `references/browser-walks.md` | Step 4, before the first rendering walk is written | The conventions: headless vs rendering walks, selector priority, page objects, session reuse, artefacts on failure only, no clock waits, isolation, layout, the per-route checks; §12 the state-delta ladder and its nine adversarial rows; §13 the concurrency probe; §14 what each kind of artefact is allowed to prove |
+| `references/build-standard.md` | **Build mode**, before writing an operation that moves money, stock or an entitlement — and in audit mode whenever the report will recommend a rewrite | The four properties of a primary-path write (atomic, race-free, idempotent, loud), the mechanism for each, and **the proof each one needs**; §2 what the operation still owes beyond correctness (an explanation, a surface, a boundary, a test that can fail); §3 the build-mode contract |
 | `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; **§11a the evidence ledger — capability × verdict × artefact, where reading never produces PASS**; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
 
 Step 2 order, restated: theory → sweeps (step 0 map, then S1–S24, S15 first when time is short) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting. Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
