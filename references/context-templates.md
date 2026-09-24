@@ -274,3 +274,8 @@ Failure Tolerance: Retry strategies, dead-letter queues, human-in-the-loop escal
 - Credential storage (API keys, tokens)
 - Variable scope (global vs. node-local)
 
+---
+
+**Reading receipt: _the profile picks the template, never the other way round_.** Quote this phrase on the report's receipts line (Step 6 in cia,
+Step 7 in ecommerce-cia) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

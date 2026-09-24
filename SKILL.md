@@ -386,7 +386,15 @@ Step 2 order, restated: theory → sweeps (step 0 map, then S1–S24, S15 first 
 
 ### The reading receipt — how a miss names its own cause
 
-Every reference file this skill loads ends with a **receipt line**: a short phrase that appears
+**A run that cannot quote the receipts has run the index, not the doctrine — and says so in its
+first line.** `SKILL.md` is a runbook; the audit is in `references/`. A run that works from this
+file's sweep index alone will produce plausible sweep lines with no method behind them, and until
+the receipts existed that was indistinguishable in the report from a doctrine gap. It is not a
+failure to admit; it is a failure to hide. Two of six cold runs on 2026-09-24 did exactly this
+and both declared it, which is why both are diagnosable.
+
+
+**Every** reference file this skill loads ends with a **receipt line** — every one, checked by `tools/receipts.py`, because a file with no receipt cannot be told apart from a file nobody opened, and that is the confusion receipts exist to remove. A run that reads a reference file carrying no receipt says so on the line, as one did on the day they were introduced, rather than inventing a phrase or dropping the line: a short phrase that appears
 nowhere else in the skill and nowhere in the audited project. The Step 6 report carries
 one line quoting the receipt of each file the run says it read.
 

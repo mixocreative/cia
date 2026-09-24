@@ -1,6 +1,6 @@
 # fixture-service — answer key
 
-**Eleven** defects (ten planted, one the harness acquired by accident) and **eight** verified controls. A Screen-tier `/cia` run on this directory must report every row below, with the sweep, a `path:line` inside the cited range, and a grade no lower than shown. Extra findings are scored separately (see `../RUNBOOK.md`); a planted row the run did not report is a **miss** and blocks the skill change that caused it.
+**Twelve** defects (eleven planted, one the harness acquired by accident) and **eight** verified controls. A Screen-tier `/cia` run on this directory must report every row below, with the sweep, a `path:line` inside the cited range, and a grade no lower than shown. Extra findings are scored separately (see `../RUNBOOK.md`); a planted row the run did not report is a **miss** and blocks the skill change that caused it.
 
 Run the suite first (`python -m unittest discover -s tests -t .`): 8 tests, all green. Every defect below sits under that green.
 
@@ -17,10 +17,22 @@ Run the suite first (`python -m unittest discover -s tests -t .`): 8 tests, all 
 | 7 | **S16** terminal-state accountability | `runner/monitor.py:33-35`; `runner/scheduler.py` (no writer of `status = 'stuck'`) | A job running past `stuck_after_minutes` is printed to stderr once per monitor run and never transitions; there is no queue, no action, and D2's Requeue / Fail actions do not exist. | Every non-terminal state has an advancer or a desk | HIGH |
 | 8 | **S13** orphan capability | `runner/legacy_retry.py`; `docs/ARCHITECTURE.md` D1 | `with_backoff` has no caller (grep → definition only). D1 says every handler uses it. Designed, documented, unbuilt. | A capability named by a design document exists or has a gap-register row | MEDIUM |
 | 9 | **S21** vacuous pass | `tests/test_scheduler.py:25-28` | `test_no_jobs_are_stuck_on_a_fresh_db` asserts `stuck_jobs(...) == []` on a job that just started; no test anywhere proves `stuck_jobs` can return a row. | A test asserting emptiness needs a sibling proving non-emptiness | HIGH |
+| 12 | **S3** fail-open at a log level nobody reads | `runner/scheduler.py:33-49` (`load_worker_identity`), called from `runner/cli.py:60` | The worker identity file is read inside a `try`; on `OSError`/`ValueError`/`KeyError` it writes **`log.debug`** and returns the default name `"worker"`. Production runs at INFO, so the line is never seen, and every worker that falls back is stamped into `claimed_by` under the same name — two workers become indistinguishable in the jobs table and on the status page. | A failure reported below the level production runs at is not reported | HIGH |
 | 11 | **S13** orphan wiring | `runner/cli.py:46`; `config.yaml` (no `db_path`) | `connect(cfg.get("db_path", ":memory:"))` reads a key the config never sets, so **every** `python -m runner.cli` invocation opens a fresh in-memory database and discards it on exit: the operator CLI is wired to nothing. | A control an operator reaches must reach the real state | HIGH |
 | 10 | **S21** runner contamination | `tests/test_scheduler.py:30-33` | `test_config_from_real_file` writes `os.environ["FIXTURE_ALERTS"]` and never restores it; every test after it in the process sees it. | Snapshot the environment before, restore after; clear on the way in | MEDIUM |
 
 Also expected, not separately scored: **S12** — `finish()` (`runner/scheduler.py:65-77`) re-queues on failure with no backoff and no per-step timeout, and since defect 8 nothing backs off; **S14** — the run states its scope as this directory and lists the modules on the map.
+
+### A note on row 12's provenance
+
+Row 12 was planted **on purpose, on 2026-09-24, because the corpus found the gap and the fixtures
+could not have.** Every failure planted here before it was *silent*; not one logged at the wrong
+level, so no run was ever asked to notice that a `catch` which logs at DEBUG is silence in
+production. A real fix commit in another repository (`WilliamAGH/findmybook`, *"stop swallowing
+exceptions in startup config normalization"*) was the corpus's first MISS for exactly that
+reason, and a doctrine lesson with no fixture row behind it is a lesson that rots. This one now
+has both: S3 in `references/sweeps.md` grades the level, and this row fails any run that does
+not.
 
 ### A note on row 11's provenance
 

@@ -241,3 +241,8 @@ When reporting findings, classify by system:
 | 4 | Monitoring, adaptation | "No metrics on slowest operations; can't forecast load" |
 | 5 | Policy, emergency control | "No way to disable addon if crashing; requires Blender restart" |
 
+---
+
+**Reading receipt: _a codebase has five systems whether or not anyone named them_.** Quote this phrase on the report's receipts line (Step 6 in cia,
+Step 7 in ecommerce-cia) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

@@ -107,6 +107,31 @@ configuration or flag read, where the wrong value is at least visible in behavio
 File it here, under S3, even when the input that triggered the catch was malformed (that is S11's
 cause; the posture is S3's finding).
 
+**The log level is part of the posture (2026-09-24, from a corpus miss).** A `catch` that logs is
+not thereby reporting. Production runs at INFO or WARN, so **a failure logged at DEBUG or TRACE is
+silence with a receipt** — the line exists, the operator's log does not contain it, and the code
+reads as handled to anyone grepping for `log.` on the failure path. The shape to hunt, verbatim
+from the commit that fixed it:
+
+```java
+} catch (IOException | SecurityException e) {
+    // Silently continue if .env loading fails, but log at debug level
+    log.debug("Skipping .env file loading: {}", e.getMessage());
+}
+```
+
+The application then boots on defaults, and its own comment says so. The maintainer's fix threw.
+This sweep's first corpus miss was exactly this site: a cold run audited that file, filed a
+different fail-open in it, and walked past this one because it logged.
+
+So for every `catch` on a primary path, write the level next to the posture: **`debug`/`trace` is
+fail-open-and-silent, and it is graded as though there were no log line at all.** `info` is
+fail-open-and-buried unless something reads it (S20 — a line in a stream nobody watches is the
+detector problem one storey down). `warn`/`error` reporting to a channel a person reads is the
+minimum for "reported", and a screen is the minimum for "handled" (S22). The comment beside the
+catch is evidence of intent, not of reporting: *"silently continue"* written by the author is the
+author agreeing with the finding.
+
 ## S4 — External field semantics from the source document (semantic drift)
 
 For every third-party field the code branches on (API status, webhook type, protocol sub-code), cite the vendor spec page or RFC section that defines it. A mapper comment is not evidence. If the spec distinguishes a family field from a subtype field, confirm the parser reads the one present in every case. No spec read → report line says "field semantics unverified". **Sample code is not a specification.** A vendor's runnable example proves the envelope it exercises and nothing else — it names no response fields, no status codes, no retry or acknowledgement rule. When the only vendor source on disk is a sample pack, the report says so and lists the manual that is missing; if the vendor publishes it, fetch it before writing a line against the boundary. A handoff note claiming "the sample folder is the complete authority" is an S4 finding, not a fact. **Gates must exist for every family that reaches them.** For every predicate a reducer, state machine or settlement path branches on (a status field, a close flag, a sub-code), list every input family that can arrive at that line and confirm the field is defined for each of them in the vendor document. A gate on a field that exists for one family only (a card-only close status read for a bank-transfer or pickup result) leaves the other families stuck in their prior state forever, with no error, no expiry and no alarm — the quietest money defect there is. **The vendor's recap is not the field table.** A manual's own summary list — a 注意事項 note, a changelog, a quick-reference — can omit a field the full request table defines (NDNF-1.2.5 p.40 lists every method flag except `TWQR`, which p.38 defines). Transcribe from the table and use the recap only as a cross-check; record any difference as a finding against the recap, not the table. **Same field name, per-family numbering.** A status field several families share may number its values differently per family (NDNF `CloseStatus` 3 = 請款完成 for cards and wallets but 請款失敗 for BNPL; the payment callback's integer `StoreType` numbers OK as 3 where the logistics `ShipType` numbers it 4). Keep one value table per family keyed on the family field, refuse a value that is not on its family's table, and never derive one document's code from another's integer.

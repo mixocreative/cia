@@ -13,7 +13,7 @@ import sys
 
 from . import digest
 from .db import connect
-from .scheduler import claim_batch, load_config
+from .scheduler import claim_batch, load_config, load_worker_identity
 
 
 def cancel(conn, job_id: int) -> bool:
@@ -57,7 +57,8 @@ def main(argv: list[str]) -> int:
 
     if command == "drain":
         size = int(cfg.get("drain_batch", 5))
-        claimed = claim_batch(conn, worker="operator-cli", limit=size)
+        identity = load_worker_identity()
+        claimed = claim_batch(conn, worker=identity["name"], limit=size)
         print(f"drain: claimed {len(claimed)} of at most {size}")
         return 0
 

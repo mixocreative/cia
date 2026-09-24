@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import sqlite3
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 DEFAULTS = {"retry_limit": 3, "stuck_after_minutes": 30, "alerts_enabled": True}
 
@@ -27,6 +30,23 @@ def load_config(path: str = "config.yaml") -> dict:
     except Exception:  # noqa: BLE001 - config is optional in dev
         return dict(DEFAULTS)
 
+
+def load_worker_identity(path: str = "worker.json") -> dict:
+    """Read this worker's identity file: its name, and the pool it belongs to.
+
+    The scheduler stamps `claimed_by` with the name from here, so two workers that fall back
+    to the same default are indistinguishable in the jobs table and on the status page.
+    """
+    try:
+        import json
+
+        with open(path, encoding="utf-8") as fh:
+            identity = json.load(fh)
+        return {"name": str(identity["name"]), "pool": str(identity.get("pool", "default"))}
+    except (OSError, ValueError, KeyError) as exc:
+        # Continue with a generated identity; the file is optional in dev.
+        log.debug("worker identity unavailable (%s); using the default", exc)
+        return {"name": "worker", "pool": "default"}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
