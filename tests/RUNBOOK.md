@@ -25,6 +25,28 @@ RUNS.md                    one row per run (append; never rewrite history)
 5. **Record** a row in `RUNS.md`: date, commit of the skill, runtime (Claude / Codex), tier, hits / near / miss / false positives, minutes, and the one sentence that explains any miss.
 6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** than the previous row on hits and misses. A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
 
+## The live probe (`fixture-service`, no second fixture needed)
+
+`cia`'s fixture is already runnable — it is a Python job runner with a sqlite database — and its
+S2 site (two workers claiming one job) is a planted defect that the read audit can only
+*predict*. `browser-walks.md` §13 says a prediction on a system that is running on this machine
+is evidence left on the floor, so the harness scores whether the auditor fired it:
+
+1. Seed one queued job.
+2. Start two claim processes against it concurrently — two shells, `python -c` against
+   `runner.scheduler`, or the service's own entry point twice.
+3. Read the job row afterwards.
+
+Expected, given the planted defect: **both claim it**. An auditor that reports the race CRITICAL
+*and* fires the probe scores the finding and the runtime credit; one that reports it without
+firing scores the finding alone; one that fires it and finds the divergence undetected by any
+monitor has also just earned the S20 row for free. Record the probe in the RUNS runtime table
+(`probes`), with the two outputs as its artefact.
+
+The same three runtime columns apply here as in the commerce harness: ladders run (the primary
+quantity in this service is the claim on a job), probes fired, and whether an evidence ledger
+was produced with artefact paths on every PASS.
+
 ## Reading a miss
 
 | Symptom | Usually means |

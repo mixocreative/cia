@@ -41,6 +41,32 @@ was a claim. MEDIUM is for defects with a working fallback or a person already i
 is for what costs nothing when it fires. When in doubt between two grades on the primary path,
 the higher one is right — an under-graded primary-path defect is the one that ships.
 
+**Grading is not filing — the promotion rule.** An observation that stayed in step prose has not
+been reported. Two runs of the same doctrine on the same fixture (`tests/RUNS.md`, 2026-09-20)
+scored 10/10 and 6/10; all three of the cheaper run's misses were promotion failures, not
+discovery failures — it named the fail-open catch, the unread heartbeat and the assert-nothing
+test in its own narrative and filed none of them as findings. The doctrine was identical. Only
+the reporting reflex differed, and the 10/10 run got that reflex from a sentence in the harness
+prompt rather than from this file, which is the instrument scoring its own scaffolding. So the
+sentence lives here now:
+
+**Every observation that meets a threshold above becomes a numbered finding — an ID, a grade, a
+`path:line` and the invariant it violates — in the same pass that saw it.** "Noted", "worth
+checking", "could be tightened", and a clause inside a step description are not findings and do
+not count as reported. An observation that does *not* meet a threshold still gets a sentence
+naming the grade it failed to reach; ungraded prose is how a real defect leaves an audit. When
+the auditor cannot decide whether a threshold is met, it is met: file at the higher grade with
+confidence POSSIBLE and let the fix-or-escalate pass settle it. Filing costs a paragraph. Not
+filing costs the defect.
+
+**And a site in a sweep line is not a finding.** The first cold run of the live fixture
+(2026-09-24) listed `public/index.php:91-93` — the checkout quantity, "`(int)` cast, no bounds"
+— among the sites of its S11 line, and never filed the defect. A customer ordering `-3` raised
+the shop's stock and wrote a negative total, and the audit had *looked straight at it*. Sweep
+lines enumerate where you looked; the findings list is what you found. A site that met a
+threshold and appears only in the enumeration is the same miss as one nobody visited, and it is
+harder to notice because the line looks thorough.
+
 ## Confidence
 - **CONFIRMED**: Defect demonstrated from code, logs, or tests
 - **HIGH-CONFIDENCE**: Strong evidence but runtime confirmation unavailable
@@ -184,6 +210,69 @@ Record important controls proven to be correct. This prevents repeated audits fr
 - Refund atomicity (payment + inventory + ledger all succeed/fail together)
 - Invoice reconciliation audits against payment gateway
 - Tax calculation deterministic across retries
+
+---
+
+# 11a. The Evidence Ledger — capability × verdict × artefact
+
+Verified controls (§11) say what the auditor believes after reading. The ledger says what
+the run can **prove**. It is one table, it appears in every report, and it is the only place in
+this doctrine where a paragraph of correct source code counts for nothing.
+
+**Rows.** Every capability the system claims, taken from the §0.9 step-0 map: one row per
+System 1 unit of work, plus one per System 2 / 3 / 3* / 4 channel that unit depends on. The map
+fixes the row list, so the ledger cannot be narrower than the system. For a commerce system the
+sibling `ecommerce-cia` fixes a mandatory row list on top of this one.
+
+**Columns.**
+
+| Capability | Verdict | Evidence (artefact path) | What the evidence shows |
+|---|---|---|---|
+
+**Verdicts, and the only things that produce them:**
+
+- **PASS** — an artefact produced *by this run* shows the capability behaving correctly, end to
+  end. An artefact is a file on disk or a command output captured this session: a test runner's
+  line naming the test that ran, an HTTP status with the response, a stored row read back after
+  the operation, a screenshot, a log line with its timestamp. `browser-walks.md` §14 fixes what
+  each kind of artefact is allowed to prove.
+- **FAIL** — an artefact shows it behaving incorrectly. A FAIL row carries the finding ID.
+- **UNVERIFIED** — everything else: no artefact, an artefact from an earlier run, an artefact
+  that proves a neighbouring fact, or a capability this tier excluded.
+
+**The rule that gives the ledger its value: reading the source can never produce PASS.** Not
+"the code clearly does this", not "the test for it exists", not "the handler is registered", not
+"I traced every branch". That is how a defect is *found*; it is not how a capability is
+*proved*. An auditor who has read a capability's whole implementation and run nothing against it
+writes UNVERIFIED and is right to. The ledger is deliberately harsher than everything else in
+this skill, because everything else rewards good reading, and the ledger exists to measure the
+thing reading cannot reach.
+
+**UNVERIFIED is a result, not an apology.** A report with twelve honest UNVERIFIED rows and a
+named tier is worth more than one with twelve PASS rows a reader cannot check. What is forbidden
+is the promotion: an UNVERIFIED cell that becomes PASS because the auditor later read more code,
+because a neighbouring capability passed, or because the suite is green overall. A green suite
+promotes the rows whose *named tests* ran, and promotes nothing else.
+
+**No blank cells, no omitted rows.** A capability with nothing to say is UNVERIFIED with the
+reason in the evidence column ("tier: Screen, not walked"; "no environment - §0.8 rung 5: <the
+one thing the owner must do>"). A capability the system does not have is `N/A` with the reason.
+An omitted row is the report claiming a smaller system than the map found, which is S14 scope
+shadow committed by the auditor.
+
+**A PASS covers the capability's refusals, not only its successes.** The same run marked
+`Checkout` PASS on two artefacts — a valid order created, an over-quantity order refused — while
+a negative quantity on that same route raised stock and wrote a negative total. Both artefacts
+were real, the row was still wrong: the capability is *checkout*, and the auditor had exercised
+two of its paths. So every PASS row's fourth column says **what the artefact covered**, in the
+capability's own terms ("valid order; over-quantity refused" — at which point the reader sees
+what is missing), and a capability exercised only on its happy path is **PARTIAL**, which is
+read as UNVERIFIED by anyone deciding whether to launch. The honest question before writing PASS
+is not "did it work?" but "which of this capability's ways of being asked did I ask?"
+
+**Where the rows come from, and the order they are written in:** the ledger is built at the
+*start* of the runtime steps, all rows UNVERIFIED, and filled as artefacts arrive. Built at the
+end, it is written from memory, and memory is where PASS comes from reading.
 
 ---
 

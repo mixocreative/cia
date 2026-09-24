@@ -154,11 +154,15 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 **Depth tiers — say which one ran.** The sweeps as written are days of work at full depth on a real system, and a run that silently sampled is S18's original sin. So the run names its tier in the first line of the report, and the tier fixes what "swept" means:
 
-| Tier | Budget | S15 / S18 / S22 matrices | Every other sweep |
-|---|---|---|---|
-| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded |
-| **Walk** | 1–2 days | every money flow at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field |
-| **Full** | as long as it takes | every reachable cell, cited to the authority per cell | as Walk, plus the blind-case test written for every S20 detector |
+| Tier | Budget | S15 / S18 / S22 matrices | Every other sweep | Runtime evidence owed |
+|---|---|---|---|---|
+| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13) |
+| **Walk** | 1–2 days | every money flow at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field | as Screen, plus a ladder per money flow, every adversarial row of §12, and a probe at every primary-path S2 site |
+| **Full** | as long as it takes | every reachable cell, cited to the authority per cell | as Walk, plus the blind-case test written for every S20 detector | as Walk, plus every ledger row at PASS or FAIL — an UNVERIFIED row at Full tier is itself a finding, about the system's testability |
+
+**The last column is what makes a tier a tier.** The first three say how much was read; only the
+fourth says how much was run, and a run that swept everything and executed nothing is a code
+review at whatever depth — its first line says so.
 
 A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitted, so a later reader knows what was not walked. **The budget line in the report is the tier's budget, not a promise the doctrine can keep at every tier.**
 
@@ -166,7 +170,7 @@ A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitte
 
 **Step 3 — Full test suite in the project's canonical environment (60–150 min). THE AGENT RUNS THIS.** Complete run, no group exclusions, on the canonical environment (docker for docker-first projects, native otherwise). If the environment is down, bring it up per §0.8 (rung 1). Run it in the background and keep working Steps 4–5 while it executes; collect the result before Step 6. Non-parallel with any other suite (DB contention). **Never green-light without a full-suite result on the latest HEAD.** A result with skipped DB/network/browser tests is "N unverified", not green (§0.9 S7); every test added this session must show its real run line (§0.9 S8). Only an exhausted §0.8 ladder produces a ⏭, and that line names the rung reached.
 
-**Step 4 — Runtime walk (5–15 min). THE AGENT DRIVES THIS.** Exercise the critical flows §0.5 / §3 identified, in the real running app, not just tests. For a web project: start the dev server per §0.8 if needed, drive the browser with the available automation (claude-in-chrome, Playwright MCP, `npx playwright` — install per §0.8 rung 2 if absent), log in with the project's documented dev credentials for authenticated routes, cover every locale and every critical route at desktop + mobile (390 × 844) breakpoints, screenshot each as an artefact. For a CLI / library / service: run the documented smoke commands or an equivalent scripted exercise. Check semantic HTML (`<h1>` per page), `aria-expanded` matches visible state, no console / stderr errors, no mobile horizontal overflow, focus rings visible, every form labelled. **Write the walks to `references/browser-walks.md`'s conventions** — page objects, session reuse, artefacts on failure only, no clock waits — or a theme change breaks every walk at once.
+**Step 4 — Runtime walk (15–30 min). THE AGENT DRIVES THIS.** Exercise the critical flows §0.5 / §3 identified, in the real running app, not just tests. For a web project: start the dev server per §0.8 if needed, drive the browser with the available automation (claude-in-chrome, Playwright MCP, `npx playwright` — install per §0.8 rung 2 if absent), log in with the project's documented dev credentials for authenticated routes, cover every locale and every critical route at desktop + mobile (390 × 844) breakpoints, screenshot each as an artefact. For a CLI / library / service: run the documented smoke commands or an equivalent scripted exercise. Check semantic HTML (`<h1>` per page), `aria-expanded` matches visible state, no console / stderr errors, no mobile horizontal overflow, focus rings visible, every form labelled. **Write the walks to `references/browser-walks.md`'s conventions** — page objects, session reuse, artefacts on failure only, no clock waits — or a theme change breaks every walk at once.
 
 **What the walk fetches, beyond the page (2026-09-18, from three misses in one morning).** A page
 that answers 200 with the right markup is not rendered until what it links arrives, so for every
@@ -195,6 +199,34 @@ with every route 200, every asset 200 and the error log silent, because a shared
 `width:100%; margin:0` while each page still stacked a framework container and an inline
 `max-width` on it, and the commit had probed the two pages that carried neither.
 
+**What the walk proves beyond the page: the operation itself (2026-09-24).** Everything above
+checks that a page renders, loads what it links, and does not error. None of it checks that doing
+the thing changed the world correctly, and that is the half most runtime walks omit — every route
+200, every asset 200, every heading present, and nobody asked whether the number moved. So every
+runtime walk also runs, per `references/browser-walks.md`:
+
+- **§12, the state-delta ladder.** One quantity the system exists to get right — the stock in a shop, the
+  claim on a job in a runner, the depth of a queue, the balance in a ledger. Read it at every
+  observer (§12 tabulates them per system type; there are never fewer than three, and the one
+  teams forget is the operator's), perform the operation through the front door — the real form,
+  or the documented command, or the published endpoint — read every observer again, and assert **the delta, with its arithmetic
+  written out** — not the value, which a lucky fixture satisfies. Then the documented reverse
+  (cancel, refund, release) and its return delta. Disagreement between observers *before* the
+  operation is already a finding. The tier (above) fixes how many ladders and which of §12's
+  adversarial rows — over-quantity, the last unit taken twice at once, abandonment, failure of
+  the outside step, duplicate and out-of-order arrivals, an operator editing mid-flight, child
+  against parent, and the floor. §12 maps all nine onto job runners, services and CLIs, so a
+  non-web system reads them without translating a shop in its head.
+- **§13, the concurrency probe.** Every select-then-act site S2 predicts is a race gets fired
+  twice concurrently against the running system, and the row is read afterwards. A race graded
+  CRITICAL from reading alone, on a system that was running on this machine at the time, left the
+  cheapest evidence in the audit unclaimed.
+
+Both write their artefacts under `artefacts/<date>-<tier>/` and fill rows in the evidence ledger
+(`references/reporting.md`), which is opened **before** the runtime steps with every row
+UNVERIFIED and filled as artefacts arrive. A ledger written afterwards is written from memory,
+and memory is where PASS comes from reading.
+
 **The walk is not optional at Screen tier.** Three defects above survived two Screen runs that
 enumerated every sweep from source and never made a request; the reports said "Screen" and no
 line said the walk was skipped. So the report carries a **runtime-walk receipt** (report line
@@ -218,7 +250,8 @@ request is a code review.
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
 6. Tier: Screen | Walk | Full — elapsed: N minutes (tier budget: 2–4 h | 1–2 d | open)
 7. Skill score: <the line `python tools/score.py` prints — this skill's own last scored fixture run, so the reader knows what the instrument found when it was last tested>
-8. Runtime walk receipt: <routes fetched N / assets fetched M, all 200 | which not> · error-log delta: <0 lines | the lines> · preview rows walked: <N of N | none exists> — or `SKIPPED: <reason>` (then the first line says code review, not Screen)
+8. Runtime walk receipt: <routes fetched N / assets fetched M, all 200 | which not> · error-log delta: <0 lines | the lines> · preview rows walked: <N of N | none exists> · state-delta ladders: <N operations, each with its before/after at every observer | none> · concurrency probes: <N S2 sites fired twice | none> — or `SKIPPED: <reason>` (then the first line says code review, not Screen)
+9. Evidence ledger (§11a): C capabilities — P PASS / F FAIL / U UNVERIFIED; every PASS cites an artefact path (table in report). **Missing line = the report never separated what this run can prove from what it read**, and reading never produces PASS.
 ```
 
 Anything skipped → say why. Never claim "handoff ready" / "green-light" / "ready for launch" without listing what wasn't verified in this session. A ⏭ is not a failure; claiming green while a ⏭ exists IS a failure of the audit.
@@ -346,12 +379,14 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/sweeps.md` | Step 2, always, in full | §0.9: step 0 map, the defect taxonomy, sweeps S1–S24 with their methods, gradings and report-line formats |
 | `references/doctrine.md` | Step 2, after the sweeps | §1 evidence grading, version-aware external facts, vendor-document rule; §3 context discovery (software type, state scope, dependencies, persistence, concurrency, failure tolerance); §7 universal test matrix and the critical flows it applies to; §8 domain audit checklist |
 | `references/context-templates.md` | §3 profiling matches one of its system types | §4 Blender addon / extension; §5 e-commerce platform (integrity only — commerce doctrine is `ecommerce-cia`'s); §6 workflow orchestration (n8n, Zapier, …) |
-| `references/browser-walks.md` | Step 4, before the first rendering walk is written | The conventions: headless vs rendering walks, selector priority, page objects, session reuse, artefacts on failure only, no clock waits, isolation, layout, the per-route checks |
-| `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
+| `references/browser-walks.md` | Step 4, before the first rendering walk is written | The conventions: headless vs rendering walks, selector priority, page objects, session reuse, artefacts on failure only, no clock waits, isolation, layout, the per-route checks; §12 the state-delta ladder and its nine adversarial rows; §13 the concurrency probe; §14 what each kind of artefact is allowed to prove |
+| `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; **§11a the evidence ledger — capability × verdict × artefact, where reading never produces PASS**; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
 
 Step 2 order, restated: theory → sweeps (step 0 map, then S1–S24, S15 first when time is short) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting. Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
 
-**Testing this skill.** `tests/RUNBOOK.md` and `tests/fixture-service/` are the harness: a planted-defect, non-commerce service with an answer key that also tests the commerce gate and the bare `run tests` trigger. Any change to this file or to `references/` is run against it before it is committed (S8 applies to the skill). `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged, so a lesson that landed in one only is a decision, not an accident.
+**Testing this skill.** `tests/RUNBOOK.md` and `tests/fixture-service/` are the harness, and since 2026-09-24 it is scored in two halves: the planted defects a reading finds, and — in `RUNS.md`'s runtime table — what the run actually executed (ladders, probes, and an evidence ledger whose PASS rows cite artefacts). The fixture is runnable, so its S2 race is fired, not predicted (RUNBOOK, "the live probe").
+
+`tests/fixture-service/` is the harness: a planted-defect, non-commerce service with an answer key that also tests the commerce gate and the bare `run tests` trigger. Any change to this file or to `references/` is run against it before it is committed (S8 applies to the skill). `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged, so a lesson that landed in one only is a decision, not an accident.
 
 ### 0.14 Paired Run With `ecommerce-cia` — explicit request only
 
