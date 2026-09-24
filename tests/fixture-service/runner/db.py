@@ -7,7 +7,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
     id            INTEGER PRIMARY KEY,
     kind          TEXT NOT NULL,
-    status        TEXT NOT NULL,           -- queued, running, done, failed, stuck
+    status        TEXT NOT NULL,           -- queued, running, done, failed, stuck, cancelled
     attempts      INTEGER NOT NULL DEFAULT 0,
     idempotency_key TEXT NOT NULL UNIQUE,  -- verified control: one key, one job
     claimed_by    TEXT,

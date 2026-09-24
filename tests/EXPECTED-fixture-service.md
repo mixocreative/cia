@@ -1,8 +1,8 @@
 # fixture-service — answer key
 
-Ten planted defects and two verified controls. A Screen-tier `/cia` run on this directory must report every row below, with the sweep, a `path:line` inside the cited range, and a grade no lower than shown. Extra findings are scored separately (see `../RUNBOOK.md`); a planted row the run did not report is a **miss** and blocks the skill change that caused it.
+**Eleven** defects (ten planted, one the harness acquired by accident) and **eight** verified controls. A Screen-tier `/cia` run on this directory must report every row below, with the sweep, a `path:line` inside the cited range, and a grade no lower than shown. Extra findings are scored separately (see `../RUNBOOK.md`); a planted row the run did not report is a **miss** and blocks the skill change that caused it.
 
-Run the suite first (`python -m unittest discover -s tests -t .`): 4 tests, all green. Every defect below sits under that green.
+Run the suite first (`python -m unittest discover -s tests -t .`): 8 tests, all green. Every defect below sits under that green.
 
 ## Planted defects
 
@@ -17,19 +17,36 @@ Run the suite first (`python -m unittest discover -s tests -t .`): 4 tests, all 
 | 7 | **S16** terminal-state accountability | `runner/monitor.py:33-35`; `runner/scheduler.py` (no writer of `status = 'stuck'`) | A job running past `stuck_after_minutes` is printed to stderr once per monitor run and never transitions; there is no queue, no action, and D2's Requeue / Fail actions do not exist. | Every non-terminal state has an advancer or a desk | HIGH |
 | 8 | **S13** orphan capability | `runner/legacy_retry.py`; `docs/ARCHITECTURE.md` D1 | `with_backoff` has no caller (grep → definition only). D1 says every handler uses it. Designed, documented, unbuilt. | A capability named by a design document exists or has a gap-register row | MEDIUM |
 | 9 | **S21** vacuous pass | `tests/test_scheduler.py:25-28` | `test_no_jobs_are_stuck_on_a_fresh_db` asserts `stuck_jobs(...) == []` on a job that just started; no test anywhere proves `stuck_jobs` can return a row. | A test asserting emptiness needs a sibling proving non-emptiness | HIGH |
+| 11 | **S13** orphan wiring | `runner/cli.py:46`; `config.yaml` (no `db_path`) | `connect(cfg.get("db_path", ":memory:"))` reads a key the config never sets, so **every** `python -m runner.cli` invocation opens a fresh in-memory database and discards it on exit: the operator CLI is wired to nothing. | A control an operator reaches must reach the real state | HIGH |
 | 10 | **S21** runner contamination | `tests/test_scheduler.py:30-33` | `test_config_from_real_file` writes `os.environ["FIXTURE_ALERTS"]` and never restores it; every test after it in the process sees it. | Snapshot the environment before, restore after; clear on the way in | MEDIUM |
 
 Also expected, not separately scored: **S12** — `finish()` (`runner/scheduler.py:65-77`) re-queues on failure with no backoff and no per-step timeout, and since defect 8 nothing backs off; **S14** — the run states its scope as this directory and lists the modules on the map.
 
+### A note on row 11's provenance
+
+Row 11 was **not planted**. It arrived with the precision controls on 2026-09-24 — I wired the new operator CLI to a config key I never added — and the cold Sonnet run found it the same day, live, by enqueuing in one process and running `cli digest` in another. It is kept for the reason `fixture-shop-live`'s L7 is kept: a defect the harness acquired by accident and a run caught by *running* is better evidence for the doctrine than one written to be found. It also makes control C4 sharper rather than weaker — `cli.cancel`'s compare-and-swap is still correct, and an auditor must now separate a correct mechanism from a mechanism wired to the wrong store.
+
 ## Verified controls (must appear under Verified Controls, not as findings)
 
-| Control | Site | Why it is correct |
-|---|---|---|
-| Idempotent submit | `runner/db.py:12` `idempotency_key UNIQUE`; `runner/scheduler.py:35-45` | A repeat submit hits the unique index, the `IntegrityError` is caught **and returned as `None`** — a distinct, tested outcome (`test_enqueue_is_idempotent`), not a swallowed error. D3 satisfied. |
-| Bounded retry | `runner/scheduler.py:65-77` | `attempts` is compared to `retry_limit` and the job parks as `failed` with a Retry button on the status page; the loop terminates. |
+Eight of them, and six were added 2026-09-24 **to measure precision**. Each is written to look
+like one of the planted defects and is correct. An auditor that flags everything scores well on
+recall and badly here, which is how an audit tool actually dies — not by missing a bug, but by
+being ignored after two noisy reports. **A control filed as a finding is a false positive and
+counts against the run.**
+
+| Control | Site | Looks like | Why it is correct |
+|---|---|---|---|
+| Idempotent submit | `runner/db.py:12` `idempotency_key UNIQUE`; `runner/scheduler.py:35-45` | a swallowed exception | The `IntegrityError` is caught **and returned as `None`** — a distinct, tested outcome (`test_enqueue_is_idempotent`), not a swallow. D3 satisfied. |
+| Bounded retry | `runner/scheduler.py:65-77` | an unbounded requeue loop | `attempts` is compared to `retry_limit` and the job parks as `failed`; the loop terminates. |
+| **Digest degrades** | `runner/digest.py:20-24` | **defect 2** — a catch that returns a default | Fail-open on a **display** path, which is the axis S3 itself exempts, named by **ADR D4** with its reason, and the degradation is *visible* — it says "unavailable", never a zero. Nothing acts on its output. |
+| **Cancel is a safe select-then-act** | `runner/cli.py:26-38` | **defect 3** — read a status, then write | The predicate is **repeated in the `UPDATE`** and `rowcount` decides the answer, so a worker that claims the job in between wins and the operator is told no. This is the correct twin of `claim_batch`; an auditor that flags both has not read the `WHERE`. |
+| **`drain_batch` has a consumer** | `config.yaml:6` → `runner/cli.py:60` | **defect 1** — a dead control | A bare-identifier grep hits config and exactly one runtime reader. README documents the command. S13's own false-orphan rule covers this: grep the identifier alone, and read every hit. |
+| **The page's 200-row cap** | `runner/status_page.py:25`, ADR D5 | an unpaged list (S22.7) | D5 names it a triage window and names where totals live instead (`runner.digest`), and single-job access is the CLI. A cap with a cited alternative surface is a decision, not a gap. |
+| **`cancelled` has a renderer** | `runner/status_page.py:21` | — | The counter-example to defect 6: five of six statuses render, which is what makes `stuck`'s absence a defect rather than an unfinished module. Flagging this one means the auditor listed the enum instead of diffing it. |
+| **Paired emptiness assertions** | `tests/test_scheduler.py:29-45` | **defect 9** — a test asserting nothing happens | `test_cancel_returns_false_once_a_worker_holds_the_job` is immediately followed by the sibling proving the true case, and `test_digest_says_so_when_there_is_nothing` by one proving the non-empty case. This is the shape defect 9 is missing, sitting next to it. |
 
 ## Gate and trigger
 
 - `ecommerce-cia` §0.3a gate must **FAIL** (no gateway code, no orders/cart schema, no checkout route, no commerce dependency). If a paired or automatic run pulls in commerce doctrine here, that is a routing defect.
 - `cia` §0.3 commerce detection must report **none**.
-- A bare `run tests` in this directory must run `python -m unittest discover -s tests -t .` first, report `Ran 4 tests … OK` with the count, and only then offer the Screen-tier audit in one line. Starting the protocol on that request is a trigger defect (§0.3).
+- A bare `run tests` in this directory must run `python -m unittest discover -s tests -t .` first, report `Ran 8 tests … OK` with the count, and only then offer the Screen-tier audit in one line. Starting the protocol on that request is a trigger defect (§0.3).

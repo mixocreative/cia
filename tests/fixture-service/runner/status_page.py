@@ -17,11 +17,13 @@ RENDERERS = {
     "running": lambda j: _row(j, "blue"),
     "done": lambda j: _row(j, "green"),
     "failed": lambda j: _row(j, "red", "<button formaction='/jobs/%d/retry'>Retry</button>" % j["id"]),
+    "cancelled": lambda j: _row(j, "grey"),
 }
 
 
 def render(conn: sqlite3.Connection) -> str:
     rows = []
+    # 200 is the triage window D5 fixes; totals live in runner.digest, not here.
     for job in conn.execute("SELECT * FROM jobs ORDER BY id DESC LIMIT 200"):
         renderer = RENDERERS.get(job["status"])
         if renderer is None:

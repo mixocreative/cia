@@ -9,6 +9,7 @@
 | 2026-09-20 | c144504 + today's edits uncommitted (S5.1 retired-caller script; S13.1 second hand-rolled map; S20.5 walk receipt is a one-day fact; S21 shape 6 runner's file listing; S22.9 button with no handler) | Claude **Sonnet** (subagent, cold, key outside the fixture, git forbidden) | Screen — `pre-launch audit, Screen tier` on fixture-service | 6 | 1 (S21-contamination LOW vs MEDIUM) | 3 (S3 fail-open catch accepted on an inline comment; S20 dead heartbeat left as step prose, never graded; S21 assert-empty vacuous pass not checked) | 0 | 25 | **Signal row, not the gate row — first run on a cheaper auditor model; the row below re-runs the same doctrine on Opus.** Every miss is a promotion/threshold failure (site found, finding not filed), not a discovery failure. Lesson: RUNS rows now name the model; the gate compares like with like. |
 | 2026-09-20 | c144504 + the same uncommitted edits | Claude **Opus** (subagent, cold, key outside the fixture, git forbidden; prompt adds "every threshold-meeting observation becomes a graded finding") | Screen — `pre-launch audit, Screen tier` on fixture-service | 10 | 0 | 0 | 0 | 12 | **Holds the 10/10 baseline** after five additive doctrine edits; 9 extra correctly-evidenced findings beyond the planted rows (D2 stuck orphan, two more S22 states, S11/S19/S24/S3/S12 sites) — candidates for new planted rows, none a false call; both controls kept out of the findings. |
 | 2026-09-24 | 92fe7e5 + this session's edits uncommitted (promotion rule, evidence ledger §11a, browser-walks §§12–14 + the stack mapping, tier runtime column, S2/S15 runtime twins, fixture-aware gate) | Claude **Opus** (subagent, cold, key outside the fixture) | Screen — `pre-launch audit, Screen tier` on **fixture-service** | 10 | 0 | 0 | 0 | 40 | **Holds the 10/10 baseline across the largest doctrine change this harness has seen**, and the new half is exercised: 4 state-delta ladders, 7 of 9 adversarial rows (the 2 skipped are N/A with reasons — *operator edit mid-flight* could not run **because no operator write path exists**, which the run filed as a finding rather than a gap in the walk), and the S2 probe **fired 10 trials × 2 OS processes: both claimed the job 10 of 10 times**, so the TOCTOU is CONFIRMED rather than predicted — plus a control probe at `enqueue` proving the mechanism missing at `:57` exists at `:44`. The ledger used **PARTIAL**, added the same day from the commerce fixture's lesson, and every PASS row named what its artefact covered and what it did not. 6 extra true findings (out-of-order `finish` reopening a `done` job — confirmed at runtime; unvalidated config types; no `busy_timeout`; `finished_at` NULL on the failure path; no deploy artefact; a config snapshot diverging from the monitor's live re-read). It declined to run `score.py` because that reads its own answer key. 215k tokens. |
+| 2026-09-24 | 50b21d8 + the precision controls and Stripe/corpus work uncommitted | Claude **Sonnet** (subagent, cold, key outside the fixture) | Screen — `pre-launch audit, Screen tier` on **fixture-service** | 8 | 2 (defect 4's blind-instrument site folded into FS-04 rather than named; defect 10 graded LOW against a MEDIUM floor) | 0 | 0 | 70 | **The cheap-model gate, and the reason the promotion rule exists.** On 2026-09-20 the same fixture scored Opus 10 / Sonnet 6 on identical doctrine, every Sonnet miss a promotion failure. With the promotion rule in `reporting.md` instead of the harness prompt, Sonnet scores **9.0 against Opus's 10 — the gap closed from 4 to 1**. It fired the §13 probe (two threads, one job, **both workers won**), ran 2 ladders plus 3 adversarial probes, and used the §13 disproved-reading rule unprompted: *"I expected sqlite's locking might mask the race — it did not. Stated, not filed as a finding, since it was a reading that turned out wrong."* **All eight controls verified, including all five precision controls added the same day — 0 false positives**, and VC-3 was explicitly contrasted against the fail-open it is built to resemble. 3 extra true findings, one of which (FS-06) is a real defect this harness had acquired by accident; it is now key row 11. 232k tokens. |
 
 ## Runtime evidence, per run (2026-09-24 onward)
 
@@ -25,3 +26,34 @@ review; say so rather than leaving the reader to assume.
 marked PASS while citing no artefact produced in that run. The honest value is **0**, at every
 tier, forever: a non-zero number means the auditor promoted a capability from reading, which is
 the one thing `reporting.md`'s ledger forbids. It is scored as a false positive.
+
+## Corpus — ground truth nobody planted (2026-09-24 onward)
+
+Real repositories, audited at the commit **before** a maintainer's own fix commit. The oracle is
+that commit's diff, not anybody's reading of the code. `tests/corpus/README.md` holds the rules;
+`tests/corpus/entries/` holds the entries and **the auditor never reads either**.
+
+This is the only table here whose number cannot be improved by knowing the answer key, because
+there is no answer key — there is a stranger's bug fix. It is also, today, nearly empty, and an
+empty corpus proves nothing.
+
+| Date | Entry | Verdict | Runtime | Note |
+|---|---|---|---|---|
+| 2026-09-24 | inventory-race-resolution | **HIT** | Claude Opus (subagent, cold, oracle unreachable) | `hackclub/resolution` at `bfa769c2`, the parent of `684a14bf` *"fix: race condition on inventory — use atomic WHERE guard on stock decrement"*. The run filed **WH-001 CRITICAL / S2** at `orders/new/+page.server.ts:123`, quoting the two lines the maintainer changed, and named the second touched file (`batches/+page.server.ts:291`) as an S2 site in the same sweep. Its proposed fix — `.where(and(eq(id, …), gte(quantity, item.quantity)))` plus an affected-row check — is **the maintainer's actual diff, character for character**. 14 further findings on real code, including a CRITICAL it found *outside* the named scope (`warehouse-backend`'s actions authorise nothing, and SvelteKit runs actions before loads) and reported rather than suppressed. It opened by declaring itself a **code review, not a Screen** because no runtime walk was in budget, and every one of its 15 ledger rows is UNVERIFIED as a result — which is the doctrine's own rule applied to itself, unprompted. 237k tokens. |
+
+**One entry is one data point.** This row is the strongest evidence in the harness — ground truth
+authored by a stranger, found before the fix, with the identical remedy — and it is still a
+single entry on a single defect class (S2) in a single language. The number to watch is whether
+the hit rate holds as entries are added by somebody not choosing them to flatter the instrument.
+
+## Cost — what a run actually takes (2026-09-24 onward)
+
+An instrument nobody can afford to run is not an instrument. The tier table promises budgets;
+this records what was spent, so the promise is checkable and so the sweeps can eventually be
+ordered by measured yield rather than by tradition.
+
+| Date | Fixture / target | Tier | Tokens | Minutes | Findings | Tokens per finding | Time to first CRITICAL |
+|---|---|---|---|---|---|---|---|
+| 2026-09-24 | corpus: hackclub/resolution | code review (walk out of budget) | 237k | 8 | 15 | ~16k | first line of the report |
+| 2026-09-24 | fixture-service | Screen | 215k | 40 | 16 | ~13k | spoken first, before the report (the run put three CRITICAL/HIGH findings in its opening lines per §0.11) |
+| 2026-09-24 | fixture-service | Screen | (sonnet run pending) | | | | |

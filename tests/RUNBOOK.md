@@ -47,6 +47,27 @@ The same three runtime columns apply here as in the commerce harness: ladders ru
 quantity in this service is the claim on a job), probes fired, and whether an evidence ledger
 was produced with artefact paths on every PASS.
 
+## The corpus run — ground truth nobody planted
+
+Everything above scores the skill against defects its own author wrote for it to find, which is
+close to a tautology. `tests/corpus/` is the answer: real repositories, checked out at the commit
+**before** a maintainer's own fix commit, with that commit's diff as the oracle.
+
+```
+python tests/corpus/run.py list
+python tests/corpus/run.py prepare <entry>     # clone at the pre-fix commit; prints the path
+python tests/corpus/run.py oracle <entry>      # SCORER ONLY - never shown to a run
+```
+
+Audit the prepared path cold, at the tier the entry names, then score one question: **did the run
+report the thing the next commit had to fix, for the reason the commit gives?** Record HIT, MISS
+or OUT-OF-SCOPE in `RUNS.md`'s corpus table.
+
+Three rules keep it honest: the auditor never reads `tests/corpus/`; the fix commit is the
+oracle rather than anybody's reading of the code; and a miss is recorded rather than explained
+away, because a miss here is the doctrine's blind spot showing itself on real code. An entry that
+keeps missing is the most valuable row in the harness.
+
 ## Reading a miss
 
 | Symptom | Usually means |

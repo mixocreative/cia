@@ -433,3 +433,7 @@ Recommended Fix: Use atomic SQL:
 Verification: Load test with 100 concurrent requests; coupon never exceeds limit
 ```
 
+---
+
+**Reading receipt: _the ledger is harsher on purpose_.** Quote this phrase on the Step 6 receipts line to show this
+file was read rather than inferred from the skill's index. It appears nowhere else.

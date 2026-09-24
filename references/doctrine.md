@@ -493,3 +493,7 @@ page and reads the response headers.
 - Are RTL languages supported?
 - Are symbols/icons culturally appropriate?
 
+---
+
+**Reading receipt: _an invariant is a sentence that can be false_.** Quote this phrase on the Step 6 receipts line to show this
+file was read rather than inferred from the skill's index. It appears nowhere else.

@@ -213,7 +213,7 @@ runtime walk also runs, per `references/browser-walks.md`:
   written out** — not the value, which a lucky fixture satisfies. Then the documented reverse
   (cancel, refund, release) and its return delta. Disagreement between observers *before* the
   operation is already a finding. The tier (above) fixes how many ladders and which of §12's
-  adversarial rows — over-quantity, the last unit taken twice at once, abandonment, failure of
+  adversarial rows — over- **and under-**quantity, the last unit taken twice at once, abandonment, failure of
   the outside step, duplicate and out-of-order arrivals, an operator editing mid-flight, child
   against parent, and the floor. §12 maps all nine onto job runners, services and CLIs, so a
   non-web system reads them without translating a shop in its head.
@@ -383,6 +383,25 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; **§11a the evidence ledger — capability × verdict × artefact, where reading never produces PASS**; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
 
 Step 2 order, restated: theory → sweeps (step 0 map, then S1–S24, S15 first when time is short) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting. Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
+
+### The reading receipt — how a miss names its own cause
+
+Every reference file this skill loads ends with a **receipt line**: a short phrase that appears
+nowhere else in the skill and nowhere in the audited project. The Step 6 report carries
+one line quoting the receipt of each file the run says it read.
+
+```
+Reference receipts: sweeps.md "the channel is the finding" | doctrine.md "an invariant is a sentence that can be false" | reporting.md "the ledger is harsher on purpose" | browser-walks.md "three observers, one subtraction"
+```
+
+This is not a trick question and it is not security — an auditor that wants to fake it can. It
+exists because a miss has two causes that look identical in the report: **the doctrine did not
+cover the defect**, or **the file carrying that doctrine was never opened**. Those need opposite
+fixes, and for a year the harness could not tell them apart. A missing receipt means the run
+worked from this file's index instead of the doctrine, and the fix is packaging, not text.
+
+A run that cannot produce a receipt says so plainly on that line rather than omitting it; an
+omitted line is read the same way a missing sweep line is.
 
 **Testing this skill.** `tests/RUNBOOK.md` and `tests/fixture-service/` are the harness, and since 2026-09-24 it is scored in two halves: the planted defects a reading finds, and — in `RUNS.md`'s runtime table — what the run actually executed (ladders, probes, and an evidence ledger whose PASS rows cite artefacts). The fixture is runnable, so its S2 race is fired, not predicted (RUNBOOK, "the live probe").
 
