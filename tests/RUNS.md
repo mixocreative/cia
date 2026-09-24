@@ -139,3 +139,37 @@ ordered by measured yield rather than by tradition.
 | 2026-09-24 | corpus: TorroMainRepo (leak) | code review | 224k | 7 | 9 | ~25k | ranked first |
 | 2026-09-24 | fixture-service | Screen | 215k | 40 | 16 | ~13k | spoken first, before the report (the run put three CRITICAL/HIGH findings in its opening lines per §0.11) |
 | 2026-09-24 | fixture-service | Screen | 232k | 70 | 13 | ~18k | spoken first, in the owner paragraph (sonnet) |
+| 2026-09-25 | `165fbe3` (S21 at 13 shapes; S1.1, S11.1, S12.3, S18 generated-artefact, UNPROVEN) | Claude **Sonnet** (subagent, cold, key and corpus fenced, git forbidden) | Screen — `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 (row 10, `FIXTURE_ALERTS` never restored: found and named in the S21 report line, then explicitly *not graded*) | 1 | 0 | 11 | **Hits up 8→10 on the previous Sonnet row, and one new miss worth more than the gain.** The miss is row 11, the operator CLI opening `cfg.get("db_path", ":memory:")` against a config that never sets `db_path`, so every invocation builds a throwaway database. A previous run caught it by running the CLI as a process **on its own initiative**; the doctrine asked for three greps and never for that, so it was luck once and a miss the next time — fixed as **S13.1**, a fourth step that runs the operator's entry point against state another process wrote. **0 of 8 precision controls misfiled.** One extra true positive the key lacked: `load_config`'s `value.isdigit()` is False for `"-1"`, so a negative `retry_limit` stays a string and `finish()` raises `TypeError` on the very path meant to record failures — confirmed live. The S2 probe fired 8/8 double-claims and the run recorded that it had *underestimated* how cleanly reproducible it was, per the disproved-reading rule. 253k tokens. |
+
+### What the two runs of 2026-09-25 decided about the doctrine's own size
+
+These runs were commissioned for one question. **Seven new S21 shapes in one sitting is a dilution
+risk, and a longer sweep skimmed is worse than a shorter one followed.** So each run was asked, at
+the end, which sections it applied, which it read and never used, and which it skimmed.
+
+**Neither named the new material as the place it skimmed.** Both named **S22** — 550 to 580 lines,
+pre-existing, written for a shop with dozens of admin screens — applied to fixtures with one HTML
+table between them. The cia run filled every new field of S21's report line (`D=0`, `I/J=0/0`,
+`C=0`, `G/H=0/0`, `U=1`, `M=0`): the new shapes being *answered*, with reasons, not skipped. So
+nothing was cut, and nothing was cut on suspicion either — which was the standing agreement, since
+provenance is not evidence and a shape's age says nothing about whether a cold auditor reaches for
+it.
+
+What the runs converged on instead, independently and in nearly the same words, is better than a
+cut. The node run: S16.1's lettered rules "were directly load-bearing" because they name a
+**mechanism**, while S11.1's byte/character trap was "pure noise — could not find a site no matter
+how carefully I looked" on an ASCII-only fixture, because it names a **domain instance**. It asked
+for a size-aware index so a small run could skip such clauses *by rule rather than by judgement*.
+That is now the reading note at the head of the sweeps, with preconditions on the three clauses the
+runs actually named — S11.1, S18.1, and S22's convention library — and with the rule that a
+precondition must be **checked** before it is skipped, because an unverified precondition is not an
+absent one.
+
+**And the harness turned out to have the defect it exists to catch.** Scoring the cia run meant
+reading the key, and three of its cited ranges were stale by twenty lines: `claim_batch` lives at
+`68-82`, the key still said `48-63`. A run reporting the race where the race actually is would have
+been scored a **MISS**, and that regression would have been recorded against whatever doctrine
+change happened to be under test. That is S21 shape 14 — the vacuous failure, an instrument red for
+a reason that is not a reason — committed by the answer key one day after the shape was written
+down. Ranges re-pinned; `tools/check_key_lines.py` now fails red when a cited file changes under
+its key, and it was proved red and then green before it was committed.

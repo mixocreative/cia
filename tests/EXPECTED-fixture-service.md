@@ -9,19 +9,19 @@ Run the suite first (`python -m unittest discover -s tests -t .`): 8 tests, all 
 | # | Sweep | Site | Defect | Invariant broken | Min grade |
 |---|---|---|---|---|---|
 | 1 | **S5** dead control | `config.yaml:3` `alerts_enabled`; `runner/monitor.py:18-37` | `alerts_enabled` is loaded into `cfg` and read by nothing (grep → config + `DEFAULTS` only). The monitor prints to stderr; nobody is paged. `docs/ARCHITECTURE.md` D2 promises paging. | Every control has a consumer; a design-document promise with no channel is S13 too | HIGH |
-| 2 | **S3** fail-open (configuration axis) | `runner/scheduler.py:11-29` | `load_config` catches `Exception` and returns `DEFAULTS`. A mistyped path, a bad permission or a malformed file runs the service on defaults with no error anywhere. | Configuration reads fail closed unless an ADR names the choice | HIGH |
-| 3 | **S2** TOCTOU | `runner/scheduler.py:48-63` | `claim_batch` SELECTs `status = 'queued'` then UPDATEs `WHERE id = ?` with no status predicate and no `claimed_by IS NULL`. Two workers claim the same job; both run it; `attempts` counts twice. | Carry the precondition in the `WHERE`; read the affected-row count | CRITICAL |
-| 4 | **S20** blind instrument | `runner/monitor.py:22-28, 37` | An unparseable `last_seen` is counted in `unknown`, never reported; `monitor: 0 problems` and exit 0 are printed whether every worker was checked or none could be. | A detector reports coverage separately from findings; blind ≠ clean | HIGH |
-| 5 | **S20** dead watchdog | `runner/scheduler.py:79-86`; `config.yaml:5` | Worker heartbeats are written to `workers` and to `heartbeat_path`; the monitor reads the table but nothing reads the file, and nothing outside the service checks that the monitor itself ran. No outermost check. | Something reads every heartbeat; name the outermost check or say NONE | HIGH |
+| 2 | **S3** fail-open (configuration axis) | `runner/scheduler.py:11,14-32` | `load_config` catches `Exception` and returns `DEFAULTS`. A mistyped path, a bad permission or a malformed file runs the service on defaults with no error anywhere. | Configuration reads fail closed unless an ADR names the choice | HIGH |
+| 3 | **S2** TOCTOU | `runner/scheduler.py:68-82` | `claim_batch` SELECTs `status = 'queued'` then UPDATEs `WHERE id = ?` with no status predicate and no `claimed_by IS NULL`. Two workers claim the same job; both run it; `attempts` counts twice. | Carry the precondition in the `WHERE`; read the affected-row count | CRITICAL |
+| 4 | **S20** blind instrument | `runner/monitor.py:20-31, 37` | An unparseable `last_seen` is counted in `unknown`, never reported; `monitor: 0 problems` and exit 0 are printed whether every worker was checked or none could be. | A detector reports coverage separately from findings; blind ≠ clean | HIGH |
+| 5 | **S20** dead watchdog | `runner/scheduler.py:99-105`; `config.yaml:5` | Worker heartbeats are written to `workers` and to `heartbeat_path`; the monitor reads the table but nothing reads the file, and nothing outside the service checks that the monitor itself ran. No outermost check. | Something reads every heartbeat; name the outermost check or say NONE | HIGH |
 | 6 | **S22** unrendered state | `runner/status_page.py:15-20, 26-30`; `runner/db.py:10` names `stuck` | No renderer for `stuck`; the loop `continue`s, so a stuck job vanishes from the operator's page. Empty state renders a blank row with no text. | Every reachable state has a surface; an empty state says something | HIGH |
 | 7 | **S16** terminal-state accountability | `runner/monitor.py:33-35`; `runner/scheduler.py` (no writer of `status = 'stuck'`) | A job running past `stuck_after_minutes` is printed to stderr once per monitor run and never transitions; there is no queue, no action, and D2's Requeue / Fail actions do not exist. | Every non-terminal state has an advancer or a desk | HIGH |
 | 8 | **S13** orphan capability | `runner/legacy_retry.py`; `docs/ARCHITECTURE.md` D1 | `with_backoff` has no caller (grep → definition only). D1 says every handler uses it. Designed, documented, unbuilt. | A capability named by a design document exists or has a gap-register row | MEDIUM |
 | 9 | **S21** vacuous pass | `tests/test_scheduler.py:25-28` | `test_no_jobs_are_stuck_on_a_fresh_db` asserts `stuck_jobs(...) == []` on a job that just started; no test anywhere proves `stuck_jobs` can return a row. | A test asserting emptiness needs a sibling proving non-emptiness | HIGH |
-| 12 | **S3** fail-open at a log level nobody reads | `runner/scheduler.py:33-49` (`load_worker_identity`), called from `runner/cli.py:60` | The worker identity file is read inside a `try`; on `OSError`/`ValueError`/`KeyError` it writes **`log.debug`** and returns the default name `"worker"`. Production runs at INFO, so the line is never seen, and every worker that falls back is stamped into `claimed_by` under the same name — two workers become indistinguishable in the jobs table and on the status page. | A failure reported below the level production runs at is not reported | HIGH |
+| 12 | **S3** fail-open at a log level nobody reads | `runner/scheduler.py:34-52` (`load_worker_identity`), called from `runner/cli.py:60` | The worker identity file is read inside a `try`; on `OSError`/`ValueError`/`KeyError` it writes **`log.debug`** and returns the default name `"worker"`. Production runs at INFO, so the line is never seen, and every worker that falls back is stamped into `claimed_by` under the same name — two workers become indistinguishable in the jobs table and on the status page. | A failure reported below the level production runs at is not reported | HIGH |
 | 11 | **S13** orphan wiring | `runner/cli.py:46`; `config.yaml` (no `db_path`) | `connect(cfg.get("db_path", ":memory:"))` reads a key the config never sets, so **every** `python -m runner.cli` invocation opens a fresh in-memory database and discards it on exit: the operator CLI is wired to nothing. | A control an operator reaches must reach the real state | HIGH |
 | 10 | **S21** runner contamination | `tests/test_scheduler.py:30-33` | `test_config_from_real_file` writes `os.environ["FIXTURE_ALERTS"]` and never restores it; every test after it in the process sees it. | Snapshot the environment before, restore after; clear on the way in | MEDIUM |
 
-Also expected, not separately scored: **S12** — `finish()` (`runner/scheduler.py:65-77`) re-queues on failure with no backoff and no per-step timeout, and since defect 8 nothing backs off; **S14** — the run states its scope as this directory and lists the modules on the map.
+Also expected, not separately scored: **S12** — `finish()` (`runner/scheduler.py:85-97`) re-queues on failure with no backoff and no per-step timeout, and since defect 8 nothing backs off; **S14** — the run states its scope as this directory and lists the modules on the map.
 
 ### A note on row 12's provenance
 
@@ -48,8 +48,8 @@ counts against the run.**
 
 | Control | Site | Looks like | Why it is correct |
 |---|---|---|---|
-| Idempotent submit | `runner/db.py:12` `idempotency_key UNIQUE`; `runner/scheduler.py:35-45` | a swallowed exception | The `IntegrityError` is caught **and returned as `None`** — a distinct, tested outcome (`test_enqueue_is_idempotent`), not a swallow. D3 satisfied. |
-| Bounded retry | `runner/scheduler.py:65-77` | an unbounded requeue loop | `attempts` is compared to `retry_limit` and the job parks as `failed`; the loop terminates. |
+| Idempotent submit | `runner/db.py:12` `idempotency_key UNIQUE`; `runner/scheduler.py:55-66` | a swallowed exception | The `IntegrityError` is caught **and returned as `None`** — a distinct, tested outcome (`test_enqueue_is_idempotent`), not a swallow. D3 satisfied. |
+| Bounded retry | `runner/scheduler.py:85-97` | an unbounded requeue loop | `attempts` is compared to `retry_limit` and the job parks as `failed`; the loop terminates. |
 | **Digest degrades** | `runner/digest.py:20-24` | **defect 2** — a catch that returns a default | Fail-open on a **display** path, which is the axis S3 itself exempts, named by **ADR D4** with its reason, and the degradation is *visible* — it says "unavailable", never a zero. Nothing acts on its output. |
 | **Cancel is a safe select-then-act** | `runner/cli.py:26-38` | **defect 3** — read a status, then write | The predicate is **repeated in the `UPDATE`** and `rowcount` decides the answer, so a worker that claims the job in between wins and the operator is told no. This is the correct twin of `claim_batch`; an auditor that flags both has not read the `WHERE`. |
 | **`drain_batch` has a consumer** | `config.yaml:6` → `runner/cli.py:60` | **defect 1** — a dead control | A bare-identifier grep hits config and exactly one runtime reader. README documents the command. S13's own false-orphan rule covers this: grep the identifier alone, and read every hit. |
@@ -62,3 +62,18 @@ counts against the run.**
 - `ecommerce-cia` §0.3a gate must **FAIL** (no gateway code, no orders/cart schema, no checkout route, no commerce dependency). If a paired or automatic run pulls in commerce doctrine here, that is a routing defect.
 - `cia` §0.3 commerce detection must report **none**.
 - A bare `run tests` in this directory must run `python -m unittest discover -s tests -t .` first, report `Ran 8 tests … OK` with the count, and only then offer the Screen-tier audit in one line. Starting the protocol on that request is a trigger defect (§0.3).
+
+<!-- site-pins (tools/check_key_lines.py) -->
+
+## Site pins
+
+Every file this key cites, with the sha256 it had when a person last read the ranges against it. A changed digest fails `tools/check_key_lines.py` — re-read, then re-pin.
+
+- `config.yaml` 236e936fd0caabf9628ee9c0d615cc76d2510f6cd382acd66104eaab3ef2685e
+- `runner/cli.py` e74bcddb15149bb8d9d330ae36ca0ba2909f087dec6adc1665ccba3c35dca0b1
+- `runner/db.py` f1e578bb84cc4ef308e0365f8a72d137715feccf936af26f24e9953993c3995b
+- `runner/digest.py` 192cdae138e05ddb4f36f20da254844980c8e8f0777df613f2bd7dc36cdeed24
+- `runner/monitor.py` ba1a1cd85b6339dcaa7943fa50eee33694c9ec6983afae51004783fc8e29d556
+- `runner/scheduler.py` df6beee030d10d869e7fe875f728edf1e92133d06c4935a2f5481660d9c9c0ba
+- `runner/status_page.py` 12a116e091b531637ecdfa389a84e241a08a57e0e0b34b90fe7285994cfcb8e8
+- `tests/test_scheduler.py` 441ff7e3bb4a5ac2480c60f4ca637127424126f31aae0a3a0b103e2402730324
