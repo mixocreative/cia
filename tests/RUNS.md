@@ -21,6 +21,8 @@ review; say so rather than leaving the reader to assume.
 |---|---|---|---|---|---|---|---|
 | — | — | — | — | — | — | — | no runtime-scored run yet; the first one establishes the baseline |
 | 2026-09-24 | fixture-service | 4 | 7 of 9 (2 N/A, each with its reason) | 2 (`claim_batch`, 10 trials; plus a control probe at `enqueue`) | 3 / 7 / 2 (+4 PARTIAL) | 0 | First runtime-scored run on this harness. No HTTP surface exists here, so the walk was the scripted equivalent §0.6 Step 4 names — 12 scenarios across 4 modules, 7 artefacts — and routes/assets are N/A on the map rather than a skip. The run also recorded **two of its own readings that the runtime disproved**, which is now doctrine (`browser-walks.md` §13). |
+| 2026-09-25 | fixture-service | 0 | 0 | 1 (`claim_batch`, 2 threads on a barrier: both claimed, `attempts=2`) | 5 / 6 / 1 | 0 | The run scored 10/1/1. It ran the S2 probe 8 of 8 and recorded that it had **underestimated** how cleanly the race reproduced — the disproved-reading rule used on itself. No ladder: the fixture has one front door and the run went straight to the probes. |
+| 2026-09-25 | fixture-service | 1 (submission, 3 observers, 0→1 agreeing) | 0 | 2 (`claim_batch` 2 threads — both claimed; **S13.1 cross-process**: enqueue in one process, `cli digest`/`drain` in another — both blind to it) | 2 / 6 / 0 | 0 | The verification run, and the one the S13.1 step was written for. Its `S13 METHOD TRACE` names all four steps with the command each ran. Four further live probes beyond the two counted here (blind monitor on an empty DB, `stuck` render, `NOT NULL` vs duplicate at `enqueue`, malformed CLI argv), each with its transcript. **0 UNVERIFIED rows and 0 UNPROVEN** — every capability it touched was exercised to a definite verdict. |
 
 **`PASS without artefact` is the column that matters most.** It counts ledger rows the run
 marked PASS while citing no artefact produced in that run. The honest value is **0**, at every
@@ -140,6 +142,7 @@ ordered by measured yield rather than by tradition.
 | 2026-09-24 | fixture-service | Screen | 215k | 40 | 16 | ~13k | spoken first, before the report (the run put three CRITICAL/HIGH findings in its opening lines per §0.11) |
 | 2026-09-24 | fixture-service | Screen | 232k | 70 | 13 | ~18k | spoken first, in the owner paragraph (sonnet) |
 | 2026-09-25 | `165fbe3` (S21 at 13 shapes; S1.1, S11.1, S12.3, S18 generated-artefact, UNPROVEN) | Claude **Sonnet** (subagent, cold, key and corpus fenced, git forbidden) | Screen — `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 (row 10, `FIXTURE_ALERTS` never restored: found and named in the S21 report line, then explicitly *not graded*) | 1 | 0 | 11 | **Hits up 8→10 on the previous Sonnet row, and one new miss worth more than the gain.** The miss is row 11, the operator CLI opening `cfg.get("db_path", ":memory:")` against a config that never sets `db_path`, so every invocation builds a throwaway database. A previous run caught it by running the CLI as a process **on its own initiative**; the doctrine asked for three greps and never for that, so it was luck once and a miss the next time — fixed as **S13.1**, a fourth step that runs the operator's entry point against state another process wrote. **0 of 8 precision controls misfiled.** One extra true positive the key lacked: `load_config`'s `value.isdigit()` is False for `"-1"`, so a negative `retry_limit` stays a string and `finish()` raises `TypeError` on the very path meant to record failures — confirmed live. The S2 probe fired 8/8 double-claims and the run recorded that it had *underestimated* how cleanly reproducible it was, per the disproved-reading rule. 253k tokens. |
+| 2026-09-25 | `831cce8` (S13.1, the mechanism/instance reading note, key ranges re-pinned) | Claude **Sonnet** (subagent, cold; key, corpus **and RUNBOOK** fenced; git forbidden) | Screen — `pre-launch audit, Screen tier` on **fixture-service** | 8 | 4 (row 4 blind-instrument proved by a different mechanism than the planted one; row 8 `with_backoff` named and sited but given no finding id; row 10 `FIXTURE_ALERTS` named and not graded; row 12 graded MEDIUM against a HIGH floor) | 0 | 0 | 11 | **S13.1 works: row 11 went from MISS to `FSVC-02`, CRITICAL, CONFIRMED live** — and the run's `S13 METHOD TRACE` shows step (d) executed as two real processes, which is the step that caught it. **Misses 1→0, hits 10→8**: every planted row was *found*, and the four nears are promotion and grading failures, not discovery failures — the same cheap-model pattern this file has recorded before. **The run also found a leak the harness could not see itself**: S13.1's worked example quoted this fixture's own line nearly verbatim, so the doctrine had become a partial answer key for the fixture that tests it. The run said so unprompted (*“very likely the source case that doctrine passage was written from — I ran it fresh anyway”*) and its evidence stands, but the example is now de-identified. 258k tokens. |
 
 ### What the two runs of 2026-09-25 decided about the doctrine's own size
 
@@ -173,3 +176,24 @@ change happened to be under test. That is S21 shape 14 — the vacuous failure, 
 a reason that is not a reason — committed by the answer key one day after the shape was written
 down. Ranges re-pinned; `tools/check_key_lines.py` now fails red when a cited file changes under
 its key, and it was proved red and then green before it was committed.
+
+### The doctrine had become an answer key, and only a run could see it
+
+The verification run of 2026-09-25 executed every step of S13 including the new fourth one, and
+then volunteered something the harness has no way to check on itself: **S13.1's worked example
+quoted `fixture-service`'s own defect nearly verbatim** — the same call, the same default, the same
+consequence. A cold auditor reading the doctrine was therefore being told where one of the planted
+defects was, in the file it is required to read in full before it opens the project.
+
+The run's own evidence survives it — it ran the probe fresh as two real processes and reported the
+trace rather than the doctrine's narration, and said plainly why it was flagging the resemblance.
+But the general problem is worse than one example: **a doctrine written from a fixture's defects
+becomes that fixture's answer key, and the harness's own S8-style separation between the auditor's
+instructions and the scorer's key silently stops holding.** Nothing in the reading fence catches
+it, because `references/` is exactly what the auditor is supposed to read.
+
+So the rule, applied here and worth keeping: **a worked example in the doctrine names the shape, not
+the fixture.** Where a lesson comes from a fixture the harness also scores against, the example is
+de-identified — the mechanism stays, the identifiers, defaults and call spellings go. Examples drawn
+from real outside codebases (the corpus, the blind-forward snapshots) need no such treatment and
+should keep their specifics, because no run is scored against them.
