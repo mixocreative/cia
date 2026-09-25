@@ -1581,11 +1581,13 @@ A surface can pass every earlier test in this sweep — it exists, it is reachab
 
 **The defect:** a screen that re-renders on a timer, a poll or an event rebuilds its controls from
 the *settled* fields of the data (`installed`, `done`, `enabled`) and throws away whatever was
-happening between them — a progress bar, a disabled "Installing..." button, an expanded panel, a
-half-typed field, focus. Meanwhile the code that started the work keeps writing to the node it
-held, which is no longer in the document. The person sees the action undo itself; pressing again
-re-attaches to the same server work and the cycle repeats. It is S15's disagreement between two
-corners, where both corners are *the same page at two instants*.
+happening between them — progress, busy/disabled state, status text, retry state, an expanded panel,
+a half-typed field, focus. This is not about installs; it is about any UI control whose action
+continues after the first event: button, menu item, toggle, form submit, command link, drag/drop
+import, background-job start, or project-specific equivalent. Meanwhile the code that started the
+work keeps writing to the node it held, which is no longer in the document. The person sees the
+action undo itself; acting again re-attaches to the same server work and the cycle repeats. It is
+S15's disagreement between two corners, where both corners are *the same page at two instants*.
 
 **Why reading misses it:** each function is correct alone — the renderer draws the list right, the
 tracker tracks the job right. And the suite misses it by construction when its fake work finishes
@@ -1597,13 +1599,15 @@ class at all. (An S21 shape, filed here because the fix lives in the surface.)
 1. List every re-render trigger in the client: `setInterval`, recursive `setTimeout` polls,
    websocket/SSE handlers, `visibilitychange`/focus refetches, and every call site of the functions
    they reach that assign `innerHTML` / replace children / re-mount a component.
-2. For each, list the transient state the region it redraws can hold: in-flight progress, button
-   disabled/label, `<details open>`, scroll position, input values, focus, selection (S22.6).
+2. For each, list the transient state the region it redraws can hold: in-flight progress, control
+   disabled/busy/label/status/retry state, `<details open>`, scroll position, input values, focus,
+   selection (S22.6).
 3. For each pair, ask: does the redraw draw that state **from a source that holds it** — the server's
-   live status (`install: {status, bytes, percent}`) or a client store keyed by item — or from the
+   live status (`work: {status, bytes, percent}`) or a client store keyed by item — or from the
    settled fields only? Settled-only is the finding. A tracker that holds a DOM node across an `await`
    instead of looking it up each tick is the same finding from the other side.
-4. Prove it in the walk (SKILL.md Step 4 (g)): slow the work, act, wait past two cycles, assert.
+4. Prove it in the walk (SKILL.md Step 4 (g)): slow the work, activate the control, wait past two
+   cycles, assert.
 
 **The fix shape:** the server is the source of truth for anything in flight and every list endpoint
 carries it; the renderer draws every state from it; one tracker per item (not per click), resumed

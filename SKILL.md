@@ -156,7 +156,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 | Tier | Budget | S15 / S18 / S22 matrices | Every other sweep | Runtime evidence owed |
 |---|---|---|---|---|
-| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13); every long-running button held through two refresh cycles (Step 4 (g)) |
+| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13); every long-running control held through two refresh cycles (Step 4 (g)) |
 | **Walk** | 1–2 days | every money flow at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field | as Screen, plus a ladder per money flow, every adversarial row of §12, and a probe at every primary-path S2 site |
 | **Full** | as long as it takes | every reachable cell, cited to the authority per cell | as Walk, plus the blind-case test written for every S20 detector | as Walk, plus every ledger row at PASS or FAIL — an UNVERIFIED row at Full tier is itself a finding, about the system's testability, and an UNPROVEN row (§11a) is a finding about the environment, which is a different owner and a different fix |
 
@@ -198,15 +198,18 @@ the numbers. Every shop page once sat pinned to the left edge in a fixed-width b
 with every route 200, every asset 200 and the error log silent, because a shared wrapper went
 `width:100%; margin:0` while each page still stacked a framework container and an inline
 `max-width` on it, and the commit had probed the two pages that carried neither.
-**(g)** Press every long-running button — install, download, build, export, start tunnel — in the
-real page, with the work slowed so it outlasts **at least two** of the page's own refresh cycles
-(find them: every `setInterval`, poll loop and re-render trigger), and watch the control the whole
-time. Its progress, its disabled state and anything the person opened beside it must survive each
-redraw. (2026-09-26: every install button in a desktop app showed its bar for a second and snapped
-back to "Download and install" while the download ran on; a 5 s `setInterval(refresh)` redrew the
-list from `installed: false`. The audit that ran the day before had written the invariant it broke,
-walked the app through its API, and never pressed the button and waited — and every test's fake
-download finished inside one cycle.) See S22.10.
+**(g)** Activate every long-running control in the real page, with the work slowed so it outlasts
+**at least two** of the page's own refresh cycles (find them: every `setInterval`, poll loop and
+re-render trigger), and watch the control the whole time. "Control" is function-agnostic: button,
+menu item, toggle, form submit, command link, drag/drop import, background-job start, or any other
+UI affordance whose action continues after the first event. Install, download, build, export and
+start-tunnel are examples, not the category. Its progress/status text, disabled/busy state, retry
+state, focus and anything the person opened beside it must survive each redraw. (2026-09-26: every
+install button in a desktop app showed its bar for a second and snapped back to "Download and
+install" while the download ran on; a 5 s `setInterval(refresh)` redrew the list from
+`installed: false`. The audit that ran the day before had written the invariant it broke, walked
+the app through its API, and never pressed the button and waited — and every test's fake download
+finished inside one cycle.) See S22.10.
 
 **What the walk proves beyond the page: the operation itself (2026-09-24).** Everything above
 checks that a page renders, loads what it links, and does not error. None of it checks that doing
@@ -259,7 +262,7 @@ Name both in the Step 6 report under line 5.
 2a. §0.9 cross-boundary invariant sweeps S1–S24 (integration-level / emergent defects): one line each — "swept, 0 findings, sites: path, path, …" or ❌ finding ref, or "no sites on the map: <map row>". Missing line = sweep not done; a count with no paths = sweep not evidenced. **S15 (four-corner end-to-end walk) carries its own table and cannot be reported as a single line.** **S23 (sequence diagrams + the arrival × perturbation grid) and S24 (the boundary × test-class plus external producer × consumer matrix) likewise carry their own tables; a single line for either means the sweep was not run.**
 2c. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S19's host-capability table is mandatory and gets its own line: `R dependency requirements × E target environments; satisfied/not-satisfied/unknown = A/B/C`. A deployment audit that never crossed what the dependencies require against what the target provides has not audited the deployment — and an `unknown` there is a finding, because it is the state in which a launch gets planned around a capability nobody confirmed.
 2d. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S20's detector table is mandatory and gets its own line: `D detectors; C report coverage separately from findings; H watched for liveness; E escalate to a human surface; outermost check: <named, or NONE>`. A green report from an instrument nobody has proved is looking is evidence of a report, not evidence of health — and that includes every earlier green this system has filed.
-2e. **Every project with a UI, every tier** — S22.10 redraw census: `T re-render triggers (timers, polls, event refetches) × S in-flight states = P pairs; K drawn from a live source, F findings; Step 4 (g): B long-running buttons pressed, H held through ≥2 cycles`. A UI project with no 2e line has not been audited for the most common way a working button looks broken.
+2e. **Every project with a UI, every tier** — S22.10 redraw census: `T re-render triggers (timers, polls, event refetches) × S in-flight states = P pairs; K drawn from a live source, F findings; Step 4 (g): C long-running controls activated, H held through ≥2 cycles`. A UI project with no 2e line has not been audited for the most common way a working control looks broken.
 2f. **Every project with a UI, every tier** — S22.11 vocabulary census: `N nouns across S surfaces; T things; D with >1 name, C names on >1 thing, M messages pointing at a name no screen shows`.
 3. Full test suite: ✅ N/M tests green on HEAD {sha}  (or ⏭ §0.8 ladder stopped at rung R: <reason + the one command the owner must run>)
 4. Runtime walk: ✅ every flow/route clean, A closed-loop actions walked, K artefacts  (or ❌ finding at flow/route/action stage)  (or ⏭ §0.8 rung R: …)
