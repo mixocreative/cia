@@ -181,6 +181,8 @@ These are **cross-boundary invariant violations**: integration-level, emergent d
 | **Blind instrument**｜盲檢工具（Blind Instrument） | a check that stopped running or examined nothing, whose report looked identical to a clean one｜已經停止執行或根本沒檢查任何東西的檢查項目，產出的報告卻與無瑕疵（Clean）報告完全相同 |
 | **Unrendered surface**｜未渲染的介面 | a state the system can reach has no screen, or one nobody rendered, or one no person can dismiss｜系統可達到的狀態卻沒有對應畫面、或是沒人渲染該畫面、或是沒有任何使用者可以關閉該畫面 |
 | **Vacuous or too-late proof**｜無效或太遲的驗證 | a test asserting emptiness passes for an unrelated reason; or the guard sits so deep in a slow suite nobody reaches it｜斷言空值的測試因無關原因而通過；或是防禦機制放在執行極慢的測試集深處，根本沒人執行得到 |
+| **Redraw clobber**｜重繪覆蓋進行中狀態 | a page's own timer or poll redraws a control from its settled fields and wipes the progress, disabled state or open panel of work still running; the button looks like it undid itself｜頁面自己的計時器或輪詢依「已完成」欄位重繪控制項，把仍在進行中的進度條、停用狀態或已展開的面板清掉；按鈕看起來像自己復原了 |
+| **One thing, two names**｜一物多名 | the same view, place or action is called different things on different screens, or one word means two things; a message points to a name no screen shows｜同一個畫面、位置或動作在不同頁面有不同名稱，或同一個詞指兩件事；訊息指向一個沒有任何畫面顯示的名稱 |
 
 Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
 
@@ -203,7 +205,7 @@ Each defect class above is a broken channel between two VSM systems; the sweeps 
 | System 4 requirement × target environment｜System 4 需求 × 目標環境 | environment constraint never crossed｜環境約束未交叉驗證 |
 | System 3\* on itself (is the safety net still looking?)｜針對 System 3\* 本身的檢查（安全網是否仍在運作？） | blind instrument, vacuous or too-late proof｜盲檢工具、無效或太遲的驗證 |
 | Every party that holds the object｜持有該物件的各方 | corner disagreement (the four-corner walk), terminal-state accountability｜四角認知不一致（四角走查）、終態責任歸屬 |
-| System 1 → a screen someone opens｜System 1 → 使用者開啟的畫面 | unrendered surface, orphan capability, scope shadow｜未渲染的介面、孤立功能、範圍陰影 |
+| System 1 → a screen someone opens｜System 1 → 使用者開啟的畫面 | unrendered surface, orphan capability, scope shadow, redraw clobber, one thing two names｜未渲染的介面、孤立功能、範圍陰影、重繪覆蓋進行中狀態、一物多名 |
 
 A channel on the map with no sweep site named against it is reported as unswept.
 
