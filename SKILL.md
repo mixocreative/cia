@@ -156,7 +156,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 | Tier | Budget | S15 / S18 / S22 matrices | Every other sweep | Runtime evidence owed |
 |---|---|---|---|---|
-| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13) |
+| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13); every long-running button held through two refresh cycles (Step 4 (g)) |
 | **Walk** | 1–2 days | every money flow at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field | as Screen, plus a ladder per money flow, every adversarial row of §12, and a probe at every primary-path S2 site |
 | **Full** | as long as it takes | every reachable cell, cited to the authority per cell | as Walk, plus the blind-case test written for every S20 detector | as Walk, plus every ledger row at PASS or FAIL — an UNVERIFIED row at Full tier is itself a finding, about the system's testability, and an UNPROVEN row (§11a) is a finding about the environment, which is a different owner and a different fix |
 
@@ -245,6 +245,11 @@ request is a code review.
 
 **Step 5 — Fix-or-escalate pass (variable).** Apply the §0.8 fix-vs-ask boundary to every finding from Steps 1–4. Autonomous fixes are committed one per finding with the test that proves them. Escalations carry the proposed patch, unapplied.
 
+**Guards the project keeps (2026-09-26).** A fix for an S22.10 or S22.11 finding is not done until the project can catch the next one without this skill:
+- **S22.10:** the regression test drives the real page with the long-running work faked to outlast **at least two** of that page's refresh cycles, and asserts the progress, disabled state and anything the person opened are all still there. A fake that finishes inside one cycle is S21's vacuous pass for this class. Where the project has a shared test helper for fakes, give it a default duration longer than the slowest page timer, so a new test gets this for free.
+- **S22.11:** one browser test per view reads the rendered `innerText` and fails on each retired name (old view, tab and mode names). A rename that leaves the old word on one screen fails the suite instead of confusing a user.
+Name both in the Step 6 report under line 5.
+
 **Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
 
 ```
@@ -254,6 +259,8 @@ request is a code review.
 2a. §0.9 cross-boundary invariant sweeps S1–S24 (integration-level / emergent defects): one line each — "swept, 0 findings, sites: path, path, …" or ❌ finding ref, or "no sites on the map: <map row>". Missing line = sweep not done; a count with no paths = sweep not evidenced. **S15 (four-corner end-to-end walk) carries its own table and cannot be reported as a single line.** **S23 (sequence diagrams + the arrival × perturbation grid) and S24 (the boundary × test-class plus external producer × consumer matrix) likewise carry their own tables; a single line for either means the sweep was not run.**
 2c. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S19's host-capability table is mandatory and gets its own line: `R dependency requirements × E target environments; satisfied/not-satisfied/unknown = A/B/C`. A deployment audit that never crossed what the dependencies require against what the target provides has not audited the deployment — and an `unknown` there is a finding, because it is the state in which a launch gets planned around a capability nobody confirmed.
 2d. **Whenever the run is a pre-launch, handoff, deploy-readiness or green-light request**, S20's detector table is mandatory and gets its own line: `D detectors; C report coverage separately from findings; H watched for liveness; E escalate to a human surface; outermost check: <named, or NONE>`. A green report from an instrument nobody has proved is looking is evidence of a report, not evidence of health — and that includes every earlier green this system has filed.
+2e. **Every project with a UI, every tier** — S22.10 redraw census: `T re-render triggers (timers, polls, event refetches) × S in-flight states = P pairs; K drawn from a live source, F findings; Step 4 (g): B long-running buttons pressed, H held through ≥2 cycles`. A UI project with no 2e line has not been audited for the most common way a working button looks broken.
+2f. **Every project with a UI, every tier** — S22.11 vocabulary census: `N nouns across S surfaces; T things; D with >1 name, C names on >1 thing, M messages pointing at a name no screen shows`.
 3. Full test suite: ✅ N/M tests green on HEAD {sha}  (or ⏭ §0.8 ladder stopped at rung R: <reason + the one command the owner must run>)
 4. Runtime walk: ✅ every flow/route clean, A closed-loop actions walked, K artefacts  (or ❌ finding at flow/route/action stage)  (or ⏭ §0.8 rung R: …)
 5. Fixes applied autonomously: N (path:line + one-line why)  |  Escalated to owner: M (list + which §0.8 boundary blocked them)
@@ -334,7 +341,7 @@ Index — the sweep, what it hunts, and the VSM channel it walks:
 | **S19** Environment-constraint reconciliation | requirement never crossed against the host | System 4 requirement × target environment |
 | **S20** Liveness of the safety net (+ S20.5 a receipt is dated, not standing) | blind instrument / dead watchdog | System 3\* itself |
 | **S21** The suite is an instrument too | vacuous or too-late proof, runner contamination, secrets in diffs, a codec proven only against itself | System 3\* itself |
-| **S22** Surface completeness: step × outcome × audience (+ S22.1–S22.9; S22.8 = the render-parameter diff, S22.9 = dead `data-action` buttons) | unrendered / undesigned surface; caught ≠ handled | System 1 → operator / user screen |
+| **S22** Surface completeness: step × outcome × audience (+ S22.1–S22.11; S22.8 = the render-parameter diff, S22.9 = dead `data-action` buttons, S22.10 = a redraw that wipes in-flight state, S22.11 = one thing, one name) | unrendered / undesigned surface; caught ≠ handled | System 1 → operator / user screen |
 | **S23** Sequence and event-flow: every external arrival × duplicate / out-of-order / late / early / missing / malformed, interleaving pairs | order-dependent outcome; unhandled arrival | System 4 → System 1 in time, System 2 ordering |
 | **S24** Contract tests at every boundary: classes a–e per side, external producer × consumer matrix, fixtures cited to the authority and version-pinned | self-agreeing fake; boundary with no contract test; compatibility claim tested only against our own dialect | System 3\* binding System 1 to System 4's actual contract |
 
