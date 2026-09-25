@@ -198,6 +198,15 @@ the numbers. Every shop page once sat pinned to the left edge in a fixed-width b
 with every route 200, every asset 200 and the error log silent, because a shared wrapper went
 `width:100%; margin:0` while each page still stacked a framework container and an inline
 `max-width` on it, and the commit had probed the two pages that carried neither.
+**(g)** Press every long-running button — install, download, build, export, start tunnel — in the
+real page, with the work slowed so it outlasts **at least two** of the page's own refresh cycles
+(find them: every `setInterval`, poll loop and re-render trigger), and watch the control the whole
+time. Its progress, its disabled state and anything the person opened beside it must survive each
+redraw. (2026-09-26: every install button in a desktop app showed its bar for a second and snapped
+back to "Download and install" while the download ran on; a 5 s `setInterval(refresh)` redrew the
+list from `installed: false`. The audit that ran the day before had written the invariant it broke,
+walked the app through its API, and never pressed the button and waited — and every test's fake
+download finished inside one cycle.) See S22.10.
 
 **What the walk proves beyond the page: the operation itself (2026-09-24).** Everything above
 checks that a page renders, loads what it links, and does not error. None of it checks that doing

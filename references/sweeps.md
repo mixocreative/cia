@@ -1577,6 +1577,60 @@ is the honest name for what reading proves.
 
 A surface can pass every earlier test in this sweep — it exists, it is reachable, it says what happened, it says what to do next — and still be a dead control if the button meant to *do* the next thing has nothing behind it, and nothing about reading the page shows the wiring is missing. An owner-facing admin page rendered two buttons on every card, `Test connection` and `Start taking real payments`, each a `data-action` attribute with no JavaScript handler and no server route reading it; the one method that would actually flip the switch was unit-tested in isolation and called by nothing in the running app. The page read as finished — copy, layout, every state accounted for — because the defect is invisible to source review of the page itself; it only shows up by grepping the *other* end. **For every admin and customer surface in scope, grep every `data-action=`, `type="button"`, `onclick=` or the framework's equivalent for the handler that consumes it**, the same way S5 traces a setting to its runtime reader — a button is a control, and this is its consumer-side check. A control the owner will press on the day they need it, that does nothing, is worse than none: a refusal that explains itself teaches people to trust refusals; a button that silently does nothing teaches them to distrust every button on the page.
 
+### S22.10 — The page's own refresh is a writer: every redraw must draw what is in flight (2026-09-26)
+
+**The defect:** a screen that re-renders on a timer, a poll or an event rebuilds its controls from
+the *settled* fields of the data (`installed`, `done`, `enabled`) and throws away whatever was
+happening between them — a progress bar, a disabled "Installing..." button, an expanded panel, a
+half-typed field, focus. Meanwhile the code that started the work keeps writing to the node it
+held, which is no longer in the document. The person sees the action undo itself; pressing again
+re-attaches to the same server work and the cycle repeats. It is S15's disagreement between two
+corners, where both corners are *the same page at two instants*.
+
+**Why reading misses it:** each function is correct alone — the renderer draws the list right, the
+tracker tracks the job right. And the suite misses it by construction when its fake work finishes
+inside one refresh cycle: nothing is in flight when the redraw lands. **A fake for a long-running
+action must outlast at least two cycles of every timer on that page**, or the test cannot see this
+class at all. (An S21 shape, filed here because the fix lives in the surface.)
+
+**Hunt it, mechanically:**
+1. List every re-render trigger in the client: `setInterval`, recursive `setTimeout` polls,
+   websocket/SSE handlers, `visibilitychange`/focus refetches, and every call site of the functions
+   they reach that assign `innerHTML` / replace children / re-mount a component.
+2. For each, list the transient state the region it redraws can hold: in-flight progress, button
+   disabled/label, `<details open>`, scroll position, input values, focus, selection (S22.6).
+3. For each pair, ask: does the redraw draw that state **from a source that holds it** — the server's
+   live status (`install: {status, bytes, percent}`) or a client store keyed by item — or from the
+   settled fields only? Settled-only is the finding. A tracker that holds a DOM node across an `await`
+   instead of looking it up each tick is the same finding from the other side.
+4. Prove it in the walk (SKILL.md Step 4 (g)): slow the work, act, wait past two cycles, assert.
+
+**The fix shape:** the server is the source of truth for anything in flight and every list endpoint
+carries it; the renderer draws every state from it; one tracker per item (not per click), resumed
+by the renderer when it sees in-flight work with no tracker — which also restores the bar after a
+reload; per-item UI state the person chose (open/closed) kept in a client map keyed by item id.
+
+### S22.11 — One thing, one name: the vocabulary census (2026-09-26)
+
+**The defect:** the same place, view or action carries two names on different screens, or two
+different things share one. Seen together in one small app: a view called "Settings mode" that
+contained a tab called "Settings"; a "Station mode / PC work mode" switch that duplicated the
+"Station" and "Work" tabs beside it; a home screen whose tiles were Status/Generate/Jobs/Results
+while the tabs for the same four places were Station/Work/Jobs/Results. Each label is fine read
+alone; the person has to learn a map between them, and support has to guess which one a user means.
+This is a mode error in Raskin's sense at the level of navigation — the same word acting
+differently depending on where you are — and Nielsen's *consistency and standards*.
+
+**Hunt it:** collect every user-visible noun for a place, mode, view, object or action — tab and
+button labels, headings, page titles, `aria-label`s, the words messages use to send the person
+somewhere ("open Settings", "finish the setup checklist"), and the docs. Group by the thing each
+refers to. **Finding** when a thing has two or more names, when one name refers to two things, or
+when a message points somewhere by a name no screen shows. Two controls that do the same thing in
+the same view (a switch duplicating tabs) are filed with it. Grade LOW alone, MEDIUM when a message
+or doc sends the person to a name they cannot find.
+
+**Report line:** `S22.11 — N nouns across S surfaces; T things; D with >1 name, C names on >1 thing, M dangling pointers`.
+
 ## S23 — Sequence and event-flow. A FLOW IS A SEQUENCE OF ARRIVALS, AND EVERY ARRIVAL CAN COME TWICE, LATE, EARLY, OUT OF ORDER OR NEVER
 
 S15 walks one object through four corners and asks whether they agree *at each state*. This sweep
