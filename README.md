@@ -14,7 +14,7 @@
 [Quick start](#quick-start) · [Wiring audit](#wiring-walk) · [What it catches](#what-it-catches) · [Where it fits](#where-it-fits) · [How it is measured](#how-it-is-measured) · [FAQ](#faq) · [Install](#install)
 
 ```bash
-claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative
+claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative-cia
 ```
 
 <img src="docs/demo.gif" alt="cia auditing a production PHP shop: VSM map, then two sweeps with file:line evidence" width="900" />
@@ -38,7 +38,7 @@ Ask your agent to run `/cia`. It maps your codebase, follows every value from wh
 **1. Install｜安裝** — one command in Claude Code (other options under [Install](#install)):
 
 ```bash
-claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative
+claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative-cia
 ```
 
 **2. Ask your agent｜直接對 Agent 下指令** — copy any of these:
@@ -532,7 +532,7 @@ When the request is in everyday words and the project carries no technical vocab
 
 ```
 claude plugin marketplace add mixocreative/cia
-claude plugin install cia@mixocreative
+claude plugin install cia@mixocreative-cia
 ```
 
 Or inside a session: `/plugin` → marketplaces → add `mixocreative/cia` → install `cia`.
