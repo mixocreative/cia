@@ -1,10 +1,180 @@
-# cia — Code Integrity Auditor｜程式碼完整性稽核 Skill
+<div align="center">
+
+# cia — Code Integrity Auditor
+
+### 程式碼完整性稽核 · a skill for Claude Code and OpenAI Codex
+
+**Your tests are green. Your system is still broken.**<br/>
+**`cia` finds the bugs that live *between* two correct functions — and proves what it checked.**
+
+**測試全綠，系統照壞。`cia` 專抓藏在「兩個各自正確的函式之間」的 bug，而且每一條結論都附證據。**
+
+[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install) [![Fixture](https://img.shields.io/badge/planted_defects-0_missed-2ea44f)](#how-it-is-measured) [![False positives](https://img.shields.io/badge/false_positives-0_of_12_controls-2ea44f)](#how-it-is-measured) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
+
+[Quick start](#quick-start) · [What it catches](#what-it-catches) · [Where it fits](#where-it-fits) · [How it is measured](#how-it-is-measured) · [FAQ](#faq) · [Install](#install)
+
+```bash
+claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative
+```
+
+<img src="docs/demo.gif" alt="cia auditing a production PHP shop: VSM map, then two sweeps with file:line evidence" width="900" />
+
+</div>
+
+---
+
+You shipped. Every test passed. Then a setting in the admin panel turned out to change nothing, a nightly job stopped three weeks ago without a word, and the "0 problems" health check had never looked at anything. Each function was correct on its own. The bug was in the wire between them.
+
+Ask your agent to run `/cia`. It maps your codebase, follows every value from where it is written to every place it is read, follows every switch from the screen to the line that should obey it, runs your app for real, and hands back a report where **nothing counts as "passed" unless this run produced the evidence**.
+
+> 程式上線了，測試也全過了。結果後台某個開關其實什麼都沒控制、某個排程三週前就默默停了、健康檢查回報「0 個問題」其實從來沒檢查過任何東西。每個函式單獨看都沒錯，錯的是它們之間的那條線。
+>
+> 對你的 AI Agent 輸入 `/cia`：它會先畫出整個系統的地圖，追蹤每個值從寫入到每一個讀取點、每個開關從畫面到真正該執行的那一行程式碼，實際把 App 跑起來走一遍，最後交出一份報告 —— **沒有這次執行產生的證據，就不算通過。**
+
+<a id="quick-start"></a>
+
+## Quick start｜快速開始
+
+**1. Install｜安裝** — one command in Claude Code (other options under [Install](#install)):
+
+```bash
+claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative
+```
+
+**2. Ask your agent｜直接對 Agent 下指令** — copy any of these:
+
+```text
+/cia pre-launch audit, Screen tier
+```
+
+```text
+Before we ship: trace every admin setting to the line of code that obeys it,
+and show me the ones nothing reads.
+```
+
+```text
+Our tests say green. Prove they actually ran the database and browser tests,
+and list everything that was NOT verified.
+```
+
+```text
+上線前幫我用 /cia 稽核：哪些後台開關其實沒有程式在讀？哪些排程停了不會有人知道？
+```
+
+**3. What comes back｜你會拿到什麼** — a numbered report that opens with five plain-language lines for the owner (what is safe, what is not, what to do first), then one line per step, every sweep naming the files it read:
+
+```text
+Tier: Screen — elapsed 3h10m (budget 2–4 h)
+1. Fast lint + scope tests ............ ✅ <N> tests green
+2. Integrity sweeps S1–S24 ............ ❌ <N> findings, each with path:line + a quoted line
+3. Full suite on HEAD <sha> ........... ✅ <N>/<N>   (or ⏭ with the one command you must run)
+4. Runtime walk ....................... routes / assets / error-log delta / closed-loop clicks
+5. Fixes applied (one commit + test each) | Escalated to you, with the patch attached
+9. Evidence ledger .................... PASS / FAIL / UNVERIFIED / UNPROVEN — every PASS cites an artefact
+```
+
+<a id="what-it-catches"></a>
+
+## What it catches｜它抓到過什麼
+
+Real defects from real runs. Every one sat behind a green suite.
+
+> 以下都是真實執行中抓到的缺陷，而且每一個發生時，測試都是全綠的。
+
+| Case｜案例 | What everyone saw｜大家看到的 | What was actually true｜實際上 |
+|---|---|---|
+| **The button that lied**｜會說謊的按鈕 | Every install button showed a progress bar, then snapped back to "Download and install". | The download was still running. A 5-second `setInterval` redraw rebuilt the list from `installed: false`, and every test's fake download finished inside one cycle. Now sweep S22.10. |
+| **Six days of 403s**｜六天的 403 | Every admin page answered 200. | Every stylesheet answered 403 — the install root had moved and every derived asset URL landed in a denied directory. Now walk step (a). |
+| **Eleven days pinned left**｜被釘在左邊十一天 | Every route 200, every asset 200, error log silent. | Every shop page sat in a fixed-width box against the left edge: a shared wrapper changed, and the commit was probed on the two pages that didn't use it. Now walk step (f): measure, don't screenshot. |
+| **The password that never was**｜從沒存進去的密碼 | A dev seeder printed the admin password. | The framework silently dropped that field on that save path; the seeder printed its intent, not the stored value. Now §0.12: a tool that reports success must prove it. |
+| **The hidden cron**｜繞過控制面的排程 | The app has a cron control plane. | One job ran outside it (the demo GIF above, on a production PHP/ProcessWire shop), with `file:line` evidence and the fix. |
+
+Used `cia` on something interesting? [Share the lesson](https://github.com/mixocreative/cia/issues/new?template=lesson.md) — the best ones become sweeps.
+
+> 用 `cia` 抓到有趣的 bug 嗎？歡迎[分享你的案例](https://github.com/mixocreative/cia/issues/new?template=lesson.md)，好案例會變成新的掃描項目。
+
+<a id="where-it-fits"></a>
+
+## Where it fits｜適用的專案
+
+| Project｜專案類型 | What `cia` checks｜檢查重點 | Needs｜需要 |
+|---|---|---|
+| Web app / admin panel｜網站、後台 | settings → consumer, closed-loop buttons, redraws that wipe progress, layout geometry, every route and asset | a browser automation tool your agent can drive (Playwright, Claude in Chrome) |
+| Service, worker, job runner｜服務、排程、背景工作 | work that stops in a non-terminal state, dead watchdogs, retry storms, races fired twice for real | the project's own run / test commands |
+| CLI or library｜命令列工具、函式庫 | smoke commands, exit codes that lie, codecs proven only against themselves | the documented smoke commands |
+| AI / LLM app, n8n workflow｜AI 應用、n8n | model output as untrusted input, agent loops with no cap, side effects without idempotency | nothing extra — §0.10 turns on automatically |
+| Blender add-on｜Blender 外掛 | undo atomicity, modal state, property write conflicts | Blender for the runtime walk |
+| Online shop｜電商 | all of the above, then tells you to run the sibling [ecommerce-cia](https://github.com/mixocreative/ecommerce-cia) for payment, stock and refund doctrine | — |
+
+<a id="faq"></a>
+
+## FAQ｜常見問題
+
+<details>
+<summary><strong>Isn't this just a code review with extra steps?｜這不就是 Code Review 嗎？</strong></summary>
+
+No. Review asks *is this line right?* Tests ask *does this unit behave?* `cia` asks *who reads this value, and who finds out when it goes wrong?* — the question neither asks. It does not replace review or tests; it runs your tests (Steps 1 and 3) and then audits them too (S21). See [How this is different](#how-this-is-different).
+
+> 不是。Review 問「這行寫對了嗎」，測試問「這個單元動作對嗎」，`cia` 問的是「這個值誰在讀？出錯時誰會知道？」它不取代 Review 或測試，而是把測試跑完之後，再檢查測試本身有沒有真的在驗證東西。
+</details>
+
+<details>
+<summary><strong>How long does it take, and what does it cost?｜要多久？花多少？</strong></summary>
+
+Three depth tiers, and the report's first line says which one ran: **Screen** 2–4 h, **Walk** 1–2 days, **Full** open-ended. Measured runs used 121k–259k tokens, about 10k–29k per finding. A bare "run the tests" only runs your tests and *offers* the audit.
+
+> 三種深度：**Screen** 2–4 小時、**Walk** 1–2 天、**Full** 不設限，報告第一行會寫明跑的是哪一種。實測每次約 121k–259k tokens。只說「跑測試」時，它只會跑測試，然後詢問你要不要做完整稽核。
+</details>
+
+<details>
+<summary><strong>Will it change my code?｜它會改我的程式嗎？</strong></summary>
+
+Only when a fix is local, reversible, carries a new test that proves it, and touches no shared state or secret — one commit per finding, on a working branch unless your `CLAUDE.md` / `AGENTS.md` says otherwise. Never pushes. Anything irreversible, shared, or a decision is escalated to you with the patch attached, unapplied.
+
+> 只有在「改動在本地、可還原、附上證明它的測試、不碰共用資料與金鑰」時才會自動修，一個發現一個 commit，且不會 push。其他一律附上修正 patch 交給你決定。
+</details>
+
+<details>
+<summary><strong>Does my code leave my machine?｜程式碼會被上傳嗎？</strong></summary>
+
+`cia` is a set of instructions your agent follows locally; it adds no service of its own. What your agent sends to its model provider is governed by that provider's policy. It never calls live third-party endpoints with side effects — sandbox or mock only.
+
+> `cia` 只是一套讓 Agent 在本機遵循的指令，本身不連任何服務。Agent 傳給模型供應商的內容依該供應商的政策處理。它絕不呼叫有副作用的正式第三方 API。
+</details>
+
+<details>
+<summary><strong>I'm not an engineer. Can I use it?｜我不是工程師，能用嗎？</strong></summary>
+
+Yes. Say so, and the plain-language contract (§0.15) binds every message to plain words: what is safe, what is not, what to do first. Prompts in 繁體中文 work too.
+
+> 可以。告訴它你不是工程師，它就會全程用白話說明：哪裡安全、哪裡不安全、先做什麼。也支援繁體中文指令。
+</details>
+
+<details>
+<summary><strong>Why should I trust an AI auditor?｜為什麼要相信 AI 稽核？</strong></summary>
+
+Don't — trust the evidence. Reading code never produces PASS in this skill; only an artefact from this run does. And the skill is scored the same way: a planted-defect fixture, a corpus of real bugs audited at the commit *before* the fix, and twelve look-alike-but-correct controls. Numbers are in [How it is measured](#how-it-is-measured), including the miss.
+
+> 不用相信 AI，相信證據就好。在這個 Skill 裡，「讀過程式碼」永遠不算通過，只有這次執行產生的證據才算。Skill 本身也用同樣的標準被評分，包含它漏掉的案例。
+</details>
+
+<details>
+<summary><strong>Which agents does it run on?｜支援哪些 Agent？</strong></summary>
+
+Tested on Claude Code (plugin or skill directory) and OpenAI Codex. The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+</details>
+
+---
+
+<a id="about"></a>
+
+## About｜關於
+
+**New in this release — evidence discipline borrowed from reverse engineering.** Every claim is tagged OBSERVED / INFERRED / UNKNOWN; every promise the owner made becomes an **obligation** with exactly one owner in the code and a verifier that names it; a test can only close a claim at its own strength (a mocked gateway never proves a real callback); "nothing reads it" must state where it looked; cut-off output is never counted; contradictions between manual, sandbox and code are recorded instead of resolved by preference; and a new **reverse-trace mode** starts from what the system visibly does and traces inward. See `references/evidence.md`. Ideas adapted from [REA](https://github.com/morluto/rea).
+
+> **本版新增：從逆向工程借來的證據紀律。** 每一條結論都標記「實測 / 推論 / 未知」；老闆說過的每一個承諾都變成一條**義務（Obligation）**，在程式裡必須剛好有一個負責者、一個點名它的驗證；測試只能證明與自己同等強度的事（用假金流的測試，永遠證明不了真的 Callback）；「沒有程式在讀」必須說清楚找過哪裡；被截斷的輸出不算數；手冊、測試環境與程式碼互相矛盾時，記錄下來而不是挑方便的那邊相信；新增**反向追蹤模式**：從系統看得見的行為出發，一路追到程式碼裡。詳見 `references/evidence.md`。概念改編自 [REA](https://github.com/morluto/rea)。
 
 **Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push that scores below the run before (RUNBOOK step 6).
-
-[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install安裝) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install安裝) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
-
-**English 🇬🇧 · 繁體中文 🇹🇼** — every section is written in both, English first, 中文接在後面。
 
 A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable system** in Stafford Beer's sense, and hunts the defect class that only such a view can see: **cross-boundary invariant violations**, also called **integration-level** or **emergent defects**.
 
@@ -13,6 +183,8 @@ A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable sy
 Since v2.0 the skill is a runbook plus reference files: twenty-two sweeps instead of fourteen, depth tiers so a run says what it did and did not walk, sweep lines that name their sites and quote a line from one of them, a plain-language contract for owners who are not engineers, a paired run with `ecommerce-cia`, and a fixture project with an answer key that fresh agents are cold-tested against.
 
 > 自 v2.0 起，本 Skill 已演進為一套 Runbook 搭配參考文件：掃描項目（Sweeps）從原本的 14 項擴增至 22 項；導入深度分級機制（Depth Tiers），讓每次執行都能清楚交代檢視與未檢視的範圍；掃描結果行會直接標示檔案位置並引用相關程式碼；針對非工程背景的 Owner 提供白話文合約機制；支援與 `ecommerce-cia` 協同執行；並附帶包含標準答案的測試專案（Fixture），用於對全新的 Agent 進行冷測試（Cold test）。
+
+<a id="how-this-is-different"></a>
 
 ## How this is different from a code review｜與一般 Code Review 的差異
 
@@ -293,6 +465,8 @@ that explains the number, the screen the refusal reaches, the boundary it must n
 
 ---
 
+<a id="how-it-is-measured"></a>
+
 ## How it is measured｜這個 Skill 的品質，如何被量測
 
 A skill that grades other people's evidence should be able to show its own｜一個專門檢查別人「有沒有證據」的工具，自己更應該拿得出證據。
@@ -335,6 +509,8 @@ When the request is in everyday words and the project carries no technical vocab
 > `tests/fixture-service/` 為可執行的服務；自 2026-09-24 起，`RUNS.md` 對執行的評估分為兩部分——透過閱讀所發現的內容，以及實際執行的成果（狀態差量走查、S2 併發探針為實際觸發而非僅作預測，以及一份每項 PASS 皆引用了產出物證明的證據帳本）。
 >
 > `tests/fixture-service/` 是一個小型 Python 任務執行器（Job Runner），在 4 個綠燈測試下埋藏了 10 個缺陷 —— 包含無任何程式讀取的 Config Key、遺失條件的 SELECT-then-UPDATE 查詢、預設放行的 Config Loader、什麼都沒檢查卻印出 "0 problems" 的 Monitor、無人讀取的 Heartbeat、狀態頁面無法顯示的狀態、孤立的 Retry Helper、無效測試（Vacuous Test），以及會洩漏至 Runner 環境的測試。`tests/EXPECTED.md` 為標準答案；`tests/RUNBOOK.md` 用於為執行結果評分（Hit、Near、Miss、False Positive、Control Misfiled、Vacuous Line）；`tests/RUNS.md` 則是紀錄帳冊。該 Fixture 刻意不設計成電商系統，藉此證明金流關卡保持關閉，且執行 "run tests" 不會啟動長達四小時的完整協定。`tools/sweep-diff.py` 則可用來比對本 Skill 與 `ecommerce-cia` 的 Sweeps 內文是否產生偏差。
+
+<a id="install"></a>
 
 ## Install｜安裝方式
 
@@ -395,7 +571,21 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/doctrine.md` | evidence grading, context discovery, the universal test matrix, the domain checklist｜證據評級、上下文探索、通用測試矩陣、領域檢查清單 |
 | `references/context-templates.md` | Blender add-on · e-commerce platform · workflow orchestration｜Blender 外掛 · 電商平台 · 工作流編排 |
 | `references/reporting.md` | finding format, severity model, verified controls, the final report｜Finding 格式、嚴重度模型、已驗證控制項與最終報告 |
+| `references/evidence.md` | claim tags, authority ladder, the obligation ledger (intent → owner → verifier), unknowns, bounded negatives, contradictions, reverse trace｜結論標記、證據強度階梯、義務帳冊（意圖 → 負責程式 → 驗證）、未知清單、有邊界的「找不到」、矛盾紀錄、反向追蹤 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |
+
+## Star history｜Star 趨勢
+
+<a href="https://www.star-history.com/#mixocreative/cia&mixocreative/ecommerce-cia&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mixocreative/cia,mixocreative/ecommerce-cia&type=Date&theme=dark" />
+    <img alt="Star history for cia and ecommerce-cia" src="https://api.star-history.com/svg?repos=mixocreative/cia,mixocreative/ecommerce-cia&type=Date" />
+  </picture>
+</a>
+
+If `cia` caught something for you, a ⭐ helps other people find it. Found a defect class it missed? [Open a lesson issue](https://github.com/mixocreative/cia/issues/new?template=lesson.md) — every sweep in this skill started as one.
+
+> 如果 `cia` 幫你抓到 bug，給個 ⭐ 能讓更多人找到它。發現它漏掉的缺陷類型？歡迎[開一個 lesson issue](https://github.com/mixocreative/cia/issues/new?template=lesson.md)，這個 Skill 的每一個掃描項目都是這樣來的。
 
 ## License｜授權條款
 
