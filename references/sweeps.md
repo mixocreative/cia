@@ -180,6 +180,11 @@ author agreeing with the finding.
 
 For every third-party field the code branches on (API status, webhook type, protocol sub-code), cite the vendor spec page or RFC section that defines it. A mapper comment is not evidence. If the spec distinguishes a family field from a subtype field, confirm the parser reads the one present in every case. No spec read → report line says "field semantics unverified". **Sample code is not a specification.** A vendor's runnable example proves the envelope it exercises and nothing else — it names no response fields, no status codes, no retry or acknowledgement rule. When the only vendor source on disk is a sample pack, the report says so and lists the manual that is missing; if the vendor publishes it, fetch it before writing a line against the boundary. A handoff note claiming "the sample folder is the complete authority" is an S4 finding, not a fact. **Gates must exist for every family that reaches them.** For every predicate a reducer, state machine or settlement path branches on (a status field, a close flag, a sub-code), list every input family that can arrive at that line and confirm the field is defined for each of them in the vendor document. A gate on a field that exists for one family only (a card-only close status read for a bank-transfer or pickup result) leaves the other families stuck in their prior state forever, with no error, no expiry and no alarm — the quietest money defect there is. **The vendor's recap is not the field table.** A manual's own summary list — a 注意事項 note, a changelog, a quick-reference — can omit a field the full request table defines (NDNF-1.2.5 p.40 lists every method flag except `TWQR`, which p.38 defines). Transcribe from the table and use the recap only as a cross-check; record any difference as a finding against the recap, not the table. **Same field name, per-family numbering.** A status field several families share may number its values differently per family (NDNF `CloseStatus` 3 = 請款完成 for cards and wallets but 請款失敗 for BNPL; the payment callback's integer `StoreType` numbers OK as 3 where the logistics `ShipType` numbers it 4). Keep one value table per family keyed on the family field, refuse a value that is not on its family's table, and never derive one document's code from another's integer.
 
+**Traffic is an authority too (2026-10-12).** Where the field crosses the wire in a flow the walk can drive,
+capture it (HAR from the walk's browser, or the proxy) and set three columns side by side: what the
+document says, what the code believes it sends or reads, what the traffic shows. Any disagreement is a
+contradiction row (`evidence.md` §E7), not a judgement call; the reverse trace in §E10 says how.
+
 ## S5 — Control to consumer (dead control / control-to-consumer wiring)
 
 For every admin toggle, feature flag, or settings row, grep for the runtime consumer in the user-facing path. A control with no consumer, or a consumer still reading the legacy source the control was meant to replace, is a finding. **The form is part of the control, and so is the queue.** When a gate is widened — a method that used to accept only one state now accepts two — every surface that leads to it must be widened in the same commit: the renderer that draws the button, the queue whose predicate lists the work, the filter on the desk. Widening the handler alone leaves a capability that exists, passes its unit test, and cannot be reached by the person it was built for (a dispatch control that accepted a cash-on-pickup order while the form that calls it still rendered only for `paid`). Sweep by predicate, not by method name: grep the old condition across renderers, queries and tests, and confirm each hit was considered. **The host's whitelist is a consumer.** When a module copies the request into a named field list before the controller sees it, every field the page posts and the list omits is a dead control that answers with a success notice (a `Turn ON` toggle whose `feature`/`enabled` fields were dropped by `stringsFrom()` for three weeks); a controller test that bypasses the host module proves nothing about it. Walk the whitelist against every `name=` the page renders, and treat a module that hands the request over another way as an exemption to be named, never as silence.
@@ -351,6 +356,12 @@ capability is present, called, and pointed somewhere nothing else is — and the
 see it is that the thing one process wrote is missing from what the other reads. **The default a
 missing config key falls back to is where to look first** (`:memory:`, `/tmp`, `localhost`,
 `sqlite://`, a stub client): each is a working implementation of somewhere nothing else is.
+
+**The general form of the false orphan (2026-10-12).** Every absence this sweep files — no caller, no
+writer, no page — states its search boundary and what lies outside it (`evidence.md` §E5): DB triggers,
+crontab and timers, workflow tools, other repos, names built from strings. And run the ledger the other
+way: an obligation (§E3) with no owner is this sweep's finding even when no design doc names it, and an
+obligation with **two** owners is S13.1's.
 
 ## S14 — Scope shadow
 
@@ -688,6 +699,11 @@ Three rules that fall out, and all three belong to every S18 run:
 
 
 Report line format: `S18 — subject, authority cited; N cells enumerated, M verified against the document, U unverified; matrix in the report. Re-walks triggered by findings this run: K.`
+
+**When the authorities disagree (2026-10-12).** Manual, validator, sandbox and FAQ will sometimes say
+different things about the same cell. Record a contradiction row (`evidence.md` §E7) with both quotes and
+their authority, block only that cell's obligations, and keep enumerating — a higher authority wins only
+inside its own scope, so the sandbox's answer does not close the production claim.
 
 ## S19 — Environment-constraint reconciliation. A REQUIREMENT THE HOST MUST SATISFY, NEVER CHECKED AGAINST THE HOST THAT WAS CHOSEN
 
@@ -1672,6 +1688,12 @@ and proves each arrival is safe in every order it can actually come.
 interleaving pair whose outcome depends on order: HIGH on a money path, MEDIUM elsewhere. A late
 arrival with no ceiling: file under S12 and cross-reference. A flow with no diagram in the report:
 the sweep did not run on it; report `UNVERIFIED`, never "swept".
+
+**Write the expected order as constraints, not as one sequence (2026-10-12).** For every interleaving pair,
+state what must hold with `evidence.md` §E8's partial order — *exactly one terminal state; paid ≺ shipped;
+notify and return in either order, the second a no-op*. A test that asserts one total order over events the
+system does not order is flaky when it fails and vacuous when it passes. When a trace breaks a constraint,
+report the first divergence, not the last symptom.
 
 ### S23 report line
 

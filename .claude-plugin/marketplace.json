@@ -10,7 +10,7 @@
       "name": "cia",
       "source": "./",
       "description": "Code Integrity Auditor: audits the wiring of any codebase on Stafford Beer's Viable System Model - dead controls, TOCTOU, fail-open, blind watchdogs, unrendered states - with a plain-language contract for owners and a fixture-tested protocol.",
-      "version": "2.0.0"
+      "version": "2.1.0"
     }
   ]
 }

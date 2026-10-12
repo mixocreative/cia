@@ -352,6 +352,10 @@ For each critical user/system flow, execute the full test matrix:
 
 ## 8.0 The invariant register — written before grading, cited by every finding
 
+*Each register entry is also an obligation row (`evidence.md` §E3): give it an ID, its intent source,
+its case kinds, its required authority and its one owner, and the register becomes something a run can
+close rather than something it can only cite.*
+
 Before the checklist below is walked, write the system's invariants down as one numbered list in
 the report: the sentences that must be true at every instant, in the system's own vocabulary —
 *money in equals money recorded*, *one entitlement per paid line, never zero, never two*, *no state
