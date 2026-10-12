@@ -11,7 +11,7 @@
 
 [![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install) [![Fixture](https://img.shields.io/badge/planted_defects-0_missed-2ea44f)](#how-it-is-measured) [![False positives](https://img.shields.io/badge/false_positives-0_of_12_controls-2ea44f)](#how-it-is-measured) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
 
-[Quick start](#quick-start) · [What it catches](#what-it-catches) · [Where it fits](#where-it-fits) · [How it is measured](#how-it-is-measured) · [FAQ](#faq) · [Install](#install)
+[Quick start](#quick-start) · [Wiring audit](#wiring-walk) · [What it catches](#what-it-catches) · [Where it fits](#where-it-fits) · [How it is measured](#how-it-is-measured) · [FAQ](#faq) · [Install](#install)
 
 ```bash
 claude plugin marketplace add mixocreative/cia && claude plugin install cia@mixocreative
@@ -72,6 +72,20 @@ Tier: Screen — elapsed 3h10m (budget 2–4 h)
 5. Fixes applied (one commit + test each) | Escalated to you, with the patch attached
 9. Evidence ledger .................... PASS / FAIL / UNVERIFIED / UNPROVEN — every PASS cites an artefact
 ```
+
+<a id="wiring-walk"></a>
+
+## Feature list vs wiring audit｜功能清單 vs 串接稽核
+
+A feature comparison asks: *"Do we have retries?"* A wiring audit asks: ***"What happens if the job is accepted, the worker dies, the input changes underneath, the result write fails, and someone opens the dashboard on Monday?"*** That is where in-house systems break — and `cia` writes that question for *your* system first, then answers it with evidence.
+
+> 功能比較問的是：「我們有重試機制嗎？」串接稽核問的是：**「如果工作被接受了、Worker 掛了、輸入資料被改了、結果寫入失敗，而有人星期一才打開儀表板，會發生什麼事？」** 自己寫的系統就是在這裡出事。`cia` 會先針對你的系統寫出這個問題，再用證據回答。
+
+- **Three layers, every run｜每次檢查三層:** function logic · relationship wiring (called, persisted, retry-safe, partial failure handled) · lifecycle rules (late, twice, out of order). Findings are counted per layer.
+- **A lifecycle state map｜流程對照圖:** for intake, processing, external calls, reversal, notifications and stored artefacts — expected path (from a mature reference or your spec, used as a **checklist, never the truth**) beside your real path, its failure/retry path, and what the operator actually sees.
+- **Seven questions for every connection｜每條串接七問:** actually called? result saved? safe twice? one authority when systems disagree? can a job die unnoticed? does an unresolved case reach a screen? is there a test that breaks *this* connection?
+- **Seven deliberate failures｜七種故障注入:** reject a downstream write · replay a message · event before its predecessor · two actors on the last unit · timeout while the far side succeeded · remove an artefact a record points to · stop a background job. Passing means **recovered, or visible to the operator** — nothing else.
+- **The deliverable｜交付成果:** a rule traceability matrix (rule · code that enforces it · connected systems · proof · covered/gap) and a gap register with exact `file:line` and proof status. Ask *"what should we audit next?"* and a **reference-guided Walk** is what it recommends. Full method: `references/wiring-walk.md`.
 
 <a id="what-it-catches"></a>
 
@@ -572,6 +586,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/context-templates.md` | Blender add-on · e-commerce platform · workflow orchestration｜Blender 外掛 · 電商平台 · 工作流編排 |
 | `references/reporting.md` | finding format, severity model, verified controls, the final report｜Finding 格式、嚴重度模型、已驗證控制項與最終報告 |
 | `references/evidence.md` | claim tags, authority ladder, the obligation ledger (intent → owner → verifier), unknowns, bounded negatives, contradictions, reverse trace｜結論標記、證據強度階梯、義務帳冊（意圖 → 負責程式 → 驗證）、未知清單、有邊界的「找不到」、矛盾紀錄、反向追蹤 |
+| `references/wiring-walk.md` | feature list vs wiring: three layers, lifecycle state map, seven connection questions, faults G1–G7, question banks, rule traceability matrix, gap register｜功能 vs 串接：三層檢查、流程對照圖、每條串接七問、七種故障注入、問題清單、規則追溯矩陣、缺口登記表 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |
 
 ## Star history｜Star 趨勢
