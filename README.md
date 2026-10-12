@@ -589,6 +589,11 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/wiring-walk.md` | feature list vs wiring: three layers, lifecycle state map, seven connection questions, faults G1–G7, question banks, rule traceability matrix, gap register｜功能 vs 串接：三層檢查、流程對照圖、每條串接七問、七種故障注入、問題清單、規則追溯矩陣、缺口登記表 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |
 
+## More skills by MixoCreative｜更多 MixoCreative 的 Skill
+
+- **[ecommerce-cia](https://github.com/mixocreative/ecommerce-cia)**: Commerce Integrity Auditor. The same method plus payments, stock, refunds and invoices, with live-verified Taiwan gateways (藍新、綠界、LINE Pay).
+- **[token-economy-delegation](https://github.com/mixocreative/token-economy-delegation)**: One router for local Ollama, Codex and Claude. Bulky jobs go to the cheapest worker whose answer can be checked; a failed check escalates. Pairs well with a long audit.
+
 ## Star history｜Star 趨勢
 
 <a href="https://www.star-history.com/#mixocreative/cia&mixocreative/ecommerce-cia&Date">
