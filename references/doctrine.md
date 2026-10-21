@@ -157,6 +157,11 @@ How is state preserved across crashes, restarts, or closes?
 - [ ] Git / version control integration
 - [ ] None (state is ephemeral)
 
+**And per environment (2026-10-16, S19.3 / S19.4):** for every environment the state lives in — developer
+machine, each CI leg, staging, the production host, any stated future host — record the engine and its
+version, the account's privileges, and how a backup made there is restored somewhere else. Two
+environments with different engines are two persistence mechanisms, whatever the ORM says.
+
 ---
 
 ## 3.5 Concurrency Model

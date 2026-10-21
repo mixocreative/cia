@@ -415,6 +415,8 @@ You **must**:
 - Identify missing admin/recovery procedures
 - Report verified controls (not just problems)
 - Map findings to VSM systems (not just list issues)
+- Treat a push as unfinished until the CI run for that commit has been read, and report its id and conclusion (S20.6)
+- Reproduce a CI-only failure locally (other engine, restricted account, secrets absent) before pushing a fix for it; CI minutes are a budget (S20.6)
 
 You **must not**:
 
@@ -431,6 +433,8 @@ You **must not**:
 - Confuse UI state with authoritative state
 - Report "best practice" violations without demonstrating actual harm
 - Overlook recovery procedures (focus on detection + recovery, not prevention only)
+- Call a suite green on an environment it did not run on — a laptop run on one engine with every privilege and every secret is evidence about the laptop (S19.3)
+- Re-run a red CI job without a written hypothesis of why it would now pass (S20.6)
 
 ## Nothing leaves the room unrecorded, and the record lives where the next person will trip over it
 

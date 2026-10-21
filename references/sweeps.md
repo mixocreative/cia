@@ -754,6 +754,78 @@ a PHP array, uploads on the local disk, a cron on one host, a lock that is a tab
 connection. Write the row with the stage that breaks it, and the plan's date for that stage; a
 finding with no such date is post-launch and says so.
 
+**S19.3 — the parity matrix: the developer machine is the most permissive cell (2026-10-16).**
+S19 crosses what the dependencies require against what the host provides. The same cross has to be
+made against what **the suite ran on**, because a test is evidence about the environment it ran in
+and nothing else — and the developer's machine is almost always the most forgiving environment the
+code will ever meet. Three axes, each of which has produced a red CI under a green laptop:
+
+1. **Engine and version.** One database engine locally while the deploy target, a CI leg or a stated
+   future host runs another (MySQL locally, MariaDB on the host, or the reverse; one major version
+   against another). What diverges is a list worth walking site by site: engine-specific SQL (JSON
+   operators and `JSON_TABLE`, `RETURNING`, CTE and window edge cases), `information_schema` columns
+   and their case and collation, DDL behaviour (implicit commits, default values on `TEXT`/`JSON`,
+   online `ALTER`), what `JSON` is (a native type on one, an alias with a check constraint on the
+   other), `GET_LOCK` and advisory-lock semantics, and the client programs themselves — dump and
+   restore binaries whose names and accepted flags differ by engine, so a tool that shells out to one
+   works only where that one is installed.
+2. **Privileges.** A local account that can do everything (`CREATE DATABASE`, `PROCESS`, `RELOAD`,
+   `SUPER`, routines and triggers) where shared hosting and many CI services grant one database and
+   little else. A test that creates a scratch database, a tool that reads a `PROCESS`-gated table or
+   sets a global variable, a dump that asks for routines — each passes locally and fails there.
+3. **Secrets present or absent.** Locally the `.env` holds every secret, every time, so a code path
+   that **wrongly requires** one is never exercised without it — a list-only or dry-run tool that
+   resolves the database password before discovering it needs no connection, a health check that
+   reads a key it never uses. CI (forks, unprivileged jobs, a fresh runner) is usually the first place
+   the secret is missing, which makes it the first place the wrong dependency shows.
+
+**Method.** Write the matrix: one row per environment the code runs in — developer machine, each CI
+leg, staging, the production host, and every host or engine a stated move names (S19.4) — with
+columns for engine and version, the account's privileges, secrets present or absent, OS and
+filesystem (case sensitivity, bind-mount quirks), and runtime version. Then one cell per suite ×
+environment: **RAN** with that run's count line pasted, or **NOT RUN**. Reproduce the cells you do not
+have before pushing, not after: a throwaway container of the other engine on a spare port, a second
+account granted exactly what the target grants, and one run with the secrets unset (an empty `.env`,
+`env -u`). CI is where a cell gets confirmed, not where it gets discovered (S20.6).
+
+**Grading.** A single-engine run is **not a green light** when the deploy target or a stated migration
+target is another engine: that cell is UNVERIFIED, and on a path that stores the primary state it is a HIGH
+finding until it is RAN. A privilege the code needs that the target account lacks is graded as S19
+grades any requirement the host cannot satisfy. A code path that demands a secret it does not use:
+MEDIUM — it fails the first unprivileged run and it means the tool cannot run where the secret must
+not be.
+
+**Worked example (mixoweb, 2026-10-14..16).** Every suite was green on the laptop, against MySQL, with
+an account that could create databases, and with `.env` populated. CI's MariaDB leg went red on
+engine-specific behaviour in the dump, restore and migration-guard tooling; the restricted CI account
+could not do what the laptop's could; and a list-only restore command failed because it resolved the
+database password from an environment that, for once, did not have one. None of the three could fail
+on the machine the code was written on, and all three had been called green.
+
+Report line format: `S19.3 — E environments × S suites; RAN R / NOT RUN N (matrix in the report); engines run <list> of engines named by deploy and migration targets <list>; restricted-account run: yes/no; secrets-absent run: yes/no.`
+
+**S19.4 — migration readiness: a backup that has never been restored somewhere else is not a migration plan (2026-10-16).**
+Runs whenever the owner has stated a future move — host to host, engine to engine, shared hosting to a
+VPS, one region to another. "Backup and restore exist" is a claim about two tools; readiness is a claim
+about a round trip **across the boundary the move crosses**, and only a drill makes it. Require:
+
+1. **Dump on A, restore on B**, where A is the current engine and version and B the target's (a
+   throwaway container of B is enough).
+2. **Compare, per table**: row counts, and `CHECKSUM TABLE` — or, where a column type makes the two
+   engines' checksums incomparable, an ordered-row hash, saying which tables needed it and why.
+   **Compare the file stores** (uploads, private downloads, generated documents) by a hash manifest.
+3. **Smoke B through the application**: log in, open a recent record, exercise one download or
+   export. A restore whose data is right and whose logins all fail because a salt or app key did not
+   travel is the commonest failed migration there is.
+4. **Write the lay-person procedure**: numbered steps the owner can follow without the developer,
+   naming each program, where every secret that must travel comes from, and how to tell it worked.
+
+**Grading.** A stated move with no cross-engine drill: HIGH — it is the data-loss class, deferred to the
+day of the move. A drill with row counts only and no checksums: its cells are PARTIAL. A drill with no
+lay procedure: MEDIUM, because the person who will run it is not the person who wrote it.
+
+Report line format: `S19.4 — move stated: <A → B | none>; drill: <date, A engine@version → B engine@version, T tables, counts equal C/T, checksums equal K/T, files hashed F> | NOT RUN; lay procedure: <path | none>.`
+
 ## S20 — Liveness of the safety net itself. ZERO FINDINGS AND ZERO LOOKING ARE THE SAME REPORT UNLESS SOMEBODY DESIGNED THEM APART
 
 The First Law — *"Nothing should die silently!!"* — applied to the watchdogs themselves.
@@ -846,6 +918,26 @@ liveness answer to a readiness question. For every detector and worker on the ro
 of the two its signal is, and whether anything asks the other.
 
 **S20.5 — a walk receipt proves the moment it was taken, not the day after (2026-09-20).** A headless walk logged into the admin, read the rendered menu and recorded five tabs with the right rows and order — proof, with a timestamp, that a menu-grouping hook was live. The next morning an environment fault killed it: a Docker bind mount whose `rewinddir()` returned a single entry made the installer see one of forty-eight modules, so a routine install run inside the container poisoned the module cache and every autoloaded module — the nav hook included — went silently off, with the admin back to a flat, ungrouped list and no error anywhere. The walk's receipt was still sitting in the report, true when written and false by the time anyone read it again. **A receipt is evidence for the run that produced it, never a standing guarantee** — treat "proven live" as dated, not closed, and demand the detector live *in the product*: a badge or panel an operator sees every day they open the screen, not only a line in an audit's output that nobody re-runs until the next audit.
+
+**S20.6 — the CI run nobody read (2026-10-16).** CI is a detector, and a detector whose verdict
+lands in an inbox nobody opens is the dead watchdog in its most ordinary form. **A push is not done
+until the CI run for that commit has been read**: its id, its conclusion, and for a red, the first
+failing job and step. In the worked example two pushes went out with a red CI that nobody looked at,
+and the owner learned it from the hosting platform's failure e-mail — the outermost check fired, and
+reached the one person who could not act on it.
+
+**Audit check.** For the commit audited, report the latest CI run id and conclusion (for GitHub:
+`gh run list --commit <sha> --limit 1 --json databaseId,status,conclusion`). `not checked` is itself a
+finding — MEDIUM, HIGH on a green-light request — and so is a CI that is configured and has not run on
+the audited commit, and so is a red on any earlier commit of the branch that nothing has explained.
+The verdict has to reach a person, not only a mailbox.
+
+**And the budget rule.** CI minutes can be the scarcest resource a small project has (a free plan, no
+budget for more), and every push spends them. Reproduce the CI cell locally first — S19.3's other-engine
+container, restricted account and secrets-absent run — push rarely and in batches, and never re-run a red
+without a written hypothesis of why it would now pass. A speculative re-run spends the budget on a
+question a local reproduction answers for nothing; and a red that turns green on re-run is a flaky test,
+which is an S21 finding, not a pass.
 
 Report line format: `S20 — D detectors enumerated; C report coverage separately from findings; H have a liveness signal something reads; E escalate to a human surface; outermost check: <named, or NONE>.`
 
