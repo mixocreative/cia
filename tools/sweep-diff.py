@@ -32,10 +32,13 @@ ECOM = SKILLS / "ecommerce-cia" / "references" / "sweeps.md"
 
 def sections(path: Path) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
-    parts = re.split(r"^## (S\d+) ", text, flags=re.M)
+    # Split on every level-2 heading, then keep the sweeps: a non-sweep section after S24 (cia's
+    # "Audit-derived classes", 2026-10-22) must end S24 rather than be counted as part of it.
+    parts = re.split(r"^## (\S+)", text, flags=re.M)
     out = {}
     for i in range(1, len(parts), 2):
-        out[parts[i]] = parts[i + 1]
+        if re.fullmatch(r"S\d+", parts[i]):
+            out[parts[i]] = parts[i + 1]
     return out
 
 
