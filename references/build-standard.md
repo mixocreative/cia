@@ -10,23 +10,35 @@ cheap, and looking correct is exactly what an LLM is good at. The answer is not 
 careful-sounding code. It is to name the properties an operation must have, and to **prove each
 one by running something that fails when the property is absent**.
 
-The sibling `ecommerce-cia` ships the worked example — `tools/reference/stock_reduction.php`, a
-stock reduction, with `prove_stock_reduction.php` proving all four properties in eight checks.
-The operation is a shop's; **the standard is not**: a job claim, a seat booking, a licence grant
-and a ledger entry need the same four, and the corpus has caught three of them failing. Read the
-proof before the implementation: it is the part that cannot be faked by prose.
+**The standard is domain-neutral; it keys on the system's primary quantity** — the thing the
+system exists to get right (`browser-walks.md` §12): the claim on a job in a runner, the rows a
+pipeline commits, the document or scene an editor saves to disk, a seat booking, a licence grant
+or entitlement, a ledger balance, the stock in a shop. A job claim, a document save, a seat
+booking, a licence grant and a ledger entry need the same four properties, and the corpus has
+caught three of them failing. This skill's own fixture (`tests/fixture-service/`, a job runner)
+is the non-commerce worked case: its `claim_batch` race is the race-free property failing, fired
+twice and caught by the live probe (`tests/RUNBOOK.md`).
+
+The one *executable* reference implementation today is commerce-flavoured, and lives in the
+sibling `ecommerce-cia`: `tools/reference/stock_reduction.php`, a stock reduction, with
+`prove_stock_reduction.php` proving all four properties in eight checks. The operation is a
+shop's; **the standard is not**. The SQL below uses a job claim first and the stock reduction
+second, so it reads the same in either domain. Read the proof before the implementation: it is
+the part that cannot be faked by prose.
 
 ---
 
 ## §1 — The four properties of a primary-path write
 
-Any operation that moves money, stock, a claim on work, or an entitlement needs all four. Three
-out of four is a system that loses records slowly.
+Any operation that changes the primary quantity — a claim on work, rows a pipeline commits, a
+user's saved document, an entitlement, a balance, money or stock — needs all four, and so does any
+operation that is irreversible or wide in blast radius whatever it touches. Three out of four is
+a system that loses records slowly.
 
 | # | Property | What it means | The mechanism | The proof that it holds |
 |---|---|---|---|---|
-| 1 | **Atomic** | every write of one operation lands together or not at all | one explicit transaction, rollback on every failure path | **inject a fault after the first write and before commit**, then read the store: the first write must be gone |
-| 2 | **Race-free** | two concurrent callers cannot both win | the predicate lives **in** the `UPDATE`, and the affected-row count decides | fire the operation twice concurrently against a row where only one may win; read the row after |
+| 1 | **Atomic** | every write of one operation lands together or not at all | one explicit transaction, rollback on every failure path (on a file store: write a temp file, flush, rename over the target) | **inject a fault after the first write and before commit**, then read the store: the first write must be gone |
+| 2 | **Race-free** | two concurrent callers cannot both win | the predicate lives **in** the `UPDATE`, and the affected-row count decides (on a file: a version or mtime check under a lock) | fire the operation twice concurrently against a row where only one may win; read the row after |
 | 3 | **Idempotent** | a retry does not re-apply | a caller-supplied key under a **UNIQUE constraint**, written inside the same transaction | send the same key twice; the second returns the first answer and changes nothing |
 | 4 | **Loud** | nothing is swallowed | a refusal is a **returned value**; a fault is an **exception** — and the two are never the same type | assert both: a refusal returns a named outcome, a fault propagates |
 
@@ -34,22 +46,29 @@ out of four is a system that loses records slowly.
 
 One `BEGIN` … `COMMIT`, and a `ROLLBACK` on every path out. The rollback's own failure is
 attached to the exception rather than discarded, because a transaction that will not roll back is
-the worst news the function can carry.
+the worst news the function can carry. On a file store the same property is write-to-temp,
+flush, then an atomic rename: an editor that writes the document in place loses the user's work
+the moment the process dies half-way through the write.
 
 **The proof is the part teams skip.** A happy-path test passes against an implementation with no
 transaction at all. The only check that separates atomic from transaction-shaped is a fault
-injected *after* the first write: drop the table the second write needs, run the operation, and
-assert the first write is gone. The reference proves exactly this, and it is check seven.
+injected *after* the first write: drop the table the second write needs (or fail the rename), run
+the operation, and assert the first write is gone. The reference proves exactly this, and it is
+check seven.
 
 ### 1.2 Race-free
 
 ```sql
+-- a job claim
+UPDATE jobs SET state = 'running', worker = ? WHERE id = ? AND state = 'queued'
+-- the same shape, in a shop
 UPDATE products SET stock = stock - ? WHERE sku = ? AND stock >= ?
 ```
 
 The `SELECT` above it may inform the message. It must not authorise the write. Two callers, one
-unit: the database arbitrates, one `UPDATE` matches, the other matches nothing, and `rowCount()`
-is what the code reads — not the value it read a moment earlier.
+unit (one queued job, one item in stock): the database arbitrates, one `UPDATE` matches, the
+other matches nothing, and `rowCount()` is what the code reads — not the value it read a moment
+earlier.
 
 **`BEGIN IMMEDIATE` (or `SELECT … FOR UPDATE`, or the engine's equivalent) takes the write lock
 up front** rather than on first write, so two writers serialise at the door instead of colliding
@@ -57,59 +76,68 @@ half-way through.
 
 Two corollaries the corpus taught, both from real fix commits:
 
-- **An absolute write is worse than a wrong write.** `SET stock = ?` with a value computed in the
-  application loses the loser's update *and* leaves a plausible number behind, so the oversell is
-  invisible afterwards. `SET stock = stock - ?` at least leaves arithmetic that can be audited.
+- **An absolute write is worse than a wrong write.** `SET stock = ?` (or `SET progress = ?`,
+  `SET balance = ?`) with a value computed in the application loses the loser's update *and*
+  leaves a plausible number behind, so the lost update is invisible afterwards. `SET stock =
+  stock - ?` at least leaves arithmetic that can be audited.
 - **A lock documented as atomic is not atomic.** A corpus entry's lock helper was a
   read-modify-write on the backend the app selected by default, while its own comment claimed
   `hincrby` was "guaranteed atomic on every backend". Read the storage adapter, not the helper.
 
 ### 1.3 Idempotent
 
-The key is the caller's, not the server's, and it identifies **the intent** — a cart, a checkout
-attempt, a provider's event id — never the attempt. Three rules:
+The key is the caller's, not the server's, and it identifies **the intent** — a job submission,
+an import batch, a save of document version N, a cart or checkout attempt, a provider's event id —
+never the attempt. Three rules:
 
 1. **The UNIQUE constraint is the arbiter**, not a `SELECT … WHERE key = ?` before the write. A
    check outside the write is a prediction (S2); the constraint is a decision. Keep the read as a
    fast path if you like, but the insert must be able to lose.
 2. **Record the refusal too.** A replayed refusal must refuse identically. An implementation that
-   records only successes turns a retry of "insufficient stock" into a fresh attempt that may
-   succeed — and the customer is charged for a decision the shop already made.
-3. **The key's identity is the provider's, when the provider supplies one** — and it is sometimes
-   a *pair*. Adyen's duplicate is `eventCode` + `pspReference` with a differing `eventDate`
-   (`adyen-onboarding.md` §3); a handler keyed on one field treats a duplicate as new.
+   records only successes turns a retry of a refused operation ("quota exceeded", "insufficient
+   stock") into a fresh attempt that may succeed — and the caller is billed, charged or granted
+   for a decision the system already made.
+3. **The key's identity is the producer's, when the producer supplies one** — and it is sometimes
+   a *pair*. A webhook sender's duplicate can be two fields with a differing timestamp (in
+   payments, Adyen's `eventCode` + `pspReference` with a differing `eventDate`,
+   `adyen-onboarding.md` §3 in `ecommerce-cia`); a handler keyed on one field treats a duplicate
+   as new.
 
 ### 1.4 Loud
 
-**A refusal is a value. A fault is an exception. Collapsing the two is how a shop records a sale
-it did not make.**
+**A refusal is a value. A fault is an exception. Collapsing the two is how a system records an
+outcome that did not happen** — a job marked done that never ran, a save reported that never
+reached disk, a sale recorded that was never made.
 
-- "Not enough stock" is a business outcome: return it, named, in a type the caller must handle.
-- "The database is unreachable" is a fault: roll back and raise. Do not return `false`, `null`,
-  or an empty result that a caller will read as "no".
-- **A caller bug is neither**: `qty = -3` is not a refusal to be recorded, it is an argument that
-  should never have reached the SQL. Throw immediately — this is the under-quantity row
-  (`browser-walks.md` §12) at the function boundary, and two independent audit runs missed it in
-  a shop that accepted it.
+- "Not enough stock", "job already claimed", "file changed on disk since you opened it" are
+  business outcomes: return them, named, in a type the caller must handle.
+- "The database is unreachable" or "the disk is full" is a fault: roll back and raise. Do not
+  return `false`, `null`, or an empty result that a caller will read as "no".
+- **A caller bug is neither**: `qty = -3` or a negative frame count is not a refusal to be
+  recorded, it is an argument that should never have reached the SQL. Throw immediately — this is
+  the under-quantity row (`browser-walks.md` §12) at the function boundary, and two independent
+  audit runs missed it in a system that accepted it.
 - **The log level is part of the posture.** `log.debug` on a failure path is silence with a
   receipt, because production runs at INFO (`sweeps.md`, S3). If the catch exists to record
   something, record it where a person will see it.
-- **Check the producer's own contract before grading a `catch` on an ingress path.** At least one
-  major payment provider instructs merchants to acknowledge *before* processing, which inverts
-  this rule for that boundary; the sibling `ecommerce-cia` documents it.
+- **Check the producer's own contract before grading a `catch` on an ingress path.** Some
+  producers instruct receivers to acknowledge *before* processing (at least one major payment
+  provider does), which inverts this rule for that boundary; the sibling `ecommerce-cia`
+  documents the payment case.
 
 ---
 
 ## §2 — Beyond the four: what the operation still owes
 
-The four properties make the write *correct*. They do not make the shop *viable*, and an audit
+The four properties make the write *correct*. They do not make the system *viable*, and an audit
 that stops at four has stopped early:
 
-- **An explanation.** A movement row that commits with the number it explains. "Why is stock 3?"
-  is a question somebody will ask six months later, and `stock = 3` is not an answer.
+- **An explanation.** A movement or history row that commits with the number it explains. "Why
+  is this job back in the queue?", "why is stock 3?", "why did this layer change?" is a question
+  somebody will ask six months later, and the current value is not an answer.
 - **A surface.** Every outcome — including the refusal — reaches a screen a person can act on
-  (S22). A refusal that only the HTTP status knows about is silent to the customer and invisible
-  to the operator.
+  (S22). A refusal that only the HTTP status or the exit code knows about is silent to the user
+  and invisible to the operator.
 - **A boundary.** The function decides what is true; it does not decide *who may ask*. Authorisation
   belongs to the caller, and a corpus entry showed why: a module where every handler took the
   object id from the request and none established ownership.
@@ -127,7 +155,7 @@ required authority, the one owner. The four properties are case kinds of that ro
 When the request is *"write this"* rather than *"audit this"*:
 
 1. **Name the operation's primary quantity and its observers** (`browser-walks.md` §12). If you
-   cannot say what number must be right afterwards, nothing below matters yet.
+   cannot say what number or state must be right afterwards, nothing below matters yet.
 2. **Write the proof first.** The four checks in §1's last column, against the operation you are
    about to write. They must fail before it exists.
 3. **Write the operation** to the mechanisms in §1.
@@ -138,11 +166,11 @@ When the request is *"write this"* rather than *"audit this"*:
    implementation's comments. Reading never produces PASS, and that includes reading code you
    wrote yourself an hour ago.
 
-**On the objection this file answers.** "An AI cannot write a production e-commerce backend" is
-true of any author — human or otherwise — who writes plausible code and ships it unproven. It is
-false where the properties are named and each one is demonstrated by something that fails when
-the property is absent. The difference is not the author. It is whether the proof exists, and
-whether anyone ran it.
+**On the objection this file answers.** "An AI cannot write a production backend" (a job system,
+a sync engine, an editor's save path, an e-commerce checkout) is true of any author — human or
+otherwise — who writes plausible code and ships it unproven. It is false where the properties are
+named and each one is demonstrated by something that fails when the property is absent. The
+difference is not the author. It is whether the proof exists, and whether anyone ran it.
 
 ---
 

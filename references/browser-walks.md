@@ -59,8 +59,9 @@ the documented dev credential lives, once.
 - **API walks and UI walks are separate directories** (`tests/api`, `tests/ui`) with separate
   budgets; an API walk is seconds and runs on every commit, a UI walk is minutes and runs before
   a release.
-- **An empty seed is a mode**, not an accident (`start:empty`): the day-one shop with no orders,
-  no products and no customers is a state every list page must render (S22 step 4).
+- **An empty seed is a mode**, not an accident (`start:empty`): the day-one system with no records,
+  no projects and no users — a shop with no orders, products or customers, an editor with no
+  document open — is a state every list page and panel must render (S22 step 4).
 
 ## 5. Evidence on failure, silence on success
 
@@ -76,15 +77,16 @@ that passes on the auditor's laptop and fails on the launch host.
 
 ## 7. Isolation — every walk makes its own world
 
-Each walk registers its own customer (a tagged address such as `walk-<mode>-<suffix>@example.com`)
-and places its own order; none assumes another's state. Tagged data is bulk-removable
+Each walk registers its own user (a tagged address such as `walk-<mode>-<suffix>@example.com`)
+and creates its own object — its own project, job or order; none assumes another's state. Tagged data is bulk-removable
 afterwards; a load probe uses its own domain (`@test-load.invalid`) for the same reason.
 
 ## 8. API beside UI
 
-For every UI walk there is usually a cheaper API or CLI check of the same fact (the order row,
-the payment row, the entitlement). Do both where the fact is money: the UI proves the person
-sees it, the row proves it is true. Mock the vendor at the boundary, never the shop.
+For every UI walk there is usually a cheaper API or CLI check of the same fact (the job row, the
+saved file read back, the entitlement, the order or payment row). Do both where the fact is the
+primary quantity (money, in a shop): the UI proves the person sees it, the row proves it is true.
+Mock the vendor at the boundary, never the system under test.
 
 ## 8a. Closed-loop actions
 
@@ -136,29 +138,35 @@ the launch gateway — so the Pay button would have done nothing on the real pag
 headless walks of that gateway were green. **Before a gateway is called walked, one real browser
 has posted its real form once, and the response headers of the page that posts it have been
 read.** Put that click in the smoke folder, per gateway, and read the CSP, cookie and referrer
-headers on the checkout route as part of it (doctrine §8.2 in `cia`).
+headers on the checkout route as part of it (doctrine §8.2 in `cia`). The general form, in any
+system: every form, redirect or upload that crosses to another origin — an OAuth provider, a
+storage or CDN host, an embedded tool, a payment gateway — is crossed once in a real browser
+before it is called walked, with the headers of the page that sends it read.
 
 ## 12. The state-delta ladder - the walk that proves an operation (2026-09-24)
 
 Sections 10 and 11 check that a page renders and that a browser can cross it. Neither checks
 that an operation *did the right thing to the system*, and that is the half of the runtime walk
 most reports are missing: every route 200, every asset 200, every heading present - and nobody
-ever asked whether buying the thing changed the number.
+ever asked whether doing the thing (saving it, claiming it, buying it) changed the number.
 
 A state-delta walk is four steps, and it is the runtime twin of the four-corner sweep (S15).
-Pick one quantity the system exists to get right - in a shop the stock of one SKU, in a queue
-the depth, in a ledger the balance, in a runner the claim on a job:
+Pick one quantity the system exists to get right - in an editor or 3D tool the objects in the
+scene and what the saved file holds, in a runner the claim on a job, in a pipeline the rows it
+committed, in a queue the depth, in a ledger the balance, in a shop the stock of one SKU:
 
 1. **Read it at every observer, before.** An observer is anything that *claims to know* the
    quantity, and every system has three or four:
 
    | System | The observers |
    |---|---|
-   | A shop | the customer's page, the operator's screen, the stored row, the provider's own view |
+   | An editor or 3D tool | the viewport, the outliner or inspector, the undo stack, the saved file read back (and a background worker's own copy, if one exists) |
    | A job runner | the status page, the operator's CLI, the job row, the worker's own memory |
+   | A data pipeline | the run log, the operator's dashboard, the target table's row count, the downstream consumer's view |
    | An API service | the response body, the metrics counter, the stored row, the upstream's view |
    | A CLI or library | the printed output, the exit code, the file or database it wrote, the lock it holds |
    | A document or content system | the rendered page, the editor's screen, the stored record, the search index |
+   | A shop | the customer's page, the operator's screen, the stored row, the provider's own view |
 
    Record all of them. **Disagreement at step 1 is already a finding** and the walk stops until
    it is filed - a walk that starts from an inconsistent world proves nothing about the
@@ -170,17 +178,19 @@ the depth, in a ledger the balance, in a runner the claim on a job:
    form and the real button in a web app; the documented command with the documented flags in a
    CLI; the published endpoint with a real token in a service; the public function with the
    arguments a caller would pass in a library. Not an internal call nobody outside could make -
-   a walk that calls `StockReducer::reduce()` has proved the reducer, not the shop, and one that
-   calls the scheduler's private `_claim()` has proved neither the queue nor the worker.
+   a walk that calls the scheduler's private `_claim()` has proved neither the queue nor the
+   worker, one that writes the editor's store directly has proved the store and not the tool, and
+   one that calls `StockReducer::reduce()` has proved the reducer, not the shop.
 3. **Read it at every observer, after.**
 4. **Assert the delta, not the value.** Write the arithmetic into the walk - `5 -> buy 2 -> 3`,
    at the page, at the screen, and in the row. A value assertion passes by luck on a fixture
    that happened to hold the right number; a delta assertion cannot.
 
-Then reverse it wherever the system says it reverses - cancel, refund, release, roll back - and
-assert the return delta by the same rule. **Whether the reverse restores the quantity is a policy
-the audit reads from the project, never assumes:** a shop that deliberately does not restock a
-refunded bespoke item is correct, and the walk asserts the *documented* policy, filing a finding
+Then reverse it wherever the system says it reverses - undo, cancel, release, roll back, refund -
+and assert the return delta by the same rule. **Whether the reverse restores the quantity is a
+policy the audit reads from the project, never assumes:** an editor whose undo deliberately does
+not reach past a save, or a shop that deliberately does not restock a refunded bespoke item, is
+correct, and the walk asserts the *documented* policy, filing a finding
 only where code and policy disagree.
 
 **The adversarial rows, which is where the defects actually live.** The ladder above is the
@@ -209,19 +219,19 @@ general form, worth carrying to any quantity: **a bound has two sides, and the a
 even when the form only offers one.**
 
 **The same ten rows outside a shop.** The names above are a shop's because that is where they
-were learned, and every one of them is a general shape. Read the middle column, not the noun:
+were learned, and every one of them is a general shape. Read the middle columns, not the noun:
 
-| Row | In a job runner | In an API service | In a CLI or library |
-|---|---|---|---|
-| Over-quantity | claim more workers than the pool holds | request beyond the documented page size or rate | an argument past the documented maximum |
-| Last unit, twice, at once | two workers claim the same queued job | two requests mutate one record concurrently | two processes take one lock or one output file |
-| Abandonment | a worker dies mid-job | a client disconnects mid-write | the process is killed between two writes |
-| Failure of the outside step | the job's external call fails | the upstream returns 5xx | the network or disk write fails |
-| Duplicate arrival | the same message delivered twice | a client retries with the same idempotency key | the command run twice on the same input |
-| Out-of-order arrival | a stale status update lands after a newer one | a webhook arrives after its own cancellation | a resumed run writes over a newer result |
-| Operator edit mid-flight | someone requeues by hand while a worker holds it | an admin endpoint writes during a request | a person edits the file the tool is rewriting |
-| Child versus parent | a sub-task's state against its batch's | a nested resource against its collection's count | a partial output against the manifest |
-| Floor | the queue depth never goes negative and an empty claim is visible | a counter never goes negative and a refusal is a documented status | no negative or impossible value is written, and the refusal is on stderr with a non-zero exit |
+| Row | In an editor or 3D tool | In a job runner | In an API service | In a CLI or library |
+|---|---|---|---|---|
+| Over-quantity | a size, count or resolution past the documented maximum, typed or scripted | claim more workers than the pool holds | request beyond the documented page size or rate | an argument past the documented maximum |
+| Last unit, twice, at once | two writers (two panels, a panel and a worker) edit one object in the same frame | two workers claim the same queued job | two requests mutate one record concurrently | two processes take one lock or one output file |
+| Abandonment | the app closes or crashes mid-save or mid-export | a worker dies mid-job | a client disconnects mid-write | the process is killed between two writes |
+| Failure of the outside step | the disk write, the worker or the GPU allocation fails | the job's external call fails | the upstream returns 5xx | the network or disk write fails |
+| Duplicate arrival | the same command applied twice (double click, key repeat, redo after reload) | the same message delivered twice | a client retries with the same idempotency key | the command run twice on the same input |
+| Out-of-order arrival | a background worker's stale result lands after a newer edit | a stale status update lands after a newer one | a webhook arrives after its own cancellation | a resumed run writes over a newer result |
+| Operator edit mid-flight | the user edits the object while a worker is computing it | someone requeues by hand while a worker holds it | an admin endpoint writes during a request | a person edits the file the tool is rewriting |
+| Child versus parent | a child's transform or count against its group's bounds or the outliner | a sub-task's state against its batch's | a nested resource against its collection's count | a partial output against the manifest |
+| Floor | no negative or impossible value (scale ≤ 0, NaN) reaches the scene, and the refusal is visible | the queue depth never goes negative and an empty claim is visible | a counter never goes negative and a refusal is a documented status | no negative or impossible value is written, and the refusal is on stderr with a non-zero exit |
 
 A system that genuinely has no analogue for a row says so on that row - `N/A`, with the reason -
 which is a sentence, not an omission. A row quietly absent from the table is the audit claiming
@@ -230,14 +240,17 @@ the system is simpler than it is.
 Every row the tier excludes becomes an `UNVERIFIED` cell in the evidence ledger
 (`reporting.md`), named - never a row quietly missing from the table.
 
-**The ladder is also the answer to the most common false PASS in this whole discipline.** "Stock
-deduction: implemented" is a claim about a class. The ladder is six observations with six
+**The ladder is also the answer to the most common false PASS in this whole discipline.** "Save:
+implemented", "job claim: implemented", "stock deduction: implemented" is a claim about a class. The ladder is six observations with six
 artefacts, and it takes about four minutes once the session fixture exists.
 
 ### 12a. The ladder as a spec — the shape to copy
 
 Prose about deltas is easy to agree with and easy not to do. This is the shape; the project
-supplies the three readers and the reverse policy, and nothing else changes.
+supplies the three readers and the reverse policy, and nothing else changes. The example is a
+shop's stock; the same file for an editor reads the part count at the viewport, the outliner and
+the saved file read back, performs "add 2 parts" through the real UI, asserts +2 at every
+observer, then undoes and asserts −2 — only the three readers and the operation change.
 
 ```js
 // walks/rendering/stock-ladder.spec.js
@@ -295,7 +308,7 @@ asserting on pages:
    stored reader goes through the application's own API or a read-only endpoint — not a second
    copy of the schema in the test.
 2. **The `before` equality assertion is not ceremony.** It is the four-corner sweep executed,
-   and on a real shop it fails more often than the delta does.
+   and on a real system (a real shop above all) it fails more often than the delta does.
 3. **`policy` is read from the project**, not from the walk's author (§12). The reverse leg is
    the assertion the project's own written rule says it is.
 
@@ -309,8 +322,8 @@ step sent out of order, an operator writing the number mid-flight. They belong b
 operation and a subtraction work the same from `curl` and a JSON read-back endpoint — which is
 how the skill's own live fixture proves its rows (`tests/verify-fixture-shop-live.py` in
 `ecommerce-cia`). What cannot be dropped is the *third* reader: a walk that checks the page and
-the database and not the operator's screen has two corners, and the missing one is where shops
-actually lie to their owners.
+the database and not the operator's screen has two corners, and the missing one is where systems
+(shops above all) actually lie to the people running them.
 
 ## 13. The concurrency probe - S2 stops being a prediction (2026-09-24)
 

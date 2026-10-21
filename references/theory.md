@@ -13,7 +13,7 @@ Loaded by `cia` before §0.9 step 0 (the VSM map). The map assigns every compone
 > systems are connected by **channels**, and Ashby's Law of Requisite Variety says each channel
 > must carry as much variety as the thing it regulates, or control is fictional.
 >
-> A codebase is such a system. Handlers, checkout, fulfilment are System 1. Locks, queues,
+> A codebase is such a system. Handlers, workers, an editor's commands, checkout and fulfilment are System 1. Locks, queues,
 > deadlines, idempotency keys are System 2. Settings, flags, admin pages, config are System 3.
 > Test suites, probes, reconciliation are System 3\*. Vendor specs, external APIs, callbacks are
 > System 4. Defaults, catch-block posture, kill switches are System 5.

@@ -1,6 +1,6 @@
-# Context Templates — §4 Blender addon, §5 e-commerce platform, §6 workflow orchestration
+# Context Templates — §4 Blender addon, §4a creative / editor tool, §5 e-commerce platform, §6 workflow orchestration
 
-Loaded by `cia` when §3 context discovery matches one of these system types. Each template restates Systems 1–5 for that shape of system; a system that matches none is profiled from §3 alone.
+Loaded by `cia` when §3 context discovery matches one of these system types. Each template restates Systems 1–5 for that shape of system; a system that matches none is profiled from §3 alone. The templates are peers: none is the default, and the order is not a priority.
 
 # 4. Context Template: Blender Addon / Extension
 
@@ -152,9 +152,61 @@ Ultimate authority and emergency intervention.
 
 ---
 
+# 4a. Context Template: Creative / Editor Tool (desktop or WebGL)
+
+Use this for a standalone editor: a 3D or CAD tool, a print-prep or slicer front end, an image,
+audio or video editor, a diagram or design tool — in a browser (WebGL/WebGPU, workers) or on the
+desktop (Electron, Qt, native).
+
+## Audit Profile
+
+```
+Software Type: Interactive editor, single-user, document-centred
+State Scope: The document or scene in memory, the undo stack, view state (camera, selection,
+             tool mode), per-user preferences
+Concurrency: One UI thread plus workers (geometry, generation, export), GPU uploads, async
+             file I/O; a worker's result can land after the user has moved on
+Persistence: The saved file (native format) and exports to other tools' formats; autosave
+             and recovery files
+External Dependencies: The file system, GPU / driver limits, independent producers and consumers
+                       of its formats (slicers, other editors), optional cloud sync
+Failure Tolerance: The user's work is never lost; every long operation can be cancelled
+```
+
+**Primary quantity:** the user's document — what the viewport shows, what the undo stack can
+restore, and what the saved file reopens to. Observers (`browser-walks.md` §12): viewport,
+outliner or inspector, undo stack, the saved file read back, any worker's copy.
+
+**Systems in one line each.** **S1** commands and tools that edit the scene, generation and
+export jobs. **S2** the command queue and undo stack, worker job ids and cancellation, the
+ordering of worker results against newer edits (S23), file locks. **S3** settings and
+preferences, tool modes, view modes and their automatic switches (S22: the user's toggle always
+wins), units. **S3\*** the test suite and its fixtures, a save → reopen → compare round trip, a
+format check against an independent producer and consumer (S24). **S4** imported files from
+other tools, GPU capabilities, OS dialogs and permissions. **S5** autosave and crash recovery,
+what happens on out-of-memory or a lost GPU context, confirmation before anything that
+overwrites or deletes the user's work.
+
+**Where defects live in this shape:** a worker's stale result applied over a newer edit; an undo
+that restores the scene but not the derived data (supports, caches, GPU buffers); a gesture or
+filter that works from the author's view only; a hit-test against a proxy instead of what the
+user sees; a forced mode with a disabled toggle; a save that writes in place and loses the file
+on a crash; an export proven only by our own importer.
+
+**Final question for this shape:** if the viewport, the in-memory document, the undo stack,
+background workers, GPU buffers and the file on disk disagree, does the tool know which is
+authoritative, and can it save, undo and recover without losing the user's work?
+
+---
+
 # 5. Context Template: E-Commerce Platform
 
-Use this when auditing a payment platform, marketplace, or order-fulfillment system.
+Use this when auditing a payment platform, marketplace, or order-fulfillment system. **This
+template covers integrity only** — state, atomicity, idempotency, concurrency, persistence and
+recovery as they apply to a shop, exactly as for any other system. Commerce doctrine (payment
+settlement semantics, order lifecycle policy, inventory reservation, refunds, tax, promotions,
+fulfilment, entitlements) belongs to `ecommerce-cia`; when this template matches, the report also
+tells the user to run `/ecommerce-cia` (`SKILL.md` §0.3, §0.4).
 
 ## Audit Profile
 

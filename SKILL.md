@@ -1,6 +1,6 @@
 ---
 name: cia
-description: "Use when auditing software integrity: architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, cross-module correctness, runtime UX journeys, closed-loop actions, ambiguous steps, dead buttons, or controls that do not visibly finish. Also use for pre-launch, handoff, green-light, ready to ship, audit, security audit, wiring audit, code review the whole thing, nothing dies silently, silent failure, fail-open, vacuous pass, TOCTOU, temporal coupling, four-corner walk, VSM map, dead watchdog, liveness, empty/error/unhappy states, story coverage, actionable alerting, requirement-to-code tracing, obligation ledger, reverse trace (how does this feature actually work, why does it do that), wiring audit, traceability matrix, what should we audit next. Runs on commerce projects too, then tells the user to also run /ecommerce-cia. Explicit /cia or $cia selects this skill only."
+description: "Use for integrity audits of any software (desktop/creative tools, 3D/WebGL editors, web apps, services, job runners, data pipelines, CLIs, libraries): architecture wiring, state/data-flow consistency, concurrency, persistence, lifecycle, import/export, API contracts, failure recovery, regressions, cross-module correctness, runtime UX journeys, closed-loop actions, ambiguous steps, dead buttons, controls that never visibly finish. Also use for pre-launch, handoff, green-light, ready to ship, audit, security audit, wiring audit, code review the whole thing, nothing dies silently, fail-open, vacuous pass, TOCTOU, temporal coupling, four-corner walk, VSM map, dead watchdog, liveness, empty/error/unhappy states, story coverage, actionable alerting, requirement-to-code tracing, obligation ledger, reverse trace (how does this actually work, why does it do that), traceability matrix, what should we audit next. Runs on commerce projects too, then suggests /ecommerce-cia. Explicit /cia or $cia selects this skill only."
 ---
 
 # SKILL: cia — Code Integrity Auditor
@@ -8,6 +8,8 @@ description: "Use when auditing software integrity: architecture wiring, state/d
 A universal audit skill for software codebases. Its primary target is **cross-boundary invariant violations** — integration-level, emergent defects where every function is individually correct and the defect lives in the channel between two of them. The theory is Stafford Beer's Viable System Model; the method is a map of the codebase onto Systems 1–5 and then twenty-four sweeps along that map's channels; the standard is that **nothing dies silently**.
 
 This file holds routing, discovery, the six-step protocol, the autonomy contract, the sweep index, escalation and the reference index. The doctrine itself lives in `references/` and is loaded per the table in §0.13 — read those files in full when the protocol reaches them; they are the audit, this file is the runbook.
+
+**What the audit prioritises, in any domain.** Every priority rule below — S15 first when time is short, the tier matrices, build mode, every grading that says "primary path" — keys on the system's **primary quantity**, the state the system exists to get right, and on **irreversibility and blast radius**. Examples, in no order of importance: the scene or document an editor or 3D tool holds and saves, the claim on a job in a runner, the rows a pipeline commits, a file on disk, a balance in a ledger, an entitlement or permission, the stock and money in a shop. A path that moves money is primary in any system, and so is any step that cannot be undone or reaches far. Name it in the §3 profile before sweeping (`browser-walks.md` §12 tabulates its observers per system type). Where a reference file says "money", "goods" or "order", that is the commerce instance of a rule that binds every domain through its own primary quantity; commerce-specific doctrine itself belongs to `ecommerce-cia` (§0.4).
 
 > **THE FIRST LAW OF THIS AUDIT: NOTHING DIES SILENTLY.**
 > In the owner's four words, which every sweep below is a special case of: *"Nothing should die silently!!"*
@@ -150,14 +152,14 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 **Step 1 — Fast lint + scope tests (5–10 min).** Run the fast-suite command; the static analyser; the style linter; the dependency vulnerability audit. Fail-stop on red architecture / contract tests before proceeding. Follow the project's `fix-red-tests` protocol memory if one exists — reds are the next task, not a footnote.
 
-**Step 2 — Universal integrity audit (this skill's doctrine).** Load and execute the reference files in the §0.13 order: FIRST the VSM map of the codebase (`references/theory.md`, then §0.9 step 0 in `references/sweeps.md`: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN `references/wiring-walk.md` on that map — the wiring question written for this system in the report's first paragraph, the lifecycle state map (reference / expected path · our path · failure/retry path · operator-visible result), seven answers for every connection, the fault set G1–G7 (recovery or a visible operator problem — nothing else passes), the per-lifecycle question banks, and the rule traceability matrix with a gap register, every finding naming its layer (function logic, relationship wiring, lifecycle rule) — THEN the twenty-four mandatory sweeps of §0.9 / `references/sweeps.md` (S1–S24, of which **S15 is the highest-value sweep in any system that moves money or goods** and runs first when time is short) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `references/doctrine.md` §1 Fundamental Audit Doctrine (evidence grading), §3 Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — load the matching §4–§6 template from `references/context-templates.md` if one fits), `references/theory.md` §2 VSM Governance Model (Systems 1–5 against that profile), doctrine §7 Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and doctrine §8 Domain Audit Checklist. Write every finding in the `references/reporting.md` §9 format and grade it on its §10 severity model. Grade against the invariant stated in-line, not against generic "what if".
+**Step 2 — Universal integrity audit (this skill's doctrine).** Load and execute the reference files in the §0.13 order: FIRST the VSM map of the codebase (`references/theory.md`, then §0.9 step 0 in `references/sweeps.md`: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN `references/wiring-walk.md` on that map — the wiring question written for this system in the report's first paragraph, the lifecycle state map (reference / expected path · our path · failure/retry path · operator-visible result), seven answers for every connection, the fault set G1–G7 (recovery or a visible operator problem — nothing else passes), the per-lifecycle question banks, and the rule traceability matrix with a gap register, every finding naming its layer (function logic, relationship wiring, lifecycle rule) — THEN the twenty-four mandatory sweeps of §0.9 / `references/sweeps.md` (S1–S24, of which **S15 is the highest-value sweep wherever the primary quantity crosses components or parties, or a step cannot be undone** — scene state to file, job claim to result, rows to a downstream consumer, money to a provider — and runs first when time is short) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `references/doctrine.md` §1 Fundamental Audit Doctrine (evidence grading), §3 Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — load the matching §4–§6 template from `references/context-templates.md` if one fits), `references/theory.md` §2 VSM Governance Model (Systems 1–5 against that profile), doctrine §7 Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and doctrine §8 Domain Audit Checklist. Write every finding in the `references/reporting.md` §9 format and grade it on its §10 severity model. Grade against the invariant stated in-line, not against generic "what if".
 
 **Depth tiers — say which one ran.** The sweeps as written are days of work at full depth on a real system, and a run that silently sampled is S18's original sin. So the run names its tier in the first line of the report, and the tier fixes what "swept" means:
 
 | Tier | Budget | S15 / S18 / S22 matrices | Every other sweep | Runtime evidence owed |
 |---|---|---|---|---|
-| **Screen** | 2–4 h | one flow, one row per state, the money cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13); every long-running control held through two refresh cycles (Step 4 (g)) |
-| **Walk** | 1–2 days | every money flow at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field | as Screen, plus a ladder per money flow, every adversarial row of §12, and a probe at every primary-path S2 site |
+| **Screen** | 2–4 h | one flow, one row per state, the primary-quantity cells only | every site enumerated from the map, each read; findings graded | the walk runs — every route and its assets for a web project, the documented smoke commands for a CLI, library or service; **one** state-delta ladder on the primary quantity (`browser-walks.md` §12); one concurrency probe on the highest-value S2 site (§13); every long-running control held through two refresh cycles (Step 4 (g)) |
+| **Walk** | 1–2 days | every flow that changes the primary quantity at full depth, the rest pairwise | as Screen, plus the vendor manual opened for every S4 / S18 field | as Screen, plus a ladder per primary-quantity flow, every adversarial row of §12, and a probe at every primary-path S2 site |
 | **Full** | as long as it takes | every reachable cell, cited to the authority per cell | as Walk, plus the blind-case test written for every S20 detector | as Walk, plus every ledger row at PASS or FAIL — an UNVERIFIED row at Full tier is itself a finding, about the system's testability, and an UNPROVEN row (§11a) is a finding about the environment, which is a different owner and a different fix |
 
 **The last column is what makes a tier a tier.** The first three say how much was read; only the
@@ -194,7 +196,7 @@ other; unequal gutters or a wrapper narrower than the viewport is a finding. Two
 change to a shared wrapper or base rule is probed on the pages that **combine** it with other
 layout classes, never on the pages that use it alone; and a screenshot is not a measurement —
 capture scaling and device-pixel ratio can paint a stripe past the scrollbar on every page, so read
-the numbers. Every shop page once sat pinned to the left edge in a fixed-width box for eleven days
+the numbers. Every page of one site (a shop) once sat pinned to the left edge in a fixed-width box for eleven days
 with every route 200, every asset 200 and the error log silent, because a shared wrapper went
 `width:100%; margin:0` while each page still stacked a framework container and an inline
 `max-width` on it, and the commit had probed the two pages that carried neither.
@@ -217,18 +219,20 @@ the thing changed the world correctly, and that is the half most runtime walks o
 200, every asset 200, every heading present, and nobody asked whether the number moved. So every
 runtime walk also runs, per `references/browser-walks.md`:
 
-- **§12, the state-delta ladder.** One quantity the system exists to get right — the stock in a shop, the
-  claim on a job in a runner, the depth of a queue, the balance in a ledger. Read it at every
+- **§12, the state-delta ladder.** One quantity the system exists to get right — the scene or
+  document state in an editor (objects in the model, what the saved file holds), the claim on a job
+  in a runner, the rows a pipeline wrote, the depth of a queue, the balance in a ledger, the stock in
+  a shop. Read it at every
   observer (§12 tabulates them per system type; there are never fewer than three, and the one
   teams forget is the operator's), perform the operation through the front door — the real form,
   or the documented command, or the published endpoint — read every observer again, and assert **the delta, with its arithmetic
   written out** — not the value, which a lucky fixture satisfies. Then the documented reverse
-  (cancel, refund, release) and its return delta. Disagreement between observers *before* the
+  (undo, cancel, release, refund) and its return delta. Disagreement between observers *before* the
   operation is already a finding. The tier (above) fixes how many ladders and which of §12's
   adversarial rows — over- **and under-**quantity, the last unit taken twice at once, abandonment, failure of
   the outside step, duplicate and out-of-order arrivals, an operator editing mid-flight, child
   against parent, and the floor. §12 maps all nine onto job runners, services and CLIs, so a
-  non-web system reads them without translating a shop in its head.
+  non-web, non-commerce system reads them without translating a shop in its head.
 - **§13, the concurrency probe.** Every select-then-act site S2 predicts is a race gets fired
   twice concurrently against the running system, and the row is read afterwards. A race graded
   CRITICAL from reading alone, on a system that was running on this machine at the time, left the
@@ -343,7 +347,7 @@ Index — the sweep, what it hunts, and the VSM channel it walks:
 | **S12** Cascade, partial failure, retry storm | no anti-oscillation, no breaker | System 2 / System 5 |
 | **S13** Orphan capability / designed-but-unbuilt (+ S13.1 a second hand-rolled map) | promise with no channel | System 3 → System 1 |
 | **S14** Scope shadow (+ S14.1 the plan as a scope claim) | audit narrower than the map | System 3\* narrower than system |
-| **S15** Four-corner end-to-end walk — **highest value wherever money or goods move; first when time is short** | corner disagreement, unreachable capability | all four corners |
+| **S15** Four-corner end-to-end walk — **highest value wherever the primary quantity crosses parties or a step is irreversible; first when time is short** | corner disagreement, unreachable capability | all four corners |
 | **S16** Terminal-state accountability (+ S16.1 queues and bulk actions) | silent death of the work | System 1 with no advancer, no notice |
 | **S17** Controls whose enforcement point is outside the system | a setting that cannot reach the decision | System 3 → System 4 |
 | **S18** Exhaustive enumeration against the authority document (+ S18.1 the manual is not the only authority) | sampled where it should have been enumerated | System 4 read per cell |
@@ -356,68 +360,7 @@ Index — the sweep, what it hunts, and the VSM channel it walks:
 
 When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term in the taxonomy, the sweeps are the first thing that runs.
 
-**Classes added 2026-10-07 (the mixoweb audit fix: each one survived a green fast suite and a clean analyser, and each is now a site to enumerate under the sweep named).**
-
-- **S1 — a form value read at render and written back on save.** A price form that also posts the stock it showed sets the stock back to that number over a sale made while the form was open. Enumerate every form field that writes a column something else also changes (stock, balance, limit, window); each must carry what it was rendered with and the write must compare under the lock (refuse "changed since you opened it"), or the field must be left out of the write when unchanged.
-- **S2 — a `SELECT … FOR UPDATE` on a key that does not exist yet, inside a post-lock re-check.** InnoDB takes a gap lock, and unrelated writers on neighbouring keys block until timeout (error 1205). After the row lock is held, a re-check of an idempotency key is a plain read. Probe: two connections, two different keys, `innodb_lock_wait_timeout = 1`.
-- **S2 / S12 — an idempotency key that names the amount instead of the request.** `refund:<order>:<amount>` makes two genuine refunds of the same amount on different days one refund, and the second press reads "refunded". Key by a per-render request id (or the approval id); report a replay as a replay, never as a fresh success.
-- **S2 — check-then-record limits.** A rate limit or quota that counts and then inserts lets N concurrent requests at the limit all pass. Record first, then count.
-- **S12.3 — a switch and its safety stamp in separate autocommit statements.** Turning a feature off and stamping the token cutoff in two statements can leave it off with no cutoff, so the next switch-on revives every old token. One statement or one transaction; a failure changes nothing and propagates.
-- **S3 — fail-closed but mis-worded.** A check that cannot read and answers "there is a dispute on this order" is closed but lies; log it and refuse with the true sentence and its own code.
-- **S5 / S18 — readers that assumed one row per parent after a migration allowed many.** When a unique key is replaced by "one live row" (void and reissue), grep every `WHERE parent_id = ?` without an order or status filter; each must say live-first (`ORDER BY status = 'voided', created_at DESC LIMIT 1`) or that it wants history.
-- **S8 / S21 — a derived count that puts one row in two states.** A card counting `notified` and `dismissed` independently double-counts a row that is both, while the table shows it once. One precedence, one function, used by the counts, the filter and the row label.
-- **S21 — a secret test made vacuous by the code under test.** A planted secret that the output normaliser happens to mask (hex, digits) passes "no secret leaked" with the masker removed. Seed values the normaliser cannot touch and prove the test red by removing the mask.
-- **S21 — a framework that turns the exception into a 200.** A test that asserts a `404` exception class was thrown proves nothing when the admin framework catches it and answers 200 with an empty body. Assert the HTTP status through the real front controller, or set the status before the throw and pin that.
-- **S21 — analyser and suite scope listed by hand.** A `phpstan.neon` (or tsconfig, mypy) path list written by hand covered 21 of 53 module directories; a test must fail when a source directory is missing from it. Likewise two test files declaring the same global class name only crash the run that loads both (the fast suite stays green): a fast test must scan for the clash.
-- **S22.9 — dead `data-action` markup.** Already listed; the re-walk found it on a providers page every card rendered. Scan all of `src/` for `data-action` with no listener anywhere, not only the page in hand.
-
-**Classes added 2026-10-09 (the 2026-10-08 audit fix of mixoweb's AI approve-by-link: five audits plus the residue of review-capped tasks; each one survived a green suite and a clean analyser, and each is now a site to enumerate under the sweep named).**
-
-- **S11 — a sanitiser stricter than the consumer it protects (parser differential).** An off-site URL check decoded HTML with `html_entity_decode()`, which needs the `;`; browsers and libxml decode `&#58` and `&#x3a` without it, so `https&#58//tracker/p.gif` passed and rendered. Enumerate every validator of untrusted markup, URLs or paths; normalise exactly as the consumer parses (WHATWG URL, the HTML tokenizer, the filesystem), and add one case per lenient form the consumer accepts that the validator's library refuses.
-- **S2 / S9 — an identity compared outside the store with a different equality than the store's.** `product.id` is case-insensitive and trims trailing spaces (utf8mb4 `_ci`, PAD SPACE); a named lock and a pending-publish guard keyed on the raw input made `PROD_x` and `prod_x` two products in the app and one in the database. Every lock name, dedupe key and guard that compares ids in code canonicalises them the way the store compares them, or resolves the id from the store first.
-- **S1 / S23 — a send-once key bucketed by a clock in another zone than the schedule that writes it.** A reminder keyed `date:am|pm` in UTC, run by cron at 09:00 and 17:00 Taipei (01:00 and 09:00 UTC), gave both runs one key, and the mail log dropped the second as a duplicate while the job printed "1 waiting". Tests fed UTC times production never produces. Bucket in the zone the schedule runs in, test with the instants the real clock produces, and make a send the log already held say so.
-- **S5 / S20 — an optional collaborator left out at one construction site.** A housekeeping class whose `?SlotRepository $slots = null` skips ending upload slots was built with it by the page and the kernel and without it by the 15-minute worker, so on the schedule nothing ended and the quota stayed spent. For every class with an optional, behaviour-carrying parameter, list every `new X(`; a scheduled path is proven by running the worker as a process in a test.
-- **S20 / S22 — a health check whose only reader is a machine.** Two checks were read only by AI tools (AI access ships off), so red reached no person. Every health row has a human surface — the dashboard and the page it names — with a preview fixture, and a reader that throws is shown as "could not be read", never as an empty healthy list.
-- **S3 / S16 — mirror operations with asymmetric failure handling.** The approve run caught `Throwable` and recorded "may have started"; its undo let a throw escape past the audit row, so a part-done undo read "changed since" with nothing saying what was put back. For every pair (do/undo, approve/restore, grant/revoke, cancel/reinstate) diff their catch blocks and their audit rows; the reverse path needs the same "stopped part way" record.
-- **S3 — a second factor skipped when its channel is missing.** An admin account with no email was handed to the gate as "not logged in", so it skipped the emailed code and entered on the password alone. A missing factor channel (no email, no phone, no enrolled device) refuses with a sentence; it never passes.
-- **S2 / S16 — the closing UPDATE of a long operation with its row count unchecked.** A streamed upload that finished after the sweep ended its slot ran `UPDATE … WHERE state = 'receiving'`, changed nothing, and still answered "Received" with an audit row. Every guarded state transition that ends a long operation checks the row count and undoes its own side effect (the file) when it lost.
-- **S5 — an eligibility predicate narrower than its own docblock.** `isEligible()` was documented "paid and dispatched" and checked only "paid", so a return could be opened before posting; the refunded unit went back on sale while the pick list still said post it. Read the docblock's stated predicate against the code at every eligibility gate; a mismatch is a finding even when no test fails.
-- **S22 — an untrusted stored value inside a panel presented as the system's facts.** The approval page's "What this is" printed the assistant's raw target param ("It acts on sku …") under a hint saying "the facts above are read now"; a nonexistent SKU like `Checked-by-the-shop: SAFE` is still stored. Every value in a facts panel is either read now from the store or labelled and quoted as the requester's words, and the hint claims "read now" only for what is.
-- **S21 — a test that hands the unit the value its caller looks up.** The download streamer's tests passed the asset in directly, so the desk's lookup (the SKU's first file, for a SKU that sells many) was never exercised and every file of a pack arrived under the first file's name. A presentation or lookup bug needs one test through the real caller with two rows that differ in what is looked up.
-- **S18 — a class fixed on one route and not its siblings.** The 2026-10-07 classes "a refund tells the customer" and "every goods-back path needs a restock decision" were fixed on the card refund form; the hand-recorded refund and both AI refund tools did neither, and the 2026-10-08 audit found them again. When a class is fixed, enumerate every route to the same outcome (form, hand record, AI tool, worker, CLI) and close each, or record why not.
-- **S14 — a fix the auditor may not make.** Two findings (a void legal sentence, a checkout total the customer never saw) sit in templates a project rule forbids editing. They are recorded with `path:line` and the exact change, under a "blocked by rule" heading the owner reads; never dropped as out of scope.
-
-**Classes added 2026-10-13 (the audit fix of mixoweb's legal-checkout build: /ecommerce-cia and /cia plus review-capped residue; each one survived a green suite and a clean analyser, and three were made by the fix round itself, so the fixer's own edits are in scope).**
-
-- **S1 / S15 — a leg that silently substitutes a value it never stores.** The review page priced the session's delivery choice only while it was open and otherwise the first open option; the confirm re-validated the raw session value and refused "unavailable" on every Pay press. Enumerate every two-leg flow (review/confirm, preview/apply, quote/accept) where one leg falls back without saying so: the leg that resolved must store or post what it resolved, one resolver serves both legs, and a test drives both legs with the stale value.
-- **S1 — a fingerprint that omits a fact the page shows.** The confirm hash covered prices and the delivery method but not the address, and two regions with different cancellation law cost the same, so a second tab moved the order under terms the buyer never saw. A confirm fingerprint covers everything the person is agreeing to (address, region, terms edition), split so the refusal names what moved (basket, details, price) instead of one catch-all sentence.
-- **S13 — derive-don't-store has an exception: evidence of what was shown.** The delivery region was computable from the address, but the address is editable after placement, so every later reader would apply the wrong regime. Before accepting "derive it", ask whether the source can change after the event the value attests; if it can, freeze the value (and the edition of the wording) at the event and make every later reader use the frozen column.
-- **S3 / S21 — a deny-list gate counted as a gate.** An architecture test counted any mention of `APP_ENV` as a gate, so `=== 'production'` passed while `staging` with live keys booted with a default key, debug and the demo catalogue. A safety gate is an allow-list (`=== 'local'`, or "live only on production"); the guard test refuses the deny-list form and has a case proving it does.
-- **S13.1 — several readers of one configuration file.** The web read `.env` with one parser, the cron dispatcher and the deploy preflight with two others that kept quotes and trailing `# comments`, so `APP_ENV=production # live host` was a different value per reader. One parser, public, called by every reader; a test feeds a commented and a quoted value to each reader.
-- **S20 / S22 — a refusal handed to the user and told to nobody.** Every refused checkout went back to the buyer and nowhere else, so a loop that refused every Pay press looked exactly like a quiet day. Count refusals per reason per day (no personal data needed) and show a health row that is red for refusals the system causes and for loop-prone reasons past a floor.
-- **S22 / S17 — text the law requires inside an owner-editable template.** A notice the law requires on a durable medium, placed as a placeholder in an editable mail, is dropped by any override written before the placeholder existed. Required text is appended by the renderer outside the editable copy, and a test renders it under an override.
-- **S21 — a docblock stranded above the wrong function.** Inserting a method between a docblock and the function it described leaves two doc comments back to back: one now documents the wrong method, the other has none, and nothing fails. The fix round did it twice. Count back-to-back doc comments per file with the tokenizer and ratchet the count (shrink only).
-- **S21 — the fixer's gate is the whole fast gate, before every commit.** Three fix commits broke checks the touched-file tests never ran (an AI-tool-graph allowlist, a static-analysis rule, an escaping assumption in an unrelated test). A fix commit runs the project's whole fast gate (suite, analyser, linter) first; "the new test is green" is not the gate.
-
-**Classes added 2026-10-14 (the audit fix of mixoweb's Bootstrap → Tailwind/daisyUI move: /ecommerce-cia and /cia plus review-capped residue; each one survived a green suite, clean analysers, screenshot diffs and an axe sweep).**
-
-- **S22 / S18 — a framework swap that keeps a class name and changes its meaning.** daisyUI's `.alert` is a column grid where Bootstrap's was a block, so a notice with a heading, text and a button laid them side by side and made a 390px page 440px wide; every class ratchet saw "a class the framework draws". After any CSS-framework swap, enumerate every component class the old and new framework share (`alert`, `card`, `btn`, `badge`, `menu`, `table`, `container`) and render each use: the same name is a new component until a rendered check reads its layout.
-- **S21 — a screenshot diff accepts a new width.** A page that grows sideways is a new picture, not a changed one, so the diff passed it. Measure `scrollWidth > clientWidth` at the narrowest width on every route and preview, with a written allow-list; an inline `max-width:400px` beside `max-w-full` is the commonest cause (the inline style wins).
-- **S21 / S14 — an accessibility sweep that covers only the preview rows.** axe ran over fixtures, so a real route's icon-only link with `alt=""` and no name, and a banner's white text on pale amber, were never measured. Run it over the sitemap's real pages too; and know what axe skips: `::placeholder` contrast and symbol-only text are not checked at all, so a placeholder colour and a "×" need a rule of their own.
-- **S21 — a contrast guard that reads classes and never the stylesheet.** The text-colour ratchet read the class names templates write; 74 `color:` declarations in the stylesheet itself (labels, notes, sale prices, ported legacy rules) were below AA, and three read `var()` of variables nothing defined (a fill that silently never drew). Measure every `color:` declaration against its own rule's background or the surfaces it can sit on, and refuse an undefined variable with no fallback.
-- **S22.10 — a form reset that desynchronises the custom UI around it.** After a successful add, `form.reset()` put the variant radios back on the default while the swatch highlight and the hero image (state kept outside the form) stayed on the pick, so the next add posted a SKU the screen did not show. When a script resets a form, list every piece of UI state derived from its fields; reset only the field that must go back.
-- **S3 / S22 — a replaced library's quiet workarounds.** Bootstrap's bundle carried behaviour nobody wrote down: closing a menu when focus Tabs out, iOS Safari's tap delivery to document listeners (no-op `mouseover` on body's children), a disabled button while a request is in flight. Before deleting a library, list what it did implicitly and re-prove each, on the browser that needed it (Playwright WebKit with `has_touch` reproduces the iOS tap quirk: pointerdown and touchend fire, click does not).
-- **S3 — a tokenizer that fails open at end of input.** A reader that opened a `class="` region and never found its close swallowed every later literal and dropped the region at end of file, so the ratchet, the codemod and the CSS word list all lost every class after it with nothing said. Any scanner with an "open" state must throw or report when input ends with that state set; and an index heuristic (`[` before, `]` after) must not swallow array-literal elements.
-- **S16 / S22 — an asynchronous write whose failure changes nothing on screen.** An HTMX add answered by an unmarked 500, a dropped connection or a timeout left the page as it was. Every client-side request needs a visible answer for each of: success, refusal, server error, no response.
-- **S21 — "only grows" stated and not enforced.** A snapshot list said it never shrinks, and the check tied snapshots to the list, so removing an entry together with its files passed. A list that must only grow carries a floor constant and names its must-have entries.
-- **S20 — a record that an unrelated commit can delete.** A later task committed a working copy of the handoff written over an older version and dropped two tasks' lines, one of them the record another decision pointed at. A record other records cite needs a test that it is still there.
-
-**Classes added 2026-10-16 (mixoweb, 2026-10-14..16: green on the laptop, red in CI, and nobody read the CI).**
-
-- **S19.3 — environment parity.** Tests green locally and red in CI because the laptop is the most permissive cell: one engine (MySQL) where the host or a migration target is another (MariaDB) — engine SQL, `information_schema`, DDL, JSON, `GET_LOCK`, dump/restore program names and flags; an all-privilege local account where the target grants one database; secrets always present via `.env`, so a list-only tool that wrongly resolves the DB password never fails locally. Name the production/CI matrix and require each cell RAN before a green light (report line 2g).
-- **S20.6 — unread CI.** Two pushes went out red and the owner learned from the platform's e-mail. A push is not done until its CI run is read; the audit reports the run id and conclusion for the audited commit, and `not checked` is a finding (report line 13).
-- **S20.6 — CI is a budget.** On a free plan with no budget, reproduce the CI cell locally (a throwaway container of the other engine, a restricted account, a no-secret run) and push rarely; a speculative re-run is waste, and a red that passes on re-run is a flaky test (S21).
-- **S19.4 — migration readiness.** For a stated host or engine move, "backup/restore exists" is not proof: dump on engine A, restore on engine B, compare row counts, `CHECKSUM TABLE` and file hashes, smoke the app on B, and write the lay-person procedure (report line 2h).
+**Classes learned from audits (2026-10-07 … 2026-10-22) live in `references/sweeps.md`, "Audit-derived classes".** Each survived a green fast suite and a clean analyser in a real audit and is a site to enumerate under the sweep it names. They are written invariant first, with the original instance as the example — most from one commerce project (mixoweb), the latest from a 3D editor (mixosupports) — so read them there, with the sweeps, every run; the instance illustrates, the invariant is what gets swept.
 
 ### 0.10 AI / LLM Component Boundary Audit (conditional)
 
@@ -435,14 +378,17 @@ Report these with the §9 finding format; the Boundary Location field is mandato
 
 ### 0.10a Build Mode — when the request is *write it*, not *audit it*
 
-The audit answers *"is this wrong?"*. Roughly as often, the request is *"write the stock
-reduction"*, *"make the webhook handler production-ready"*, *"review this before I ship it"* —
+The audit answers *"is this wrong?"*. Roughly as often, the request is *"write the job claim"*,
+*"make the save path crash-safe"*, *"make the webhook handler production-ready"*, *"write the
+stock reduction"*, *"review this before I ship it"* —
 and an auditor with no standard to build to either declines, or writes plausible code and calls
 it done. Plausible is the failure mode: correct-looking code is the cheapest thing an LLM
 produces.
 
 **Enter build mode when** the user asks for an implementation, a rewrite, or a hardening pass on
-an operation that moves money, stock, a claim on work, or an entitlement — or asks whether
+an operation that changes the system's primary quantity — a claim on work, rows a pipeline
+commits, the document or scene a user saves, a file on disk, an entitlement, a balance, money or
+stock — or on any operation that is irreversible or wide in blast radius; or asks whether
 something is "production-ready". Say which mode you are in, as §0.15 requires for setup mode.
 
 **The contract, and it is short because the whole of it is in `references/build-standard.md`:**
@@ -466,11 +412,15 @@ something is "production-ready". Say which mode you are in, as §0.15 requires f
    rule that reading never produces PASS applies hardest to an author reading their own work an
    hour later.
 
-**The worked example is executable, not illustrative.** `ecommerce-cia`'s
-`tools/reference/stock_reduction.php` implements the four properties and
+**The worked examples are executable, not illustrative.** In this skill, the fixture's job claim
+(`tests/fixture-service/`, `claim_batch`) is the race-free property failing, and the RUNBOOK's live
+probe fires it. The full four-property reference is commerce-flavoured and lives in the sibling:
+`ecommerce-cia`'s `tools/reference/stock_reduction.php` implements the four properties and
 `prove_stock_reduction.php` proves them in eight checks — including the one most codebases never
 write: a fault injected *after* the decrement and *before* the commit, which is the only check
-that separates an atomic implementation from a transaction-shaped one. Read the proof first.
+that separates an atomic implementation from a transaction-shaped one. Read the proof first; the
+four properties transfer unchanged to a job claim, a document save or a ledger entry
+(`build-standard.md` §1 gives both shapes).
 
 **What build mode does not do.** It does not decide authorisation, routing, or who is told —
 those belong to the caller, and folding them in is the "one function did everything" defect. And
@@ -497,11 +447,11 @@ Beer's algedonic rule, applied to the auditor itself: **a pain signal that stops
 Binding, for every run of this skill:
 
 1. **Say CRITICAL and HIGH findings in the conversation at the moment they are confirmed**, in one or two sentences each, before continuing the sweep. Not at the end of the audit, not only in the report, not only in the register.
-2. **Say the blocked thing.** Escalate the consequence, not the classification: "the pickup feature cannot be reached in production under the shipped seed" beats "S1-02, HIGH, dead control".
+2. **Say the blocked thing.** Escalate the consequence, not the classification: "saving a project silently drops every hidden layer from the file" or "the pickup feature cannot be reached in production under the shipped seed" beats "S1-02, HIGH, dead control".
 3. **Say what the owner must decide**, with the options, when the fix is a decision rather than a patch.
 4. **If the audit discovers that something the user asked for cannot be done** — a suite that does not exist, a walk matrix that is mostly unwritten, an environment that cannot reach the provider — say so **first, in the opening message of the session**, not after the work around it is finished.
 5. **Keep a single owner-facing block at the top of the project's register or handoff** ("open owner decisions"), listing every unanswered HIGH with what it blocks, and point every session at it. Written escalation is the backup of the spoken one, never its replacement.
-6. **The same rule binds the system, not only the auditor.** The owner put it plainly: *"anything system cannot handle must hv badge or flag in admin panel of order management page to let admin handle and notice."* So when the audit finds a condition the code cannot resolve by itself, "it is logged" is not a resolution and "an alert row is written" is not either. Ask which screen the operator already opens daily, and whether the condition becomes visible there. If it does not, that is a finding in its own right — see S16 step 5 — and it is the finding most likely to be waved through, because the handling code exists and looks complete.
+6. **The same rule binds the system, not only the auditor.** The owner put it plainly: *"anything system cannot handle must hv badge or flag in admin panel of order management page to let admin handle and notice."* So when the audit finds a condition the code cannot resolve by itself, "it is logged" is not a resolution and "an alert row is written" is not either. Ask which screen the operator already opens daily — the job dashboard in a runner, the run history of a pipeline, the status bar, problems panel or the object itself in an editor or 3D tool, the order page in a shop — and whether the condition becomes visible there. If it does not, that is a finding in its own right — see S16 step 5 — and it is the finding most likely to be waved through, because the handling code exists and looks complete.
 
 A run that ends with the owner learning a HIGH finding by asking "what is left?" has failed step 5 of §0.6 regardless of how complete the report is.
 
@@ -528,9 +478,9 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/theory.md` | Step 2, before §0.9 step 0 | Beer's VSM applied to a codebase; §2 definition of Systems 1, 2, 3, 3\*, 4, 5; §16 quick reference for classifying findings by system |
 | `references/sweeps.md` | Step 2, always, in full | §0.9: step 0 map, the defect taxonomy, sweeps S1–S24 with their methods, gradings and report-line formats |
 | `references/doctrine.md` | Step 2, after the sweeps | §1 evidence grading, version-aware external facts, vendor-document rule; §3 context discovery (software type, state scope, dependencies, persistence, concurrency, failure tolerance); §7 universal test matrix and the critical flows it applies to; §8 domain audit checklist |
-| `references/context-templates.md` | §3 profiling matches one of its system types | §4 Blender addon / extension; §5 e-commerce platform (integrity only — commerce doctrine is `ecommerce-cia`'s); §6 workflow orchestration (n8n, Zapier, …) |
+| `references/context-templates.md` | §3 profiling matches one of its system types | §4 Blender addon / extension; §4a creative / editor desktop or WebGL tool (scene, undo stack, workers, file I/O, GPU memory); §5 e-commerce platform (integrity only — commerce doctrine is `ecommerce-cia`'s); §6 workflow orchestration (n8n, Zapier, …) |
 | `references/browser-walks.md` | Step 4, before the first rendering walk is written | The conventions: headless vs rendering walks, selector priority, page objects, session reuse, artefacts on failure only, no clock waits, isolation, closed-loop actions (§8a), layout, the per-route checks; §12 the state-delta ladder and its nine adversarial rows; §13 the concurrency probe; §14 what each kind of artefact is allowed to prove |
-| `references/build-standard.md` | **Build mode**, before writing an operation that moves money, stock or an entitlement — and in audit mode whenever the report will recommend a rewrite | The four properties of a primary-path write (atomic, race-free, idempotent, loud), the mechanism for each, and **the proof each one needs**; §2 what the operation still owes beyond correctness (an explanation, a surface, a boundary, a test that can fail); §3 the build-mode contract |
+| `references/build-standard.md` | **Build mode**, before writing an operation that changes the primary quantity (a job claim, a document save, committed rows, an entitlement, a balance, stock) or cannot be undone — and in audit mode whenever the report will recommend a rewrite | The four properties of a primary-path write (atomic, race-free, idempotent, loud), the mechanism for each, and **the proof each one needs**; §2 what the operation still owes beyond correctness (an explanation, a surface, a boundary, a test that can fail); §3 the build-mode contract |
 | `references/reporting.md` | Before the first finding is written, and before Step 6 | §9 finding format; §10 severity model; §11 verified controls; **§11a the evidence ledger — capability × verdict × artefact, where reading never produces PASS**; §12 five-section final report; §13 must / must-not rules; §17 a complete worked finding |
 | `references/wiring-walk.md` | Step 2, right after the step-0 map; every run; **the default "what should we audit next" answer is its Walk tier** | Feature list vs wiring; a reference system as a stage checklist, never the truth; three layers L1 function / L2 wiring / L3 lifecycle rules; the lifecycle state map; seven questions per connection; faults G1–G7 with "recover or show the operator"; question banks per lifecycle; the rule traceability matrix; the gap register with proof status. Commerce has a stricter version in `ecommerce-cia` |
 | `references/evidence.md` | After `reporting.md`, before the first finding is graded; in build mode before the proof; first in reverse-trace mode | §E1 OBSERVED / INFERRED / UNKNOWN on every claim; §E2 the authority ladder A0–A5 and why a verifier below a claim's authority closes nothing; **§E3 the obligation ledger — intent → owner → verifier**; §E4 the unknown register; §E5 bounded negatives; §E6 truncation and fail-closed aggregation; §E7 contradictions; §E8 partial-order specs; §E9 deployed ≠ HEAD; §E10 reverse trace; §E11 the question checklist |
@@ -579,7 +529,7 @@ Runs only when the user names both skills in one request ("run /cia and /ecommer
 
 ### 0.15 Plain-Language Contract — when the user is not an engineer
 
-Detect it, do not ask: the request is in everyday words ("怎麼開始", "my site broke after payment", "is it safe to launch"), the directory is empty or has no tests, the user has not used a technical term. Then, for the rest of the session, every user-facing message obeys:
+Detect it, do not ask: the request is in everyday words ("怎麼開始", "my app lost my work", "is it safe to launch"), the directory is empty or has no tests, the user has not used a technical term. Then, for the rest of the session, every user-facing message obeys:
 
 1. **One thing at a time.** One question, 2–4 choices, one-line consequence each. One next action at the end of every message, in bold.
 2. **Say what it means, not what it is called.** Sweep ids, section numbers, VSM systems and taxonomy terms stay in the report file; to the user, "a setting nothing reads, so switching it does nothing" — never "S5 dead control". The first use of any unavoidable term gets a six-word gloss.
@@ -587,7 +537,7 @@ Detect it, do not ask: the request is in everyday words ("怎麼開始", "my sit
 4. **Never hand them a command you can run.** §0.8 applies doubly: the AI runs the probe, the fetch, the test, the tunnel. The user's own actions are only the ones the hard limits reserve for them (identity, passwords, account creation, console changes on a fresh yes), and each is one exact click with a link.
 5. **Errors are translated, not quoted.** A stack trace, an exit code or a vendor code comes back as: what happened, why, the one thing to do, who does it. The raw text appears once, in a collapsed block or brackets.
 6. **Waits are named.** Anything that depends on a vendor or a host is a line: who, what was asked, since when, what it blocks — on the readiness card, not in prose.
-7. **Money and identity get the slow voice.** Before any step that touches real money, a production console, or the user's identity, drop the shorthand: full sentences, what will happen, what cannot be undone, and an explicit yes.
+7. **Money, identity and irreversible steps get the slow voice.** Before any step that touches real money, a production console, the user's identity, or deletes or overwrites the user's own data, drop the shorthand: full sentences, what will happen, what cannot be undone, and an explicit yes.
 8. **Reports get an owner paragraph first.** Any audit or setup report opens with ≤ 5 plain lines: what is safe, what is not, what to do first — before the numbered lines (§0.6 Step 6).
 
 The doctrine does not change; only the voice does. A finding is still graded, cited and filed exactly as §0.9 and `reporting.md` require.
@@ -603,7 +553,7 @@ When neither an explicit skill call nor a clear trigger word settles the mode, a
 | **"What should we audit next?" / "Is our in-house system solid?"** | A **reference-guided Walk** (`references/wiring-walk.md` §10): map every primary flow, inspect every connection, run G1–G7, deliver the rule traceability matrix and a gap register with exact code locations and proof status. |
 | **"Something broke."** | Step 1 fast tests + S10 probe-before-diagnosis; smallest fix with a test, per §0.8. |
 | **"Tests are red / CI is red."** | Step 1 with `fix-red-tests` posture: reds are the next task; S21 counts, not colours. |
-| **"Is this a shop?"** (commerce detected) | Say so, run §0.6 in full, and tell the user `ecommerce-cia` exists for the money doctrine (§0.3). |
+| **"Is this a shop?"** (commerce detected) | Say so, run §0.6 in full, and tell the user `ecommerce-cia` exists for the commerce doctrine (§0.3). |
 
 ---
 
@@ -617,16 +567,26 @@ At the end of every audit, ask:
 
 For specific contexts:
 
+**Editor / 3D / creative tool:**
+> If the viewport, the in-memory scene or document, the undo stack, background workers, GPU
+> buffers, and the file on disk disagree, does the tool know which is authoritative, and can it
+> save, undo and recover without losing the user's work?
+
 **Blender addon:**
 > If Blender scene state, addon internal state, undo stack, file on disk, and external 
 > asset library disagree, does the addon know which is authoritative and can it recover?
 
-**E-commerce:**
-> If customer UI, admin UI, database, payment gateway, logistics provider, and financial 
-> ledger disagree on order status, does the system know which is authoritative and converge correctly?
+**Job runner / data pipeline:**
+> If the queue, the job row, the worker, the output store, the operator dashboard, and the
+> downstream consumer disagree on whether a job ran, does the system know which is authoritative
+> and converge without running it twice or losing it?
 
 **Workflow orchestration:**
 > If workflow definition, execution state, external API responses, database, and audit log 
 > disagree on what happened, does the system converge to truth?
+
+**E-commerce:**
+> If customer UI, admin UI, database, payment gateway, logistics provider, and financial 
+> ledger disagree on order status, does the system know which is authoritative and converge correctly?
 
 If the answer is **no**, the system is not yet cybernetically viable.

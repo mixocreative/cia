@@ -17,8 +17,8 @@ Unique audit finding identifier (e.g., `BLA-001`, `ECOM-025`).
 - **INFORMATIONAL**: Improvement or verified design note without identified defect
 
 **The primary path, named first.** Every system has one unit of work it exists to get right —
-the payment in a shop, the job execution in a runner, the record in a store, the message in a
-queue, the alert in a monitor — and one or more *safety nets* watching it (the monitor, the
+the job execution in a runner, the scene or document an editor saves, the record in a store, the
+message in a queue, the alert in a monitor, the payment in a shop — and one or more *safety nets* watching it (the monitor, the
 reconcile, the watchdog, the test suite). Name that unit in the invariant register before
 grading anything; the floor below is written against it. **This skill is universal: "primary
 path" is not a synonym for "money path".** Three fixture runs in a row (2026-09-15 to
@@ -82,7 +82,7 @@ State Management, Concurrency, API Contracts, Persistence, Extensibility, Securi
 The §0.9 taxonomy term (TOCTOU race, temporal coupling / stale snapshot, semantic drift, dead control, fail-open default, vacuous pass, deferred-work residue, rename residue, boundary schema drift, cascade / retry storm, or "single-component" when the defect is not cross-boundary).
 
 ## Boundary Location
-The two sides the defect lives between, as `producer → consumer` or `Step N (what) → Step N+1 (what)`. Examples: `Checkout::placeOrder (deadline frozen) → OrderDesk::offeredMethods (settings re-read)`, `gateway callback parser → SelfHealDecision`. Add the VSM channel the defect sits on, e.g. `System 3 → System 1`, `System 3* → System 3`, `System 4 ↔ vendor`. "None" is acceptable only when Defect Class is single-component.
+The two sides the defect lives between, as `producer → consumer` or `Step N (what) → Step N+1 (what)`. Examples: `Scheduler.claim (SELECT) → Worker.run (UPDATE without the predicate)`, `SceneStore.save (unit scale read) → Exporter.writeHeader (unit scale re-read)`, `Checkout::placeOrder (deadline frozen) → OrderDesk::offeredMethods (settings re-read)`, `gateway callback parser → SelfHealDecision`. Add the VSM channel the defect sits on, e.g. `System 3 → System 1`, `System 3* → System 3`, `System 4 ↔ vendor`. "None" is acceptable only when Defect Class is single-component.
 
 ## Invariant
 What must remain true (the rule being violated).
@@ -127,6 +127,7 @@ How to prove the defect is fixed.
 ## Critical Severity Indicators
 
 Likely or demonstrated:
+- The primary unit of work lost, executed twice, or recorded as finished when it was not, with no notice (a job, a save, a send, a charge — §9 "the primary path")
 - Financial loss or unauthorized charges
 - Unauthorized access to sensitive data
 - Complete data loss or irrecoverable corruption
@@ -203,6 +204,11 @@ Record important controls proven to be correct. This prevents repeated audits fr
 - Deleted object references cleaned up on undo
 - Addon namespace isolated (no collision with other addons)
 - Cancellation releases all resources within 100ms
+
+**Examples (job runner / pipeline):**
+- Job claim carries its full predicate; two workers cannot both run one job
+- Lease expiry requeues an abandoned job exactly once, and the requeue is visible
+- Batch re-run is idempotent (no duplicate rows)
 
 **Examples (e-commerce):**
 - Payment callback deduplication prevents double-charge
@@ -326,6 +332,7 @@ Always organize findings into **five sections**:
 Only true showstoppers or severe systemic threats.
 
 Prioritize:
+- The primary quantity (the user's work, the system's primary data, a job's result — whatever §9 named as the primary path)
 - Money (unauthorized charges, loss of revenue, fraud)
 - Authorization (unauthorized access)
 - Data integrity (unrecoverable corruption, permanent loss)
@@ -339,7 +346,7 @@ Prioritize:
 Show mismatches among:
 - User interface state
 - Backend/database state
-- External system state (payment provider, logistics, file system)
+- External system state (file system, workers, GPU, remote store, payment or logistics provider)
 - Undo/redo stack
 - Audit logs
 
@@ -365,6 +372,9 @@ List high-value controls verified from evidence.
 
 Do not give generic praise. Cite specific architecture:
 ```
+✓ Job claim: claim UPDATE re-states `state = 'queued'` and reads the affected-row count;
+  two concurrent claims → exactly one wins (verified by the §13 probe, artefact probes/claim.txt)
+
 ✓ Payment idempotency: All payment operations keyed by transaction ID;
   duplicate webhook processed exactly once (verified in payment handler, line 342)
   
@@ -467,9 +477,44 @@ undeferred one.
 # 17. Examples: From Generic to Specific
 
 ### Incomplete Finding (Generic)
-> "Concurrency issue exists in payment processing."
+> "Zones do not always work."
 
-### Complete Finding (Specific)
+### Complete Finding (Specific) — a 3D editor
+```
+ID: EDIT-007
+Severity: HIGH
+Confidence: CONFIRMED
+VSM System: 1 → 1 (a rule checked at one end of an entity)
+Domain: State Management & Data Integrity
+Defect Class: sampled where it should have been enumerated (S18), stale end (S1)
+
+Invariant: No support touches a painted no-support zone, at either end
+
+Evidence:
+  File: src/core/jobs.ts, jobContacts()
+  Check: an automatic contact is dropped when its top contact lies in a zone
+  Missing: where the support's column lands on the model below is never tested
+
+Observed: a column from an upper overhang lands inside a painted zone on the
+  lower surface and survives (artefact: screenshot + scene file of the case)
+
+Failure Scenario:
+  1. User paints a no-support zone on a lower, cosmetic surface
+  2. Auto supports generate; a support's top contact is on an overhang above,
+     outside the zone, and its column lands on the painted surface
+  3. Zone filter keeps it; the printed part carries a scar on the face the user protected
+
+Impact: The user's explicit instruction silently ignored; ruined print, lost resin and hours
+
+Recommended Fix: Test every point where the support touches the model (top contact
+  and landing point, with the builder's own landing ray) against the zone, in the one
+  function the main thread and the mesh worker share, so counts and the built mesh agree
+
+Verification: Fixture whose landing point only is in the zone; the filter removes it.
+  (From the 2026-10-22 mixosupports fix; sweeps.md "Audit-derived classes".)
+```
+
+### Complete Finding (Specific) — a shop
 ```
 ID: ECOM-042
 Severity: CRITICAL

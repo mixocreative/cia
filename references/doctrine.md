@@ -197,6 +197,8 @@ Normal, expected sequence with all systems responding correctly.
 
 **Example (Blender addon):** Create mesh → apply modifier → save file → reopen.
 
+**Example (job runner):** Submit a job → a worker claims it → output written → the dashboard says done and links the output.
+
 **Example (e-commerce):** Add item → checkout → payment success → order confirmed.
 
 ---
@@ -206,9 +208,11 @@ Same request/event delivered twice.
 
 **Example (Blender addon):** User hits operator twice by accident (or click handler fires twice).
 
-**Example (e-commerce):** Customer clicks "Pay" twice before form disables; gateway processes both.
-
 **Example (workflow):** Webhook from Slack fires twice (timeout + retry).
+
+**Example (job runner):** The queue delivers the same job message twice; two runs write two outputs.
+
+**Example (e-commerce):** Customer clicks "Pay" twice before form disables; gateway processes both.
 
 ---
 
@@ -217,9 +221,11 @@ Two conflicting valid operations executed simultaneously.
 
 **Example (Blender addon):** Two addons modify same mesh property at same time.
 
-**Example (e-commerce):** Customer and admin both issue refund simultaneously.
-
 **Example (workflow):** Two parallel branches both try to update same record.
+
+**Example (job runner):** Two workers claim the same queued job in the same tick.
+
+**Example (e-commerce):** Customer and admin both issue refund simultaneously.
 
 ---
 
@@ -228,9 +234,11 @@ Remote operation may have succeeded while local operation timed out.
 
 **Example (Blender addon):** Texture load from network times out mid-operation.
 
-**Example (e-commerce):** Payment gateway takes 30s to respond; customer clicks cancel after 10s.
-
 **Example (workflow):** API call takes >60s timeout; is operation retried? Already performed?
+
+**Example (job runner):** The worker's call to a render service times out, but the render completed upstream.
+
+**Example (e-commerce):** Payment gateway takes 30s to respond; customer clicks cancel after 10s.
 
 ---
 
@@ -239,9 +247,11 @@ Same operation executed again after initial failure.
 
 **Example (Blender addon):** Undo fails (scene corrupted), user tries undo again.
 
-**Example (e-commerce):** Payment failed (temporary network error); customer retries.
-
 **Example (workflow):** API returned 500; workflow automatically retried.
+
+**Example (job runner):** A job fails on a transient error; the retry must reuse the job's idempotency key, not start a second job.
+
+**Example (e-commerce):** Payment failed (temporary network error); customer retries.
 
 ---
 
@@ -250,9 +260,11 @@ Events arrive in unexpected sequence.
 
 **Example (Blender addon):** Undo/redo replayed in non-sequential order.
 
-**Example (e-commerce):** Invoice received before payment webhook processed.
-
 **Example (workflow):** Webhook arrives before database write completes.
+
+**Example (job runner):** A stale worker's "failed" update lands after another worker marked the job "done".
+
+**Example (e-commerce):** Invoice received before payment webhook processed.
 
 ---
 
@@ -261,9 +273,11 @@ One subsystem succeeds while another fails.
 
 **Example (Blender addon):** Material updated but viewport shader not recompiled.
 
-**Example (e-commerce):** Payment captured but inventory not decremented; customer charged but no order.
-
 **Example (workflow):** Email sent but database write failed.
+
+**Example (job runner):** Output file written but the job row never updated; the dashboard says running for ever.
+
+**Example (e-commerce):** Payment captured but inventory not decremented; customer charged but no order.
 
 ---
 
@@ -272,9 +286,11 @@ User cancels operation mid-way (closes window, hits ESC, disconnects).
 
 **Example (Blender addon):** User cancels long mesh operation (must clean up locks).
 
-**Example (e-commerce):** Customer closes browser during checkout.
-
 **Example (workflow):** Workflow paused by user; what happens to in-flight API calls?
+
+**Example (job runner):** The worker process is killed mid-job; its lease must expire and the job requeue exactly once.
+
+**Example (e-commerce):** Customer closes browser during checkout.
 
 ---
 
@@ -283,9 +299,11 @@ External change while operation in-flight.
 
 **Example (Blender addon):** User manually deletes material while addon UI still references it.
 
-**Example (e-commerce):** Admin issues refund while customer initiates new payment.
-
 **Example (workflow):** User edits workflow while execution in-progress.
+
+**Example (job runner):** Operator cancels a job while a worker holds it.
+
+**Example (e-commerce):** Admin issues refund while customer initiates new payment.
 
 ---
 
@@ -294,9 +312,11 @@ Operation uses data that has changed since it was read.
 
 **Example (Blender addon):** Addon cached mesh data, but user modifies mesh externally.
 
-**Example (e-commerce):** Customer views price, price changes, then completes checkout at old price.
-
 **Example (workflow):** Template variable changed mid-execution.
+
+**Example (job runner):** Worker runs with the settings snapshot taken at submit time after the operator changed them.
+
+**Example (e-commerce):** Customer views price, price changes, then completes checkout at old price.
 
 ---
 
@@ -305,9 +325,11 @@ Third-party system temporarily unavailable.
 
 **Example (Blender addon):** Asset library offline, texture can't download.
 
-**Example (e-commerce):** Payment gateway returns 503 Service Unavailable.
-
 **Example (workflow):** Slack API unavailable, message can't send.
+
+**Example (job runner):** The object store is down; jobs back off and stay visible, instead of failing permanently.
+
+**Example (e-commerce):** Payment gateway returns 503 Service Unavailable.
 
 ---
 
@@ -316,9 +338,11 @@ System eventually reconciles despite failures.
 
 **Example (Blender addon):** Crash during save; reopen file and data is intact.
 
-**Example (e-commerce):** Payment captured but email failed; reconciliation finds and retries email.
-
 **Example (workflow):** Execution log correctly shows what succeeded and what failed.
+
+**Example (job runner):** After a crash, the reaper finds jobs whose lease expired and requeues each exactly once.
+
+**Example (e-commerce):** Payment captured but email failed; reconciliation finds and retries email.
 
 ---
 
@@ -334,6 +358,28 @@ For each critical user/system flow, execute the full test matrix:
 - Addon enable / disable
 - Batch operations (apply modifier to 100 objects)
 
+**Editor / 3D / WebGL tool:**
+- Open → edit → save → reopen (the saved file reproduces the scene)
+- Undo / redo across every command, including ones a background worker finishes
+- Import and export against independent producers and consumers (S24)
+- Long operations (generate, repair, slice, render) with cancel and progress
+- Selection and tool gestures from every working view, not only the default one
+- Out-of-memory and lost GPU context
+
+**Job runner / data pipeline:**
+- Submit → claim → run → output → done, end to end
+- Two workers on one job; a worker killed mid-job
+- Retry and dead-letter, each visible to an operator
+- Re-run of a batch (idempotent, no duplicate rows)
+- Scheduler stopped (who notices — S20)
+
+**Workflow:**
+- Webhook trigger to multi-step execution
+- Async operation (fire-and-forget, check status later)
+- Error branch (operation fails, fallback executes)
+- Parallel execution (multiple branches)
+- Retry scenario (one node fails 3 times, then succeeds)
+
 **E-commerce:**
 - Paid checkout (start to finish)
 - Free/promotional content acquisition
@@ -342,13 +388,6 @@ For each critical user/system flow, execute the full test matrix:
 - Async payment (payment pending → settled)
 - Inventory contention (last item, two customers)
 - Tax calculation and invoice issuance
-
-**Workflow:**
-- Webhook trigger to multi-step execution
-- Async operation (fire-and-forget, check status later)
-- Error branch (operation fails, fallback executes)
-- Parallel execution (multiple branches)
-- Retry scenario (one node fails 3 times, then succeeds)
 
 
 ---
@@ -363,9 +402,11 @@ close rather than something it can only cite.*
 
 Before the checklist below is walked, write the system's invariants down as one numbered list in
 the report: the sentences that must be true at every instant, in the system's own vocabulary —
-*money in equals money recorded*, *one entitlement per paid line, never zero, never two*, *no state
-write without its audit row*, *every open exception has a screen and a person who can close it*,
-*a settled refund is never re-sent*. The commerce skill's doctrine §4 is the seed list for a shop;
+*the saved file reopens to the scene the user saw*, *every queued job runs exactly once or is
+visibly failed*, *every committed row names its source batch*, *no state write without its audit
+row*, *every open exception has a screen and a person who can close it*; in a shop, *money in
+equals money recorded*, *one entitlement per paid line, never zero, never two*, *a settled refund
+is never re-sent*. The commerce skill's doctrine §4 is the seed list for a shop;
 for any other system derive them from §3's profile and the map's channels. Then: **every finding
 names the invariant it breaks by number.** A finding that names none is an opinion about style and
 is not graded; a sweep that finds nothing against an invariant nobody wrote down has not looked.
@@ -377,7 +418,7 @@ Choose relevant domains for your system:
 
 ## 8.1 The audit row carries the state before, not only the change
 
-Every mutation an operator or a job makes to a money- or rights-bearing row writes an audit row
+Every mutation an operator or a job makes to a row that bears the primary quantity, money or rights writes an audit row
 that holds **who, when, from where (client address), the state before and the state after, and
 the request's correlation id** — a delta alone cannot reconstruct a record at a moment an
 auditor names, and "after" without "before" is a diff with one side missing. Capture the before
@@ -395,7 +436,9 @@ strictest Content-Security-Policy on the site (nonce-based, no `'unsafe-inline'`
 no analytics, chat or third-party widget of any kind, Subresource Integrity on any script that
 is not self-hosted, and a CSP report endpoint that reaches a person (S20.2). A shop that self-
 hosts every script and font has the easy half of this by construction; the audit still opens the
-page and reads the response headers.
+page and reads the response headers. The same zone applies, in any system, to every page where a
+credential, recovery code or API key is entered; on a system that takes no payments, those pages
+are this section's sites.
 
 ## State Management & Data Integrity
 

@@ -55,9 +55,11 @@ Evidence has a strength, and a claim can only be closed by evidence at least as 
 
 Rules, each one a way a green check closed a claim it could not see:
 
-1. **Every obligation (§E3) and every ledger row names the authority it requires.** "Admin sees a
-   badge for a stuck order" requires A3. "The callback signature verifies" requires A5. "Stock never
-   goes negative under concurrent checkout" requires A2 at least, A3 for the PASS that launches.
+1. **Every obligation (§E3) and every ledger row names the authority it requires.** "The operator
+   sees a badge for a stuck job (or a stuck order)" requires A3. "The callback signature verifies"
+   requires A5. "A job is never claimed twice", like "stock never goes negative under concurrent
+   checkout", requires A2 at least, A3 for the PASS that launches. "The saved file reopens to the
+   scene the user saw" requires A2 (a real save and reopen), never A1.
 2. **A verifier closes a claim only at or above its required authority.** A unit test with a mocked
    gateway (A1) cannot close "the callback works" (A5): it proves the handler agrees with the mock,
    which is `sweeps.md` S21's self-consistent codec at a different height. A green unit suite cannot
@@ -74,11 +76,12 @@ Rules, each one a way a green check closed a claim it could not see:
 **Rows come from intent, not from code.** Sources, in order of weight: the owner's own words (in the
 conversation, the register, a handoff); the invariant register (`doctrine.md` §8.0); design docs,
 plans and ADRs; the vendor document cells S18 enumerates; and the promises a screen makes to a person
-("refund within 7 days", "out of stock items cannot be ordered", a toggle labelled "Allow guest checkout").
+("autosaves every 5 minutes", "failed jobs are retried 3 times", a toggle labelled "Allow guest
+access"; in a shop, "refund within 7 days", "out of stock items cannot be ordered").
 
 | Field | What it holds |
 |---|---|
-| **ID** | `layer.family.name`, stable, with a version — `checkout.stock.no-oversell@1`, `admin.alert.stuck-order@1`, `gateway.newebpay.notify-idempotent@1` |
+| **ID** | `layer.family.name`, stable, with a version — `queue.claim.exactly-once@1`, `editor.save.reopens-identical@1`, `admin.alert.stuck-job@1`, `checkout.stock.no-oversell@1`, `gateway.newebpay.notify-idempotent@1` |
 | **Statement** | one sentence that can be false (`doctrine.md` §8.0) |
 | **Intent source** | the quote and where it lives — owner message, `docs/ARCHITECTURE.md` D7, manual §4.2, the screen |
 | **Required authority** | A0–A5 (§E2) |
@@ -246,7 +249,7 @@ a minified vendor SDK, a plugin zip that is not in the repo, a SaaS step in the 
 ## §E11 — A narrow question gets a checklist, and the checklist gets revisited
 
 For any request narrower than the full protocol ("why does X happen", "does Y work", "check the
-refund path"): before the first tool call, write the questions and the evidence each needs; at the
+refund path", "check the export path"): before the first tool call, write the questions and the evidence each needs; at the
 end, mark each **answered** (with the artefact), **partial** (with what is missing) or **unresolved**
 (into §E4). A bounded search stays bounded in the reply (§E5). Never describe an investigation as
 complete while a question on its own list is open.
