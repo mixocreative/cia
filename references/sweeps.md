@@ -861,7 +861,7 @@ Method — apply to **every** component whose job is to notice:
 2. **For each, separate "ran" from "worked".** Demand two numbers, not one: **coverage** (how many things were actually inspected) and **findings** (how many were wrong). A report carrying only findings cannot distinguish a clean system from a blind instrument. Where coverage can be zero while the run still "succeeds", that state must be named and raised — *blind*, *degraded*, *nothing verified* — never folded into success.
 3. **Give every scheduled thing a heartbeat, and make something read it.** Writing a heartbeat nobody queries is theatre. Something must compare last-run against expected-interval and escalate the gap — with a grace of a few intervals so one late run is not an alarm, and with *never ran* treated as the loudest case rather than the quietest, because on a fresh deploy it means the schedule was never installed.
 4. **Walk the escalation to a surface a human opens.** For each detector: where does its output appear, and who opens that? A log, a table, an email to an unread address and an exit code nobody reads are all the same answer — nowhere.
-5. **Then ask the recursive question, and answer it once rather than forever.** Who watches the watcher? The regress terminates only by leaving the system: an exit code a scheduler mails, an external uptime probe, a dead-man's switch a third party trips when a ping stops arriving. **Name the outermost check and confirm it is outside the process it watches.** A monitor inside the thing it monitors shares its failures.
+5. **Then ask the recursive question, and answer it once rather than forever.** Who watches the watcher? The regress terminates only by leaving the system: an exit code a scheduler mails, an external uptime probe, a dead-man's switch a third party trips when a ping stops arriving. **Name the outermost check and confirm it is outside the process it watches.** A monitor inside the thing it monitors shares its failures. **And confirm what it touches is the code a real request runs** — outside the process is half the test; a probe whose endpoint answers before the application boots stays green through the outage it exists to catch (2026-10-22, below).
 6. **Test the blind case explicitly.** A detector's test suite must contain "it examined nothing and said so". That test is almost never written, because it feels like testing the absence of work — it is testing the difference between silence and safety.
 
 **Grading.** A detector on a primary or safety path that cannot distinguish blind from clean: **HIGH** — every run it makes is uninterpretable, including the ones already filed as green. A scheduled job critical to the primary quantity (money, backups, sync, expiry, job results) with no liveness signal: **HIGH** — and a heartbeat that is written and read by nothing *is* no liveness signal (grade the job HIGH, not the missing reader MEDIUM). A detector whose output reaches no human surface: **HIGH** (S16 rule six). No outermost check outside the system: **MEDIUM**, and it is the one to state plainly rather than grade, because it is an architectural choice the owner should make knowingly.
@@ -2179,6 +2179,53 @@ checksums and file hashes, smoke the app on B, write the lay procedure — repor
   surface stayed, because only the top contact was tested. The fix tested the landing point too,
   with the builder's own landing ray, in the one function the main thread and the mesh worker
   share — so counts, checks and the built mesh agree.
+
+### 2026-10-22 — mixoweb pre-launch audits (/cia and /ecommerce-cia ahead of a host move)
+
+- **S20 — a watchdog that answers before the code it guards runs.** The outermost check must
+  exercise the path a real request takes — boot the application, read the store through its own
+  layer, render one real page — or it proves only that the web server and the database are up.
+  Enumerate every health, status and uptime endpoint and say where in the request path each one
+  returns; one that returns before the application boots is a liveness answer to a readiness
+  question (S20.4). Then name what reads the application's error log: a log nothing alerts on is
+  the report storey. e.g. (shop) a `/status` endpoint answered `SELECT 1` before the framework
+  booted and stayed 200 while every storefront page was 500; the uptime probe pointed at it would
+  have stayed green through the outage, and the PHP error log recording every 500 fed no alert.
+- **S20 / S3 — required configuration missing, and the job exits 0.** A worker whose required
+  configuration is unset, or present and undecryptable, must in production exit non-zero, leave its
+  heartbeat stale or marked degraded, and turn its health row red; "nothing to do" and "cannot do
+  anything" are different states (step 2's blind case, applied to advancers per S20.1). Enumerate
+  every worker's config guard and read what it returns. e.g. (shop) the mail workers returned 0
+  when SMTP was unset or its stored secret would not decrypt, so the heartbeats stayed fresh and the
+  mail health row showed green beside "last sent: never".
+- **S21 — a path filter matched against the absolute path.** Every test that includes or excludes
+  files by path (an orphan-class scan, an "every X has a test" pairing, a forbidden-call grep, an
+  allow-list) matches against the path relative to the repo root, never the absolute one, or the
+  checkout's location changes the verdict. Prove it from a checkout whose parent folders carry the
+  excluded names. e.g. an orphan-class test skipped any absolute path containing `/scratchpad/`,
+  `/docs/` or `/tests/`, so a checkout under such a folder failed for no reason or — worse — skipped
+  every file and passed vacuously.
+- **S2 / S15 — a second sign-in method linked to an existing account by email.** When an OAuth,
+  magic-link or SSO sign-in attaches to an existing account because the address matches, and the
+  account's creator never proved that address, the link must remove the creator's password and end
+  their sessions; otherwise a stranger who pre-registered the victim's address keeps a way into the
+  account the victim now uses — verified by the victim's own sign-in — and everything it
+  accumulates (pre-hijack takeover). Enumerate every path that attaches an identity to an account
+  and compare each with the password-reset path, which already treats "proved the inbox" as the
+  event that ends earlier credentials; asymmetry between the two is the signal. e.g. (shop) a
+  Google sign-in linked by email kept the unverified account's password, so the pre-registrant
+  could sign in later and read the buyer's orders and download history.
+- **S19.4 / S10 — a dev-machine override retargets "the old host".** A hosts-file entry, DNS
+  override, SSH alias or proxy on the machine driving a host move silently points steps meant for
+  the old host at the new one (or the reverse), and a backup, final export or "still works" check
+  then succeeds against the wrong side. A move runbook says, per step, which host it runs against
+  and how to confirm it (IP, server hostname, a marker file), and when each override is switched
+  on and off. e.g. the owner's laptop already mapped the shop's domain to the new server, so every
+  "on the old host" step would have reached the new one.
+- **S19.4 / S16 — the move window.** An external writer (webhook, callback, queue consumer) still
+  delivering to the old host after the dump is lost unless the runbook stops it or re-queries and
+  replays it after cutover, and a closed-for-the-move gate must still pass the token-addressed pages
+  people were sent links to. The payment form of this is in `ecommerce-cia` (2026-10-22 classes).
 
 ---
 

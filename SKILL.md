@@ -360,7 +360,7 @@ Index — the sweep, what it hunts, and the VSM channel it walks:
 
 When the user asks for "code integrity", "audit", "review the wiring", "trace state across time", "every control to its consumer", or names any term in the taxonomy, the sweeps are the first thing that runs.
 
-**Classes learned from audits (2026-10-07 … 2026-10-22) live in `references/sweeps.md`, "Audit-derived classes".** Each survived a green fast suite and a clean analyser in a real audit and is a site to enumerate under the sweep it names. They are written invariant first, with the original instance as the example — most from one commerce project (mixoweb), the latest from a 3D editor (mixosupports) — so read them there, with the sweeps, every run; the instance illustrates, the invariant is what gets swept.
+**Classes learned from audits (2026-10-07 … 2026-10-22) live in `references/sweeps.md`, "Audit-derived classes".** Each survived a green fast suite and a clean analyser in a real audit and is a site to enumerate under the sweep it names. They are written invariant first, with the original instance as the example — most from one commerce project (mixoweb), one block from a 3D editor (mixosupports) — so read them there, with the sweeps, every run; the instance illustrates, the invariant is what gets swept.
 
 ### 0.10 AI / LLM Component Boundary Audit (conditional)
 
