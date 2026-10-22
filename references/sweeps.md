@@ -2227,6 +2227,74 @@ checksums and file hashes, smoke the app on B, write the lay procedure — repor
   replays it after cutover, and a closed-for-the-move gate must still pass the token-addressed pages
   people were sent links to. The payment form of this is in `ecommerce-cia` (2026-10-22 classes).
 
+### 2026-10-22 (later) — runtime audit of refunds, payments, downloads and settings, and the live proof of its fixes (each survived a green suite and earlier static audits; found by driving the running application)
+
+- **S5 / S22 / S15 — mutual refusal: two controls for one job, each pointing at the other.** When a
+  routing rule ("this kind goes through the automated path, that kind by hand") is copied into each
+  surface that offers the job, the copies drift, and an item lands where the automated form says
+  "use the manual one" and the manual form says "use the automated one" — nobody can do the job.
+  Enumerate every job with two or more entry points (automated and manual, admin and operator tool,
+  desk and CLI). The rule must live in one table keyed by every dimension that decides it; every
+  surface, guard and executor reads that table; an unknown key is refused by all of them. Then walk
+  each value of the key through each surface and read what it says; two surfaces that each end in a
+  refusal are the finding. e.g. (shop) the refund form asked one gateway's rule about every gateway,
+  and the hand form refused what the router told the operator to enter by hand: a paid card order
+  had no refund route at all.
+- **S18 / S4 — a capability assumed per provider, not per kind of item.** A provider's API
+  rarely supports an operation for every kind of thing it handles. Key the capability by
+  (provider, kind) from the provider's own document, and enumerate the kinds a provider accepts
+  against the operations offered. e.g. (shop) a card-refund API offered for ATM transfers,
+  convenience-store codes and wallets of the same gateway.
+- **S12 / S2 — an idempotency key that never changes after a failure.** The twin of the key that
+  names the payload: a key built from (entity, amount) alone makes a declined or failed attempt the
+  answer to every later attempt, so retry is impossible and the operator is told the old failure
+  forever. The key carries the attempt: it advances only when every earlier attempt is known to have
+  failed, and stays put while one is pending or succeeded. Probe: fail the operation once, fix the
+  cause, retry, and read what the second press does.
+- **S15 / S1 — a terminal state tested as one number.** "Fully done" computed as `this amount ==
+  total` misses the case where several partial amounts add up to the total, and the thing stays
+  actionable (shippable, refundable again). Terminal checks compare the sum of everything applied
+  against the total, from the same source every other reader uses. Probe: apply the parts one at a
+  time and read the state after the last.
+- **S5 / S22 — a message written through one accessor and read through another.** A flash message,
+  session value or one-shot flag stored through the framework's session API and read from the raw
+  superglobal (or the reverse) never shows, and nothing errors. A one-shot "sent" or "done" flag
+  that is not cleared when the send fails blocks every resend. Enumerate every read and write of
+  each session key and assert one accessor; for each one-shot flag, name the event that clears it
+  and walk the failure path.
+- **S13.1 / S20 — a hand-maintained list of what to watch or run, beside the catalogue of what
+  exists.** A watched-jobs list or a fallback scheduler's job list written by hand drifts from the
+  job catalogue, and the critical job added last is neither watched nor run when the primary
+  scheduler is gone. Derive the list from the catalogue, or add a parity test that fails when a
+  catalogued job is in neither the list nor an explicit exemption. Enumerate every second list that
+  restates the catalogue.
+- **S16 / S20 — a stored status that no consumer drains.** A row stored as "pending" that nothing
+  will ever process counts as stuck forever in health and is skipped by retention sweeps, so it
+  grows and alarms for ever. A status says what will happen to the row: for every status value name
+  the process that moves it on; a value with no such process is a terminal one, named so.
+- **S20 / S2 — an alarm upserted on a key that omits a distinguishing dimension.** An `ON
+  DUPLICATE KEY` or upsert for alarms whose unique key lacks a dimension that tells two alarms apart
+  (provider, source, kind) collapses two different alarms into one row carrying the first's label
+  and the second's text, and one alarm is lost. For every alarm upsert, list the dimensions the key
+  carries and the dimensions the message mentions; a dimension in the message and not in the key is
+  the finding. Probe: raise two alarms that differ only in that dimension, with equal counts.
+- **S22 — a system or sentinel row shown in a user-facing list under the wrong framing.** A row the
+  system files about itself (a check "could not finish") has no subject of the kind the list is
+  about, so a list that selects "open rows whose subject is missing" presents it as the alarming
+  thing ("money received for an order that does not exist"), with the raw sentinel as its
+  identifier. Enumerate every sentinel id and every list that reads the table; each list excludes
+  the sentinels or gives them a panel of their own with their own words and action.
+- **S21 — a teardown that restores saved state after a skipped setup.** A `tearDown` that puts back
+  what `setUp` saved writes null (or an empty default) over live process-wide state when `setUp`
+  returned early or was skipped, and every later test in the process runs against it. Teardown
+  returns early when setup did not complete; grep each teardown that restores a global, cache or
+  snapshot.
+- **S20.5 / S21 — prove the fixes live after they merge.** These classes were found by driving the
+  running application against real data (the live admin pages, real rows) after a round of fixes
+  had merged, not by the suites, and several were interactions between two fixes that each passed
+  alone. Keep the post-merge live walk mandatory: boot the merged tree, open the pages the fixes
+  touch, read the rows they wrote, and report the result as its own line.
+
 ---
 
 **Reading receipt: _the channel is the finding_.** Quote this phrase on the Step 6 receipts line to show this
