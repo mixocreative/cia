@@ -22,17 +22,19 @@ Walk down the ladder. Stop at the first level that can answer the question with 
 
 | Level | Executor | Use it for | Token cost to the main context |
 |---|---|---|---|
-| E0 | **Deterministic tool** — grep, the test runner, the linter, `tools/check_structure.py`, `tools/sweep-diff.py` | any question a command can answer exactly: does this symbol exist, do the tests pass, does the file still parse | none beyond the output line |
-| E1 | **Graph** — CodeGraphContext for code relationships and graphify for architectural context once the project passes the complexity signals; graphify alone below them. One question goes to one graph (`code-graph-tools.md` §2) | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
-| E2 | **Local model** (Ollama) — only after the probe in `token-economy-delegation` succeeds | bulky mechanical text work: summarising a long log, reformatting a table, first-pass tagging of many short items | the local answer; **untrusted until verified** |
-| E3 | **Explore subagent** — read-only fan-out search | "find every place that does X" across many directories, when the answer is a list of `path:line` | the list only |
-| E4 | **Cheapest capable subagent** (Haiku, then Sonnet if Haiku misses) | a bounded per-file review against an explicit checklist — for example, classify each catch block in eight files by the S3 posture | the verdict table |
-| E5 | **Main model** | judgment; reasoning across files; grading; confirmation; the final report | everything — keep it small by using levels 0–4 first |
-| E6 | **Cold reviewer** — a fresh context with no memory of the author (EGM Goldfish, or a cold audit run) | "can someone who has only this document act on it?"; a second opinion on a finding | the reviewer's verdict list |
+| X0 | **Deterministic tool** — grep, the test runner, the linter, `tools/check_structure.py`, `tools/sweep-diff.py` | any question a command can answer exactly: does this symbol exist, do the tests pass, does the file still parse | none beyond the output line |
+| X1 | **Graph** — CodeGraphContext for code relationships and graphify for architectural context once the project passes the complexity signals; graphify alone below them. One question goes to one graph (`code-graph-tools.md` §2) | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
+| X2 | **Local model** (Ollama) — only after the probe in `token-economy-delegation` succeeds | bulky mechanical text work: summarising a long log, reformatting a table, first-pass tagging of many short items | the local answer; **untrusted until verified** |
+| X3 | **Explore subagent** — read-only fan-out search | "find every place that does X" across many directories, when the answer is a list of `path:line` | the list only |
+| X4 | **Cheapest capable subagent** (Haiku, then Sonnet if Haiku misses) | a bounded per-file review against an explicit checklist — for example, classify each catch block in eight files by the S3 posture | the verdict table |
+| X5 | **Main model** | judgment; reasoning across files; grading; confirmation; the final report | everything — keep it small by using levels 0–4 first |
+| X6 | **Cold reviewer** — a fresh context with no memory of the author (EGM Goldfish, or a cold audit run) | "can someone who has only this document act on it?"; a second opinion on a finding | the reviewer's verdict list |
+
+On a runtime without these models (Codex, or a smaller deployment), map each level to the cheapest available model that can follow a checklist; the order of the ladder and the verification rules stay the same.
 
 Two rules sit above the ladder:
 
-- **A cheaper level never grades.** Levels E0–E4 return evidence. The main model (or the cold reviewer for a judgement about wording) decides what the evidence means.
+- **A cheaper level never grades.** Levels X0–X4 return evidence. The main model (or the cold reviewer for a judgement about wording) decides what the evidence means.
 - **Reuse before re-exploring.** Before any read, check in order: the graph report (`graphify-out/GRAPH_REPORT.md`), the sites already recorded in the handoff or the last report, and the deterministic checks in `tools/`. Every answer found there is cited, not re-derived. Re-reading a file to rediscover a site a prior report already names is the waste this rule exists to stop.
 - **A deterministic check replaces a reading when it can answer the question.** `tools/check_structure.py` for the skill's structure, `tools/design_check.py deps|adr|states` for rules, `tools/sweep-diff.py` for drift. Run the check, read its count and its sites, and open files only at those sites.
 - **Start at the top only when the answer is exact.** Do not use a grep to answer a question that needs reading, and do not read a file to answer a question a grep answers.

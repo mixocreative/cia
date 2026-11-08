@@ -99,6 +99,8 @@ The state-delta ladder (`browser-walks.md` §12) observes the transitions on scr
 
 **Run it.** `python tools/design_check.py states <table.json>` checks the table: missing cells, unreachable states, exit-less states.
 
+**Walk it.** The table is also the test plan: generate one Playwright (or CLI) walk per transition row from the table file — drive the event from the state, assert the target state's marker on screen (`browser-walks.md` §12) — and write one line per walked transition (`state event target`) to a log. `python tools/design_check.py states <table.json> --walked <log>` then fails on every row with no walk and on every walk the table does not contain, and prints `transitions walked W/T`. A walk generated from the table cannot test a transition the table omits, so the completeness check runs first. Do not adopt a statechart library for this: the table is already the model, and a proof that re-implements its subject proves the re-implementation (S21).
+
 **Sweep it with.** S16 (every non-terminal state has a queue or an exit), S22 (step × outcome × audience), S23 (arrival order).
 
 ---

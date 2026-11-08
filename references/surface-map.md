@@ -141,7 +141,7 @@ An `unswept U` above zero is printed, not hidden. Zero unswept cells is the only
 ## 8. Known limits
 
 - The matrix is only as complete as the inventories. A capability registered dynamically (plugin loaders, reflection, generated routes) will be missed by grep; say so and list the registration mechanism as UNKNOWN (`evidence.md` §E4), do not call the matrix complete.
-- A `●` cell proves a path exists in the code. It does not prove a person can find it. Findability is a usability question: `journey-map.md` and the owner's own walkthrough decide it.
+- A `●` cell proves a path exists in the code. It does not prove a person can find it. Findability is a usability question: the cold-reader walkthrough in `journey-map.md` §5a decides it.
 
 ---
 

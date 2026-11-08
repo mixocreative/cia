@@ -36,6 +36,9 @@ Each journey gets one row. Use a stable ID (`JRN-###`) and cite it from tests an
 | Exits | every terminal state, each marked **done / abandoned / failed / needs-human** |
 | Primary quantity touched | which stored state changes, and where it is read back |
 | Owner decision needed? | yes if an exit has no defined behaviour yet |
+| Use errors | for each step marked critical: the plausible wrong action a first-time user takes (wrong object, wrong order, premature confirm, skipped undo), and the control that prevents or reverses it (path:line) — or `NONE`, which is a finding under T4 |
+
+A critical step with no use-error row has been judged safe by its author, which is the one judge usability engineering excludes.
 
 A journey with no `exit = needs-human` is one where something can get stuck without anyone being told. Check for that first.
 
@@ -96,6 +99,17 @@ A blank cell is an unswept cell and is counted as such.
 **T8 — The mode error.** A surface offers an action whose preconditions are not met in the current mode (edit mode off, offline, read-only, draft vs published) and explains nothing. S22.6.
 
 Each trap that fires is a finding, graded under `reporting.md` §9, with the grid cell it sits in.
+
+### 5a. The cold-reader walkthrough — can a person find the way
+
+For every step of a critical journey, a reader with no context (an EGM Goldfish or a fresh subagent, `test-tools.md` §2) answers four questions from the screen alone (a cognitive walkthrough):
+
+- **W1** — would I know to do this now?
+- **W2** — can I see the control?
+- **W3** — would I pick this one over its neighbours?
+- **W4** — after acting, do I know it worked and what comes next?
+
+A "no" is a finding on that grid cell, graded MEDIUM — HIGH when the step is critical and the wrong neighbour is irreversible. Record it as `●(read)`: a walkthrough judges wording and layout, never behaviour. Run it at Walk tier for every critical journey and at Screen tier for the primary one; real screens come from the running app (`companion-skills.md`, `stitch`).
 
 ---
 

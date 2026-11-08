@@ -1,6 +1,6 @@
 # Code-graph tools — when a project has become complicated enough to need one, and which one
 
-> Job of this file: decide **when** the AI should bring in a code graph, **which** graph answers which question, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (level E1).
+> Job of this file: decide **when** the AI should bring in a code graph, **which** graph answers which question, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (level X1).
 >
 > Two tools are named. **graphify** is already in use on this machine (`graphify-out/`, `graphify update .`). **CodeGraphContext** (`cgc`, an MCP server and CLI that indexes local code into a graph database) is the one the owner asked to add. It is not installed here and has not been run. Its README exists in several mirrors and forks whose versions and commands differ (`cgc start` versus `cgc mcp start`, Neo4j versus an embedded database), so this file names only what they agree on and says to check the installed version's own `--help` before relying on any detail. Sources are in §6.
 
