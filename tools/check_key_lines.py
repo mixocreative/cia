@@ -23,7 +23,13 @@ disappears under its key is the common case and it is caught.
 
 Beyond that, it pins the sha256 of every file the key cites. A cited file that changed content
 means the ranges must be re-read by a person; the checker says which files and stops. Re-pin with
-`--repin` after checking the ranges by hand, never as a reflex.
+`--repin` after checking the ranges by hand, never as a reflex - and with `--only <key>` when only
+one key's ranges were re-read, because re-pinning a key nobody re-read is the silent-permissive
+failure this checker exists to refuse.
+
+Two keys cite the same fixture: the audit key (what a cold audit must find) and the build key
+(what a cold build must produce). The build run works on a throwaway copy, so the repo fixture
+and both pins stay valid whatever the build writes.
 """
 
 from __future__ import annotations
@@ -37,6 +43,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 KEYS = {
     "tests/EXPECTED-fixture-service.md": "tests/fixture-service",
+    "tests/EXPECTED-build-fixture.md": "tests/fixture-service",
 }
 PIN_MARKER = "<!-- site-pins (tools/check_key_lines.py) -->"
 
@@ -55,11 +62,15 @@ def pins_from(text: str) -> dict[str, str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repin", action="store_true", help="rewrite the pins after a human re-read")
+    parser.add_argument(
+        "--only", choices=sorted(KEYS), help="check (or re-pin) this one key instead of all of them"
+    )
     args = parser.parse_args()
 
     failures: list[str] = []
+    keys = {args.only: KEYS[args.only]} if args.only else KEYS
 
-    for key_rel, fixture_rel in KEYS.items():
+    for key_rel, fixture_rel in keys.items():
         key_path = ROOT / key_rel
         fixture = ROOT / fixture_rel
         text = key_path.read_text(encoding="utf-8")
@@ -104,7 +115,11 @@ def main() -> int:
                 newline="\n",
             )
             print(f"{key_rel}: pinned {len(seen)} cited files")
-            return 0
+            # No early return: with several keys, returning here would re-pin only the first
+            # and leave the rest reporting stale pins as if nothing had been done.
+
+    if args.repin:
+        return 0
 
     if failures:
         print("key-line check FAILED:")

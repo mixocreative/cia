@@ -5,15 +5,17 @@ The skill's own S8 applies to the skill: a doctrine edit nobody has run is a wri
 ## What is here
 
 ```
-fixture-service/         a Python job runner with 10 planted defects and 2 correct controls
-EXPECTED-fixture-service.md      the answer key: sweep, path:line, minimum grade — kept OUTSIDE the fixture on purpose
+fixture-service/         a Python job runner with 12 planted defects and 8 verified controls
+EXPECTED-fixture-service.md      the audit answer key: sweep, path:line, minimum grade — kept OUTSIDE the fixture on purpose
+EXPECTED-build-fixture.md        the build-mode answer key: the artefacts §0.10a must produce, in order
 RUNS.md                    one row per run (append; never rewrite history)
+harness/cold_run.py        launches one cold run (audit | build | run-tests); prompts are read from this file
 ```
 
 ## Procedure
 
-1. **Fresh session.** Open a new Claude Code (or Codex) session with `tests/fixture-service` as the working directory. No project memory, no CLAUDE.md — the fixture must be audited cold, the way a new project would be.
-2. **Trigger.** Say exactly: `pre-launch audit, Screen tier`. Separately, in another fresh session, say `run tests` alone: the expected behaviour is the test run first (`Ran 4 tests … OK`) and a one-line offer of the audit — not the protocol. Two things are under test before any sweep runs: §0.3 commerce detection must report *none* and the discovery block must say so; and the run must declare its tier.
+1. **Fresh session.** Open a new Claude Code (or Codex) session with `tests/fixture-service` as the working directory, or run `python tests/harness/cold_run.py --mode audit`. No project memory, no CLAUDE.md — the fixture must be audited cold, the way a new project would be.
+2. **Trigger.** Say exactly: `pre-launch audit, Screen tier`. Separately, in another fresh session, say `run tests` alone: the expected behaviour is the test run first (`Ran 8 tests … OK`) and a one-line offer of the audit — not the protocol. Two things are under test before any sweep runs: §0.3 commerce detection must report *none* and the discovery block must say so; and the run must declare its tier.
 3. **Let it run.** Do not answer questions the skill should answer itself (§0.8). If it asks the owner for something the fixture contains, that is a finding against the skill — record it.
 4. **Score against `EXPECTED-fixture-service.md`** (the scorer reads it; the auditor never does — it sits beside this file, outside the fixture, because two cold runs on 2026-09-19 leaked it through the S6 deferred-work grep the doctrine itself prescribes over `tests/`; an answer key inside the audited tree is a key the auditor will hit)**:**
    - **Hit** — the planted row is reported under the right sweep, with a `path:line` inside the cited range and a grade at or above the minimum.
@@ -46,6 +48,39 @@ monitor has also just earned the S20 row for free. Record the probe in the RUNS 
 The same three runtime columns apply here as in the commerce harness: ladders run (the primary
 quantity in this service is the claim on a job), probes fired, and whether an evidence ledger
 was produced with artefact paths on every PASS.
+
+## The build-mode run
+
+Everything above scores the skill answering *"is this wrong?"*. §0.10a answers *"write it"*, and a
+build contract nobody has run cold is a written test, not a run one. The prompt — the first fenced
+block here is what `tests/harness/cold_run.py --mode build` sends, so it holds the prompt and
+nothing else:
+
+```
+build mode: make the job claim in runner/scheduler.py race-free and crash-safe, production-ready
+```
+
+1. **A throwaway copy, never the repo copy.** A build changes code, and the planted defects under
+   `tests/fixture-service/` are what every audit row above is scored against; a build that lands
+   on the repo copy repairs defect 3 and invalidates the audit key. `cold_run.py --mode build`
+   copies the fixture to a fresh temp directory and runs there. Run by hand, do the same
+   (`cp -r tests/fixture-service <tmp>`), and nothing from the copy comes back.
+2. **The same HARD RULES** as every cold run: no `tests/EXPECTED-*.md`, no `tests/RUNS.md`, no
+   `tests/corpus/entries/`; `references/*.md` read in full.
+3. **Score against `EXPECTED-build-fixture.md`.** It scores the *artefacts* — obligation row before
+   code, four proofs red before the implementation, output pasted, ledger row from the artefact,
+   OBL id in the test names, line 14, the fixture suite still green, the closure gate counted — not
+   whether the SQL ends up right. Correct code with no proof behind it misses every proof row. A
+   verified control "fixed" along the way is a false positive, as in the audit key.
+4. **Record** a row in `RUNS.md`'s build table (the section headed `## Build-mode runs`, at the end
+   of the file; `tools/score.py` reads it separately so a build score can never move the audit
+   gate). Same columns as the audit table; the Prompt cell holds the prompt above; the Note names
+   any collateral edit outside `claim_batch` and the reason the run gave for it.
+5. **The gate.** A miss here is **not a push blocker until a baseline row exists** — the first
+   scored build run is recorded, not blocked, and `score.py --gate` compares later build rows
+   against it on the same model. Until a row scores clean (no miss, no false positive),
+   `README.md` and `SKILL.md` must **not** claim build mode is cold-tested; they may say the audit
+   is, because it is.
 
 ## The corpus run — ground truth nobody planted
 

@@ -203,3 +203,9 @@ de-identified — the mechanism stays, the identifiers, defaults and call spelli
 from real outside codebases (the corpus, the blind-forward snapshots) need no such treatment and
 should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `14b766a` (v2.2.0: sweeps split into seven files; surface-map, journey-map, build-orchestration, design-tools, agent-deployment, test-tools, code-graph-tools; CG/SC/E labels; §0.14–§0.15 moved out of SKILL.md) | Claude **Sonnet** (subagent, cold; key, corpus, RUNS and RUNBOOK fenced; git forbidden; fixture read-only) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 8 | **12/0/0/0, up from 10/2/0/0 on the same model (score 11 -> 12).** Rows 10 and 12, the two nears of the 2026-10-21 row, are now hits at their floors (FS-17 MEDIUM, FS-09 HIGH). Every planted row hit at or above its minimum grade; no control filed as a defect (6 of 8 named under verified controls; the `cancelled` renderer and the paired emptiness tests not mentioned, neither filed). 11 extra findings judged true, among them `finish()` with no predicate (FS-02), `drain` stranding a batch as `running` (FS-13) and the status page and its Retry button having no caller (FS-11); FS-21 (README lists `drain` without documenting it) is a thin LOW. First run on the new references: report line 14 printed SURFACE and JOURNEY, the run quoted the surface-map receipt, and it left build, design, graph, test-tools and agent-deployment unloaded because none was triggered. Packaging caveat: sweeps/05 and 07 read in part (S22.7 and 07's dated blocks skipped by precondition), as earlier runs did with S15–S19. |
+
+## Build-mode runs (2026-11-09 onward)
+
+| Date | Skill commit | Runtime | Prompt | Hits | Near | Miss | False+ | Minutes | Note |
+|---|---|---|---|---|---|---|---|---|---|
+| — | — | — | — | — | — | — | — | — | no build run scored yet |
