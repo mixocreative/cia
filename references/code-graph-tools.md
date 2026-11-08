@@ -58,6 +58,22 @@ Both graphs help, so neither is retired for one bad result. What the measurement
 - if a question type is answered more cheaply by the other graph (say graphify answers a call-chain question well enough on this codebase, or CodeGraphContext gives a better module overview), move that question type in the §2 table and say so in the handoff;
 - only if a graph cannot run at all (failed probe, no usable database on this platform) does the other answer both kinds of question, and the report says why.
 
+
+### 2.5 Other ways each can help
+
+The table in §2 says where to ask **first**; it is not a fence. Either graph may help in other ways, as long as §2.1–§2.3 still hold (one graph per question, separate stores, the code authoritative). Uses worth reaching for:
+
+| Graph | Other help | Feeds |
+|---|---|---|
+| graphify | its markdown nodes show which doc sections describe a component, so a code change can be traced to the docs it may have made stale | the cascade check, `build-orchestration.md` §5 |
+| graphify | its communities give a first draft of the C4 component level, to be checked against the code | `design-tools.md` §1 |
+| graphify | `graphify diagnose multigraph` before a count from the graph is reported | `test-tools.md` §1 |
+| CodeGraphContext | callers and call chains for every capability, so orphans show up as nodes with no inbound edge | `surface-map.md` C1 (orphans), S13 |
+| CodeGraphContext | dead-code and complexity queries, **if the installed version offers them** (check its `--help` or MCP tool list; do not assume) | orphan candidates (S13); size-debt cut targets (`build-orchestration.md` §4) |
+| CodeGraphContext | the running watcher keeps the graph current during a long build session | the freshness check, §4 and G8 |
+
+Each of these is a lead, not a verdict: the cited line is read before it enters a report (§2.3).
+
 ---
 
 ## 3. What CodeGraphContext changes on the machine — check before running it
