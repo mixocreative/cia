@@ -511,7 +511,7 @@ Recommended Fix: Test every point where the support touches the model (top conta
   function the main thread and the mesh worker share, so counts and the built mesh agree
 
 Verification: Fixture whose landing point only is in the zone; the filter removes it.
-  (From the 2026-10-22 mixosupports fix; sweeps.md "Audit-derived classes".)
+  (From the 2026-10-22 mixosupports fix; sweeps/ "Audit-derived classes".)
 ```
 
 ### Complete Finding (Specific) — a shop

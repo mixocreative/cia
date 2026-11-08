@@ -118,7 +118,7 @@ reached disk, a sale recorded that was never made.
   the under-quantity row (`browser-walks.md` §12) at the function boundary, and two independent
   audit runs missed it in a system that accepted it.
 - **The log level is part of the posture.** `log.debug` on a failure path is silence with a
-  receipt, because production runs at INFO (`sweeps.md`, S3). If the catch exists to record
+  receipt, because production runs at INFO (`sweeps/`, S3). If the catch exists to record
   something, record it where a person will see it.
 - **Check the producer's own contract before grading a `catch` on an ingress path.** Some
   producers instruct receivers to acknowledge *before* processing (at least one major payment

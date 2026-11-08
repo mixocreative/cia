@@ -33,7 +33,7 @@ level, so no run was ever asked to notice that a `catch` which logs at DEBUG is 
 production. A real fix commit in another repository (`WilliamAGH/findmybook`, *"stop swallowing
 exceptions in startup config normalization"*) was the corpus's first MISS for exactly that
 reason, and a doctrine lesson with no fixture row behind it is a lesson that rots. This one now
-has both: S3 in `references/sweeps.md` grades the level, and this row fails any run that does
+has both: S3 in `references/sweeps/` grades the level, and this row fails any run that does
 not.
 
 ### A note on row 11's provenance

@@ -1,6 +1,6 @@
 # The reference-guided wiring walk — function, wiring and lifecycle rules, proved together
 
-Loaded in Step 2 right after the step-0 map in `sweeps.md` and before the sweeps run. It turns the map into the
+Loaded in Step 2 right after the step-0 map in `sweeps/` and before the sweeps run. It turns the map into the
 audit's deliverable: a lifecycle state map, seven answers per connection, a deliberate fault set, and a rule
 traceability matrix with a gap register. It is the **default answer when the owner asks "what should we audit
 next?"** on any system built in-house: a **reference-guided Walk** — map every primary flow, inspect every

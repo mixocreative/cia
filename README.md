@@ -580,7 +580,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | File｜檔案 | Purpose｜功能用途 |
 |---|---|
 | `SKILL.md` | the runbook: routing, runtime discovery, six-step protocol, autonomy ladder, sweep index, escalation, plain-language contract, start menu｜Runbook 本體：包含路由、執行期探索、六步驟協定、自主階梯、Sweep 索引、通報升級機制、白話文合約與啟動選單 |
-| `references/sweeps.md` | S1–S22 with methods, gradings and report-line formats｜S1–S22 掃描項目，包含檢測方法、評級標準與報告輸出格式 |
+| `references/sweeps/` | S1–S24 with methods, gradings and report-line formats｜S1–S22 掃描項目，包含檢測方法、評級標準與報告輸出格式 |
 | `references/theory.md` | the Viable System Model applied to a codebase; Systems 1, 2, 3, 3*, 4, 5｜應用於程式碼庫的 Viable System Model（可行系統模型）；涵蓋 Systems 1, 2, 3, 3*, 4, 5 |
 | `references/doctrine.md` | evidence grading, context discovery, the universal test matrix, the domain checklist｜證據評級、上下文探索、通用測試矩陣、領域檢查清單 |
 | `references/context-templates.md` | Blender add-on · e-commerce platform · workflow orchestration｜Blender 外掛 · 電商平台 · 工作流編排 |

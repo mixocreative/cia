@@ -139,8 +139,8 @@ that, the prompt is the finding.
 
 | Symptom | Usually means |
 |---|---|
-| Sweep line present, path absent | agent read the §0.9 index and not `references/sweeps.md` — packaging |
-| Right site, wrong sweep | taxonomy wording; the two sweeps' boundaries are unclear in `sweeps.md` |
+| Sweep line present, path absent | agent read the §0.9 index and not `references/sweeps/` — packaging |
+| Right site, wrong sweep | taxonomy wording; the two sweeps' boundaries are unclear in `sweeps/` |
 | Control filed as defect | the §29 "verified controls" habit is not binding enough in `reporting.md` |
 | Asked the owner for the architecture document | §1.4 / §0.5 discovery did not look under `docs/` |
 | Reported tier but ran deeper or shallower | the tier table in Step 2 is not shaping the run |
