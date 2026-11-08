@@ -71,6 +71,8 @@ Layers, from the top: `app` (startup, providers, routing) · `processes` (multi-
 
 **The check.** Run it as a guard test in CI, not as a manual review. The output is a count with sites; zero violations and zero cycles is the pass. A test that prints violations and exits 0 is a vacuous pass (S7/S21 applied to the rule itself): the run must fail on a planted violation, once, to show it can.
 
+**Run it.** `python tools/design_check.py deps <root> --rules design-rules.json` prints the cycles and violations with their sites, and exits 1 on any. Its UNRESOLVED count names the aliased imports it did not check.
+
 **Sweep it with.** S13 and S17 (a rule enforced outside the system is a label), S21 (a check that cannot fail).
 
 ---
@@ -94,6 +96,8 @@ Layers, from the top: `app` (startup, providers, routing) · `processes` (multi-
 - a machine in code that differs from the table in the docs → drift (`test-tools.md` §2, the EGM drift report).
 
 The state-delta ladder (`browser-walks.md` §12) observes the transitions on screen; the table is the spec it is checked against. `meddev-state-machines` (adapted in `journey-map.md` §1) adds the safe-state and timeout rules for devices and other safety-relevant flows.
+
+**Run it.** `python tools/design_check.py states <table.json>` checks the table: missing cells, unreachable states, exit-less states.
 
 **Sweep it with.** S16 (every non-terminal state has a queue or an exit), S22 (step × outcome × audience), S23 (arrival order).
 
@@ -121,6 +125,8 @@ Consequences: what becomes easier, what becomes harder, what is now enforced whe
 - every rule enforced by a guard test (§3, §4) cites its ADR in the test or the rule's config; a rule with no ADR is an unexplained rule, graded as debt;
 - an ADR whose status says accepted but whose check is absent is a decision nobody enforces;
 - a code path that contradicts an accepted ADR is **escalated, not fixed** (`SKILL.md` §0.5 item 3): the owner decides whether the ADR or the code is wrong.
+
+**Run it.** `python tools/design_check.py adr docs/adr` checks each record's fields, status and supersedes links.
 
 **Sweep it with.** S5, S13 (the decision that was never built), S18 (the authority document is the ADR when one exists).
 

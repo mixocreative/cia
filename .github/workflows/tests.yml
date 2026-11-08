@@ -21,3 +21,5 @@ jobs:
           PY
       - name: Skill structure guard (nothing loose, S1-S24 once each, file-size debt named)
         run: python tools/check_structure.py
+      - name: Design-check guard tests (each rule fails on a planted defect)
+        run: python -m unittest discover -s tests/design-check -t tests/design-check
