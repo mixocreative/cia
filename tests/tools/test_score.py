@@ -101,6 +101,8 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0), (11, 0, 0)])]), 0)  # mean 11.5
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0), (12, 0, 1)])]), 1)  # a miss is never noise
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0)])]), 1)              # one run is a sample
+        reverted = ("ccccccc` (reverted in `ddddddd", [(10, 0, 0), (12, 0, 0)])
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(11, 1, 0), (11, 1, 0)]), reverted]), 0)  # judged: bbbbbbb
 
     def test_build_gate_is_a_ratchet(self):
         build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]

@@ -142,7 +142,11 @@ def audit_gate(rs: list[dict]) -> int:
     """Per-commit gate. Misses and false positives are doctrine: zero tolerance. Half-rows are noise:
     the mean of at least two runs on the commit under test must stay within NOISE of the best earlier
     per-commit mean, and that floor is taken against the best ever, so it can never drift down."""
-    last = rs[-1]
+    live = [r for r in rs if not r.get("reverted")]
+    if not live:
+        print("gate: every scored run is on a reverted commit - nothing under test.")
+        return 0
+    last = live[-1]
     pool = [r for r in rs if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
     group = [r for r in pool if r["token"] == last["token"]]
     earlier = [r for r in pool if r["token"] != last["token"]]
@@ -199,6 +203,9 @@ def _parse(lines) -> list[dict]:
             "fixture": fixture_of(cells[3]),
             "model": model_of(cells[2]),
             "token": commit_of(cells[1]),
+            # A row whose commit cell says "reverted" measured doctrine that no longer ships: it stays in the
+            # history and in the floor, but it is never the commit under test.
+            "reverted": "reverted" in cells[1].lower(),
         })
     return out
 
