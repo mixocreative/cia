@@ -28,8 +28,8 @@ Output
 
 Runtimes
     claude: `claude -p <prompt> --output-format text [--model NAME]`.
-    codex:  `codex exec <prompt>` - UNVERIFIED: the codex flags (and whether --model
-    is accepted) have not been checked against a real codex install.
+    codex:  `codex exec --skip-git-repo-check -s workspace-write [-m MODEL] -o FILE -` with the prompt on
+    stdin, always on a temporary copy of the fixture (flags checked against codex-cli 0.157).
 """
 import argparse
 import datetime
@@ -140,10 +140,14 @@ def build_command(runtime, prompt, model, mode=None):
             cmd += ["--model", model]
         if mode in ALLOWED_TOOLS:
             cmd += ["--allowedTools", *ALLOWED_TOOLS[mode]]
-    else:  # codex - flags UNVERIFIED
-        cmd = ["codex", "exec", prompt]
+    else:
+        # codex: flags checked against `codex exec --help` (codex-cli 0.157). Codex sandboxes the whole
+        # run rather than single tools, so every codex run works on a throwaway copy of the fixture
+        # (see main) with a writable sandbox there; the planted defects cannot change by construction.
+        cmd = ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write"]
         if model:
-            cmd += ["--model", model]
+            cmd += ["-m", model]
+        cmd += [prompt]
     return cmd
 
 
@@ -171,13 +175,13 @@ def main(argv=None, runbook=None):
 
     cmd = build_command(args.runtime, prompt, args.model, args.mode)
 
-    if args.mode == "build":
+    if args.mode == "build" or args.runtime == "codex":
         if args.dry_run:
-            cwd = os.path.join(tempfile.gettempdir(), "cia-build-<new-copy>")
+            cwd = os.path.join(tempfile.gettempdir(), f"cia-{args.mode}-<new-copy>")
         else:
-            cwd = tempfile.mkdtemp(prefix="cia-build-")
+            cwd = tempfile.mkdtemp(prefix=f"cia-{args.mode}-")
             shutil.copytree(FIXTURE, cwd, dirs_exist_ok=True)
-            print(f"build copy: {cwd}", file=sys.stderr)
+            print(f"{args.mode} copy: {cwd}", file=sys.stderr)
     else:
         cwd = str(FIXTURE)
 
@@ -196,9 +200,10 @@ def main(argv=None, runbook=None):
     if args.runtime == "claude":
         argv = [exe] + [a for a in cmd[1:] if a != prompt]
         stdin = prompt
-    else:  # codex: prompt stays an argument; UNVERIFIED on Windows (see module docstring)
-        argv = [exe] + cmd[1:]
-        stdin = None
+    else:  # codex reads the prompt from stdin when it is "-"; -o keeps only its final message
+        last_msg = os.path.join(tempfile.mkdtemp(prefix="cia-codex-out-"), "last.md")
+        argv = [exe] + [a for a in cmd[1:] if a != prompt] + ["-o", last_msg, "-"]
+        stdin = prompt
     res = subprocess.run(argv, cwd=cwd, input=stdin, capture_output=True, text=True,
                          encoding="utf-8", timeout=TIMEOUT_S)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -211,7 +216,10 @@ def main(argv=None, runbook=None):
     )
     # Trap 3: a failed run must not be saved as an empty report and exit 0 - that is the fail-open
     # this skill audits for. Keep stderr in the artefact and return non-zero.
-    body = res.stdout if res.returncode == 0 else f"{res.stdout}\n\n<!-- stderr -->\n{res.stderr}"
+    out_text = res.stdout
+    if args.runtime == "codex" and os.path.exists(last_msg):
+        out_text = Path(last_msg).read_text(encoding="utf-8")
+    body = out_text if res.returncode == 0 else f"{out_text}\n\n<!-- stderr -->\n{res.stderr}"
     path.write_text(header + body, encoding="utf-8")
     print(path)
     return 0 if res.returncode == 0 else 1

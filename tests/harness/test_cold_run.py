@@ -83,5 +83,17 @@ class ColdRunTests(unittest.TestCase):
         self.assertIn("Edit", b)
 
 
+
+class CodexTests(unittest.TestCase):
+    def test_codex_runs_on_a_copy_with_checked_flags(self):
+        res = run("audit", RUNBOOK_BASE, ["--dry-run", "--runtime", "codex"])
+        self.assertEqual(res.returncode, 0, res.stderr)
+        cmd = json.loads(res.stdout.split(chr(10))[0])
+        self.assertEqual(cmd[:2], ["codex", "exec"])
+        self.assertIn("--skip-git-repo-check", cmd)
+        self.assertEqual(cmd[cmd.index("-s") + 1], "workspace-write")
+        self.assertTrue(cmd[-1].startswith("pre-launch audit, Screen tier"))
+        self.assertIn("cia-audit-<new-copy>", res.stdout)  # never the repo fixture
+
 if __name__ == "__main__":
     unittest.main()
