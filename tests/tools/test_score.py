@@ -12,8 +12,8 @@ import score  # noqa: E402
 HDR = "| Date | Skill commit | Runtime | Tier | Hits | Near | Miss | False+ | Minutes | Note |"
 
 
-def row(date, hits, near=0, miss=0, false=0, runtime="Claude Opus", tier="Screen"):
-    return f"| {date} | `abc` | {runtime} | {tier} | {hits} | {near} | {miss} | {false} | 5 | n |"
+def row(date, hits, near=0, miss=0, false=0, runtime="Claude Opus", tier="Screen", commit="abc"):
+    return f"| {date} | `{commit}` | {runtime} | {tier} | {hits} | {near} | {miss} | {false} | 5 | n |"
 
 
 def runs_text(audit, build, runtime_ok=True):
@@ -83,16 +83,24 @@ class ScoreTests(unittest.TestCase):
         self.assertIn("build: no scored build run yet", out)
 
     def test_audit_regression_still_fails(self):
-        t = runs_text([row("2026-11-01", 10), row("2026-11-02", 7, miss=3)],
+        t = runs_text([row("2026-11-01", 10, commit="aaaaaaa"), row("2026-11-02", 7, miss=3, commit="bbbbbbb")],
                       [row("2026-11-10", 9)])
         self.assertEqual(self.run_score(t, "--gate")[0], 1)
 
-    def test_audit_gate_is_a_ratchet(self):
-        # 12, then a recorded 10.5, then 11: 11 beats the previous row but not the best one, so it fails.
-        lowered = [row("2026-11-01", 12), row("2026-11-02", 9, near=3), row("2026-11-03", 11)]
-        self.assertEqual(self.run_score(runs_text(lowered, []), "--gate")[0], 1)
-        restored = [row("2026-11-01", 12), row("2026-11-02", 9, near=3), row("2026-11-03", 12)]
-        self.assertEqual(self.run_score(runs_text(restored, []), "--gate")[0], 0)
+    def gate_on(self, groups):
+        """groups: list of (commit, [(hits, near, miss)...]); returns the --gate exit code."""
+        audit = [row(f"2026-11-{i + 1:02d}", h, near=n, miss=m, commit=c)
+                 for i, (c, runs) in enumerate(groups) for (h, n, m) in runs]
+        return self.run_score(runs_text(audit, []), "--gate")[0]
+
+    def test_per_commit_gate(self):
+        base = ("aaaaaaa", [(12, 0, 0)])
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0), (9, 3, 0)])]), 1)   # mean 11.25 < 11.5
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(9, 3, 0), (9, 3, 0)])]), 1)    # mean 10.5
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(11, 1, 0), (11, 1, 0)])]), 0)  # mean 11.5, at the floor
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0), (11, 0, 0)])]), 0)  # mean 11.5
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0), (12, 0, 1)])]), 1)  # a miss is never noise
+        self.assertEqual(self.gate_on([base, ("bbbbbbb", [(12, 0, 0)])]), 1)              # one run is a sample
 
     def test_build_gate_is_a_ratchet(self):
         build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
