@@ -553,6 +553,8 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/paired-run.md` | running /cia and /ecommerce-cia together: the spine, the folded steps, one report｜同時執行 /cia 與 /ecommerce-cia：主軸、合併步驟、單一報告 |
 | `references/plain-language.md` | the voice for a user who is not an engineer: eight rules｜面對非工程背景使用者的溝通方式：八條規則 |
 | `references/companion-skills.md` | when cia hands a bounded job to another skill (impeccable, stitch, meddev, fmea/rcca, EGM …), and how the AI finds, vets and installs a missing skill or tool｜何時把一段工作交給其他技能，以及 AI 如何尋找、審查並安裝缺少的技能或工具 |
+| `agents/` | three thin agent briefs for Claude Code: cold auditor, surface mapper, site reviewer; no doctrine｜Claude Code 用的三份精簡代理說明：冷讀稽核員、介面盤點員、網站審查員；不含準則內容 |
+| `tests/harness/` | the cold-run launcher: one command starts a fresh agent run against the fixture and saves its report｜冷啟動執行器：一行指令就能對測試專案啟動全新的代理執行，並儲存報告 |
 | `tools/design_check.py` | design checks an AI can run without installing anything: `deps` (cycles, layer and forbidden-import violations), `adr` (record fields and supersedes links), `states` (transition tables) — stdlib only｜設計檢查，AI 可直接執行：`deps`（循環、分層與禁止相依）、`adr`（欄位與取代連結）、`states`（轉移表），僅用標準函式庫 |
 | `tools/check_structure.py` | structure guard, run in CI: nothing loose, nothing missing, S1–S24 each once, file-size debt named｜結構守衛，CI 執行：無鬆散檔、無遺漏、S1–S24 各一次、檔案大小債務需具名 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |

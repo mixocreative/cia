@@ -23,3 +23,9 @@ jobs:
         run: python tools/check_structure.py
       - name: Design-check guard tests (each rule fails on a planted defect)
         run: python -m unittest discover -s tests/design-check -t tests/design-check
+      - name: Harness launcher tests (prompts read from RUNBOOK, build runs on a copy)
+        run: python -m unittest discover -s tests/harness -t tests/harness
+      - name: Agent definition tests (no doctrine duplicated outside references/)
+        run: python -m unittest discover -s tests/plugin -t tests/plugin
+      - name: Scorer tests (build rows never move the audit gate)
+        run: python -m unittest discover -s tests/tools -t tests/tools
