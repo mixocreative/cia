@@ -1,6 +1,6 @@
 # Code-graph tools — when a project has become complicated enough to need one, and which one
 
-> Job of this file: decide **when** the AI should bring in a code graph, **which** graph to use, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (rung 1).
+> Job of this file: decide **when** the AI should bring in a code graph, **which** graph answers which question, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (rung 1).
 >
 > Two tools are named. **graphify** is already in use on this machine (`graphify-out/`, `graphify update .`). **CodeGraphContext** (`cgc`, an MCP server and CLI that indexes local code into a graph database) is the one the owner asked to add. It is not installed here and has not been run. Its README exists in several mirrors and forks whose versions and commands differ (`cgc start` versus `cgc mcp start`, Neo4j versus an embedded database), so this file names only what they agree on and says to check the installed version's own `--help` before relying on any detail. Sources are in §6.
 
@@ -23,17 +23,36 @@ Below the thresholds, `grep` and the test runner are enough. Say so in the repor
 
 ---
 
-## 2. Which graph
+## 2. Two graphs, two jobs
 
-| Situation | Use |
-|---|---|
-| Two or more complexity signals hold (§1) | **CodeGraphContext** — from now on the AI's code graph for this project, after the checks in §3. It serves the graph over MCP, so later sessions query it instead of re-exploring the same code, and `cgc watch .` keeps it current while code changes. If the repo also has `graphify-out/`, stop refreshing it once CodeGraphContext is in place: two graphs double the stale-index risk |
-| Below the thresholds, or a one-off audit | graphify (`graphify update .`) or grep — nothing is installed and no configuration is edited |
-| CodeGraphContext cannot run here (no embedded database on this platform, Neo4j not available, probe fails) | graphify, and the report says why |
+Below the thresholds of §1, graphify alone (or grep). Once CodeGraphContext is in place (§1 triggers, §3 checks), both serve the same repository, **each for one kind of question**:
 
-**Never keep two graph tools indexing the same repository.** Pick one per repository and say which in the handoff.
+| Question | Ask first | Ask the other only when |
+|---|---|---|
+| **Code relationships** — who calls X, what X calls, imports, the call chain from an entry point to a write, what a change touches | **CodeGraphContext** | it cannot answer: a language it does not parse, a stale index, a failed probe. Then graphify `explain` / `path` |
+| **Architectural context** — which modules cluster together, which docs and sections describe a component, how the system divides, the overview a new session needs | **graphify** (`graphify-out/GRAPH_REPORT.md`, `graphify query`) | the answer names a component whose code relationships matter. Then CodeGraphContext, for those relationships only |
 
-**Then measure, and keep it only if it pays.** The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with CodeGraphContext, compare the tokens spent on exploration against a comparable task before it, with the same findings, and write both numbers in the handoff. If CodeGraphContext did not reduce them, tell the owner and fall back to graphify.
+### 2.1 One question, one graph
+
+Do not ask both graphs the same question to compare them: that doubles the tokens and leaves two answers to reconcile. Ask the second graph only when the first returned nothing usable, returned `TRUNCATED` and narrowing did not help, or is stale. Record each fallback and its reason in the report line (§5).
+
+### 2.2 Separate storage
+
+- graphify writes only `graphify-out/` at the project root.
+- CodeGraphContext keeps its own database (its embedded store, or Neo4j) in its own location.
+- Never point either tool at the other's directory or database, never share one Neo4j database between them, and gitignore both index locations.
+- Record both index paths in the handoff, so the next session knows which store belongs to which tool.
+
+### 2.3 One source of truth: the code and its architecture documents
+
+- The repository's code and its architecture documentation (ADRs, the C4 map, design docs, README maps) are **authoritative**. Both graphs are derived indexes of them.
+- A graph that disagrees with the code is **stale**: the code wins, and the graph is re-indexed.
+- A graph that disagrees with an architecture document is a drift question between the document and the code (`test-tools.md` §2). It is settled by reading both, never by trusting the graph.
+- No graph answer enters a report as a fact until the cited line has been read (`evidence.md` §E1).
+
+### 2.4 Measure, and keep CodeGraphContext only if it pays
+
+The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with CodeGraphContext, compare the tokens spent on code-relationship questions against a comparable task before it, with the same findings, and write both numbers in the handoff. If it did not reduce them, tell the owner, retire it, and let graphify answer both kinds of question.
 
 ---
 
@@ -49,7 +68,7 @@ Before running it:
 
 1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Record the version in the report's rung line. If it does not answer after a user-scope install, fall back to graphify and say so.
 2. **Ask the owner before `cgc mcp setup`** and before any Neo4j install. Name the config file the wizard will change.
-3. **Find the index location and gitignore it.** The sources do not agree on where the embedded store lives; read it from the installed version's output. A committed index is a stale index waiting to be trusted.
+3. **Find the index location, keep it apart from graphify's, and gitignore it.** The sources do not agree on where the embedded store lives; read it from the installed version's output, and confirm it is not inside `graphify-out/` and does not share a database with anything else (§2.2). A committed index is a stale index waiting to be trusted.
 4. **Confirm locality.** The tool indexes local code into a local database per its README. Check that against the installed version before a confidential project is indexed.
 5. **Watch the watcher.** `cgc watch .` is a background process. If it dies, the graph goes stale silently and every later answer is about old code — the dead-watchdog defect of S20 applied to the graph. Before trusting an answer, check the graph is newer than the last code change; if the watcher is not running, re-index.
 
@@ -57,17 +76,19 @@ Before running it:
 
 ## 4. How the AI uses it
 
-- **Ask the graph before reading wide.** The graph's answer (callers, callees, the path from an entry point to a write) replaces a multi-file read. Grade it as `test-tools.md` §1 says: a graph edge is a lead until the line is read.
+- **Ask the right graph before reading wide** (§2): CodeGraphContext for code relationships, graphify for architectural context. The answer replaces a multi-file read. Grade it as `test-tools.md` §1 says: a graph edge is a lead until the line is read.
 - **Feed it to the matrices.** A capability's callers feed `surface-map.md` (orphans, dead controls); a path feeds the blast radius in `test-tools.md` §3; components and arrows feed the C4 check in `design-tools.md` §1.
-- **Keep it fresh.** A graph older than the last code change is stale. The closure gate G8 in `build-orchestration.md` requires a refresh before the session finishes: `cgc index .` (or a running watcher) for CodeGraphContext, `graphify update .` for graphify.
-- **Do not let the graph grade.** It maps the code; it does not prove a behaviour (`evidence.md` §E1).
+- **Keep it fresh.** A graph older than the last code change is stale. The closure gate G8 in `build-orchestration.md` requires a refresh before the session finishes: `cgc index .` (or a running watcher) for CodeGraphContext, `graphify update .` for graphify. Refresh each one that is in use; a fresh graph next to a stale one is still a stale answer when the stale one is asked.
+- **Do not let the graph grade or override.** It maps the code; it does not prove a behaviour, and it never outranks the code or the architecture documents (§2.3).
 
 ---
 
 ## 5. Report line
 
 ```
-GRAPH — tool <name> <version> (probed); trigger signals held <list>; index path <path>, fresh as of <commit>; watcher <running|not used|dead>; queries <n>, truncated <t>; edges used E; stale-check: <pass|fail>.
+GRAPH — code relationships via <cgc|graphify> <version> (n queries); architecture via graphify (m queries); second-graph fallbacks f (reasons);
+        trigger signals held <list>; index paths <cgc path> | graphify-out/ (separate: yes|no); fresh as of <commit> each; watcher <running|not used|dead>;
+        truncated t; graph-vs-code disagreements d (code won, re-indexed); stale-check: <pass|fail>.
 ```
 
 ---

@@ -10,7 +10,7 @@
 
 Use the graph before reading files. It answers the structural question for a few hundred tokens where a wide read costs tens of thousands.
 
-**Choose the graph first** (`code-graph-tools.md` §2). **Build or refresh.** `graphify update .` in the project root; for CodeGraphContext, `cgc index .` (or a running `cgc watch .`), after the checks in `code-graph-tools.md` §3. It writes `graphify-out/` (`graph.json`, `GRAPH_REPORT.md`, `graph.html`). Run it before finishing any session that changed code (the user's standing rule). `graphify-out/` is generated and is not committed (`.gitignore`).
+**Choose the graph by the question** (`code-graph-tools.md` §2): once CodeGraphContext is in place, callers and paths (steps 2–3 of the recipe below) go to it, and graphify supplies the architectural context. Neither graph outranks the code (§2.3). **Build or refresh.** `graphify update .` in the project root; for CodeGraphContext, `cgc index .` (or a running `cgc watch .`), after the checks in `code-graph-tools.md` §3. It writes `graphify-out/` (`graph.json`, `GRAPH_REPORT.md`, `graph.html`). Run it before finishing any session that changed code (the user's standing rule). `graphify-out/` is generated and is not committed (`.gitignore`).
 
 **Ask it, bounded.** Every query has a token budget; the default (about 2000 tokens) truncates large answers, and a truncated answer is marked `TRUNCATED` and is not complete (`SKILL.md` §0.12 rule 5). Pass `--budget` when the answer is big, or narrow the query.
 
