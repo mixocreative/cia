@@ -108,6 +108,12 @@ class ScoreTests(unittest.TestCase):
         build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
         self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)
 
+    def test_build_gate_skips_reverted_rows(self):
+        build = [row("2026-11-10", 4), row("2026-11-11", 4), row("2026-11-12", 2, commit="aaaaaaa` (reverted in `bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 0)
+        build[-1] = row("2026-11-12", 2, commit="aaaaaaa")
+        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)
+
     def test_default_output_has_build_line(self):
         code, out, _ = self.run_score(runs_text(self.AUDIT, [row("2026-11-10", 9)]))
         self.assertEqual(code, 0)

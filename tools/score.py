@@ -236,8 +236,12 @@ def build_gate(bs: list[dict]) -> int:
     """Newest build row against the best earlier build row on the same model. Same rule as audit."""
     if not bs:
         return 0   # main() has already printed "build: no scored build run yet"
-    last = bs[-1]
-    same = [r for r in bs[:-1] if r["model"] == last["model"]]
+    # Same rule as audit_gate: a row on a reverted commit measured doctrine that no longer ships.
+    live = [r for r in bs if not r.get("reverted")]
+    if not live:
+        return 0
+    last = live[-1]
+    same = [r for r in bs if r is not last and r["model"] == last["model"] and bs.index(r) < bs.index(last)]
     if not same:
         print(f"build gate: {last['date']} is the first scored build run with {last['model']} - "
               f"a baseline. Recorded, not blocked.")
