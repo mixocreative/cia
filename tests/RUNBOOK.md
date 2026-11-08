@@ -26,7 +26,7 @@ harness/cold_run.py        launches one cold run (audit | build | run-tests); pr
    - **Control misfiled** — a verified control reported as a defect. Counts as a miss.
    - **Vacuous line** — a sweep line with a count but no paths, or paths but no quoted line (§0.9). Counts as a miss for that sweep even if the finding was elsewhere reported.
 5. **Record** a row in `RUNS.md`: date, commit of the skill, runtime (Claude / Codex), tier, hits / near / miss / false positives, minutes, and the one sentence that explains any miss.
-6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** than the best earlier row on the same fixture and model, on score and misses (the gate is a ratchet: a recorded regression never becomes the new baseline). A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
+6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** — precisely: a change ships when every run on its commit has no miss and no false positive, and the mean of at least two runs is within half a row of the best earlier per-commit mean on the same fixture and model. Half a row is a reporting slip (near, unanchored) and is the instrument's noise; a miss is doctrine and is never noise. A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
 
 ## The live probe (`fixture-service`, no second fixture needed)
 
