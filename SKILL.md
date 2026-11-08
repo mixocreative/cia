@@ -260,6 +260,8 @@ Name both in the Step 6 report under line 5.
 
 **Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
 
+**Anchor before printing.** Re-read every finding and every sweep-line site for a `path:line` a reader can open; a symbol, a file or a concept named without its line is not filed yet — add the line, or move it to the unknown register (`evidence.md` §E4). The harness scores an unanchored finding as half (RUNBOOK).
+
 ```
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
 2. /cia universal integrity: ✅ 0 findings  (or ❌ N findings — see below)  [commerce detected → user must also run /ecommerce-cia]
@@ -414,7 +416,7 @@ something is "production-ready". Say which mode you are in, as §0.15 requires f
    rule that reading never produces PASS applies hardest to an author reading their own work an
    hour later.
 
-**Read both files before the first line of code, and report in this shape.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. The build report opens with the mode, then in order: the obligation row (step 0, as a row, not a docstring), the primary quantity and its observers, the four proofs by name with their red output, the green output pasted, the evidence-ledger row, the closure-gate counts CG1–CG13 (`n/a` with a reason where one does not apply) and Step 6 line 14. A report missing one of these names it and says why; it never says done.
+**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. Write the build report as the form in `build-standard.md` §3a, every block filled or `n/a` with a reason; a report missing a block names it and never says done.
 
 **The worked examples are executable.** The fixture's `claim_batch` (`tests/fixture-service/`) is the race-free property failing. `ecommerce-cia`'s `tools/reference/stock_reduction.php` and `prove_stock_reduction.php` prove all four properties in eight checks, including the fault injected after the write and before the commit, which separates an atomic implementation from a transaction-shaped one (`build-standard.md` §1 gives both shapes).
 

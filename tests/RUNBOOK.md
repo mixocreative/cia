@@ -20,12 +20,13 @@ harness/cold_run.py        launches one cold run (audit | build | run-tests); pr
 4. **Score against `EXPECTED-fixture-service.md`** (the scorer reads it; the auditor never does — it sits beside this file, outside the fixture, because two cold runs on 2026-09-19 leaked it through the S6 deferred-work grep the doctrine itself prescribes over `tests/`; an answer key inside the audited tree is a key the auditor will hit)**:**
    - **Hit** — the planted row is reported under the right sweep, with a `path:line` inside the cited range and a grade at or above the minimum.
    - **Near** — right site, wrong sweep or grade one level low. Counts half.
+   - **Unanchored** — right defect, right sweep, grade at or above the floor, but no `path:line` inside the cited range (a symbol, a file or a concept named without its line). Counts half, like near, and is listed in its own column of the note, because it is a reporting defect (reporting.md §9, the promotion rule) and not a discovery one — the fix is different.
    - **Miss** — not reported, or reported only as a count with no path.
    - **False positive** — a finding at a site with no planted defect. List each; decide whether the fixture is wrong (fix the fixture and re-run) or the doctrine is (fix the doctrine).
    - **Control misfiled** — a verified control reported as a defect. Counts as a miss.
    - **Vacuous line** — a sweep line with a count but no paths, or paths but no quoted line (§0.9). Counts as a miss for that sweep even if the finding was elsewhere reported.
 5. **Record** a row in `RUNS.md`: date, commit of the skill, runtime (Claude / Codex), tier, hits / near / miss / false positives, minutes, and the one sentence that explains any miss.
-6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** than the previous row on hits and misses. A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
+6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** than the best earlier row on the same fixture and model, on score and misses (the gate is a ratchet: a recorded regression never becomes the new baseline). A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
 
 ## The live probe (`fixture-service`, no second fixture needed)
 
