@@ -433,57 +433,9 @@ When the project calls a model (SDK in the lockfile, prompt files, agent loop, v
 
 ## Build mode｜建置模式：不只稽核，還要寫得對
 
-The audit answers *"is this wrong?"*. Build mode answers the question that comes first in real
-work: **"what does right look like, and how would I know?"**
+When the request is *write it* rather than *audit it*, the skill switches to build mode: an obligation row first, a proof that fails before the code exists, then the four properties of a primary-path write (atomic, race-free, idempotent, loud). The full standard and the proof each property needs are in [`references/build-standard.md`](references/build-standard.md); building a multi-part app with no loose ends is in [`references/build-orchestration.md`](references/build-orchestration.md). The executable four-property reference (`stock_reduction.php` and its eight-check proof) lives in `ecommerce-cia`.
 
-It exists because of an objection worth taking seriously — that an AI cannot write a backend that
-handles money correctly. That objection is right about one thing: code which *looks* correct is
-the cheapest thing a language model produces. The answer is not more careful-sounding code. It is
-to name the properties an operation must have, and to prove each one with something that **fails
-when the property is absent**.
-
-> 稽核模式回答的是「這裡寫錯了嗎？」；**建置模式**回答的是實務上更早出現的問題：**「寫對長什麼樣子？我怎麼知道它真的對？」**
->
-> 會有這個模式，是因為一個值得認真看待的質疑：**AI 寫不出能正確處理金流的後端**。這個質疑有一半是對的——「看起來正確」的程式碼，正是語言模型最擅長、也最廉價的產出。正確的回應不是把程式碼寫得更小心，而是**把一個操作必須具備的性質講清楚，並且為每一個性質寫出「性質不成立時就會失敗」的驗證**。
-
-Four properties for any write that moves money, stock, a claim on work or an entitlement｜任何會
-動到金錢、庫存、工作認領或權益的寫入，都需要這四個性質：
-
-| Property 性質 | Mechanism 機制 | The proof 如何證明 |
-|---|---|---|
-| **Atomic 具原子性** | 單一 transaction，所有失敗路徑都 rollback | **在第一次寫入之後、commit 之前注入故障**——第一次的寫入必須消失 |
-| **Race-free 無競態** | 條件判斷寫在 `UPDATE` 裡面，由受影響列數決定結果 | 在「只能有一個贏家」的情況下同時發動兩次 |
-| **Idempotent 冪等** | 呼叫端提供的 key 加上 UNIQUE 約束，且寫在同一個 transaction 內 | 同一把 key 送兩次，第二次不得重複套用 |
-| **Loud 不吞錯** | 「拒絕」是回傳值，「故障」是例外，兩者永遠不同型別 | 兩者都要斷言 |
-
-`ecommerce-cia`'s `tools/reference/stock_reduction.php` implements all four for the operation shops get wrong most
-often, and its `tools/reference/prove_stock_reduction.php` proves them in eight checks — run them
-there｜這兩個檔案位於 `ecommerce-cia`，是**可執行的範本**，不是示意用的程式碼片段，請在該處直接跑起來看：
-
-```
-  PROVED  the happy path                        5 - 2 = 3, one movement row explaining it
-  PROVED  IDEMPOTENT: a replay re-applies nothing   stock still 3, still one movement
-  PROVED  IDEMPOTENT: a refusal replays as itself   the decision is recorded, not just the success
-  PROVED  LOUD: a refusal is a value, not silence   nothing written, nothing partial
-  PROVED  LOUD: a negative quantity is refused      qty < 1 cannot reach the SQL
-  PROVED  RACE-FREE: two callers, one unit          exactly one ok, one refusal, stock 0 - never -1
-  PROVED  ATOMIC: a fault after the decrement       rolled back to 5, no operation recorded, and it threw
-  PROVED  LOUD: the fault was not swallowed         no success-shaped value was returned
-```
-
-The seventh check is the one most codebases never write. A happy-path test passes against an
-implementation with **no transaction at all**; only a fault injected *after* the first write and
-*before* the commit separates atomic from merely transaction-shaped.
-
-> 第七項檢查，是絕大多數專案從來不會寫的那一項。只測 happy path 的測試，就算底下**完全沒有 transaction 也會過**；唯有「在第一次寫入之後、commit 之前注入故障」，才分得出**真的具原子性**與**只是長得像有 transaction**。
-
-The full standard — including what the operation still owes beyond correctness: the movement row
-that explains the number, the screen the refusal reaches, the boundary it must not cross — is
-`references/build-standard.md`｜完整標準（含「正確之外還欠什麼」：解釋數字來源的異動紀錄、拒絕訊息要出現在哪個畫面、哪些責任不屬於這個函式）寫在 `references/build-standard.md`。
-
----
-
-<a id="how-it-is-measured"></a>
+> 當需求是「寫出來」而非「稽核」時，本 Skill 會切換為建置模式：先寫義務列，再寫一個在程式碼存在前就會失敗的驗證，最後依主要路徑寫入的四項性質（原子性、無競態、冪等、失敗要大聲）實作。完整標準與各性質所需的驗證見 `references/build-standard.md`；以不留鬆散結尾的方式建置多部分應用程式見 `references/build-orchestration.md`。可執行的四性質範本（`stock_reduction.php` 及其八項驗證）位於 `ecommerce-cia`。
 
 ## How it is measured｜這個 Skill 的品質，如何被量測
 

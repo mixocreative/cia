@@ -116,6 +116,7 @@ Read every file in this folder at Step 2, in full. The numbering is the contract
 | `03-flows-and-terminal-states.md` | S15–S17 | four-corner walk, terminal-state accountability, out-of-system enforcement |
 | `04-enumeration-environment-liveness.md` | S18–S21 | exhaustive enumeration, environment constraints, liveness of the safety net, the suite as instrument |
 | `05-surface-completeness.md` | S22 | step × outcome × audience, dead buttons, unrendered screens |
-| `06-event-flow-and-contracts.md` | S23–S24, audit-derived classes | event flow and arrivals, contract tests at boundaries, classes learned from audits |
+| `06-event-flow-and-contracts.md` | S23–S24 | event flow and arrivals, contract tests at boundaries |
+| `07-audit-derived-classes.md` | audit-derived classes | dated lessons from real audits, each filed under the sweep it names |
 
 Cross-cutting companions: `../surface-map.md` (function-to-UI gaps, the matrix that S5, S13 and S22 feed) and `../journey-map.md` (critical workflows and their branches).

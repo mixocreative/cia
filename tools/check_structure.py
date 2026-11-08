@@ -32,8 +32,6 @@ DEBT_LIMIT = 600    # over this, the file is named as debt below, with its next 
 
 # file (relative to HERE) -> the next cut, written down. Empty when nothing is over DEBT_LIMIT.
 DEBT = {
-    "references/sweeps/05-surface-completeness.md": "S22 is ~660 lines: next cut is S22.7's dated 2026-09-13/14 blocks to 06-event-flow-and-contracts.md 'Audit-derived classes', mirrored in ecommerce-cia in the same push so sweep-diff stays clean, and scored by a fixture run (RUNBOOK) first; S22.1–S22.11 stay in one file (one place per sweep)",
-    "README.md": "passes 600 lines: next cut is the 'Build mode' section (duplicates references/build-standard.md and the sibling's proof output) to a four-line pointer; the Structure table alone would not bring it under 600",
 }
 
 failures: list[str] = []
