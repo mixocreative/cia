@@ -414,15 +414,9 @@ something is "production-ready". Say which mode you are in, as §0.15 requires f
    rule that reading never produces PASS applies hardest to an author reading their own work an
    hour later.
 
-**The worked examples are executable, not illustrative.** In this skill, the fixture's job claim
-(`tests/fixture-service/`, `claim_batch`) is the race-free property failing, and the RUNBOOK's live
-probe fires it. The full four-property reference is commerce-flavoured and lives in the sibling:
-`ecommerce-cia`'s `tools/reference/stock_reduction.php` implements the four properties and
-`prove_stock_reduction.php` proves them in eight checks — including the one most codebases never
-write: a fault injected *after* the decrement and *before* the commit, which is the only check
-that separates an atomic implementation from a transaction-shaped one. Read the proof first; the
-four properties transfer unchanged to a job claim, a document save or a ledger entry
-(`build-standard.md` §1 gives both shapes).
+**Read both files before the first line of code, and report in this shape.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. The build report opens with the mode, then in order: the obligation row (step 0, as a row, not a docstring), the primary quantity and its observers, the four proofs by name with their red output, the green output pasted, the evidence-ledger row, the closure-gate counts CG1–CG13 (`n/a` with a reason where one does not apply) and Step 6 line 14. A report missing one of these names it and says why; it never says done.
+
+**The worked examples are executable.** The fixture's `claim_batch` (`tests/fixture-service/`) is the race-free property failing. `ecommerce-cia`'s `tools/reference/stock_reduction.php` and `prove_stock_reduction.php` prove all four properties in eight checks, including the fault injected after the write and before the commit, which separates an atomic implementation from a transaction-shaped one (`build-standard.md` §1 gives both shapes).
 
 **What build mode does not do.** It does not decide authorisation, routing, or who is told —
 those belong to the caller, and folding them in is the "one function did everything" defect. And
@@ -498,7 +492,7 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/paired-run.md` | The user names both /cia and /ecommerce-cia in one request | which skill is the spine, how the steps fold together, one register and one report |
 | `references/plain-language.md` | §0.15 detection fires, before the first reply | the eight rules of voice for a user who is not an engineer; rule 8, the owner paragraph |
 
-Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map, connections, G1–G7, rule matrix) → sweeps S1–S24 (S15 first when time is short) → surface-map then journey-map (any project with a UI or more than one surface) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting → evidence (claim tags, obligation ledger, unknowns). Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
+Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map, connections, G1–G7, rule matrix) → sweeps S1–S24 (S15 first when time is short) → surface-map then journey-map (any project with a UI or more than one surface: a rendered page, an operator CLI or an API counts, even when nothing serves the page) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting → evidence (claim tags, obligation ledger, unknowns). Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
 
 ### The reading receipt — how a miss names its own cause
 

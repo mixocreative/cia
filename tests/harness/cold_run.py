@@ -123,7 +123,9 @@ def build_prompt(mode, runbook_text):
 # Audit and run-tests get no Write/Edit: the fixture's planted defects must survive the run, and the
 # list enforces that rather than trusting the HARD RULES text. Build mode edits, but only ever on the
 # throwaway copy main() makes.
-READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)"]
+# The project's own linter and test runner are part of Step 1; a run that cannot call them reports NOT RUN.
+READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)",
+              "Bash(ruff:*)", "Bash(pytest:*)"]
 ALLOWED_TOOLS = {
     "audit": READ_TOOLS,
     "run-tests": READ_TOOLS,
