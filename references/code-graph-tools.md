@@ -86,7 +86,7 @@ CodeGraphContext is a Python CLI plus a database plus an MCP server. Indexing re
 
 Before running it:
 
-1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Record the version in the EXECUTORS line (`agent-deployment.md` §8). If it does not answer after a user-scope install, fall back to graphify and say so.
+1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Verified with 0.6.13 on 2026-11-09: a user-scope pip install puts `cgc.exe` in the user Scripts folder, which may not be on PATH (call it by full path); `cgc --db kuzudb --path <store-dir> index <root>` builds an embedded KuzuDB store with no server and no config change; `cgc analyze callers|calls|chain|dead-code|complexity` answers the code-relationship questions (it found the fixture's orphan `with_backoff` with zero callers); it keeps its own config and logs in `~/.codegraphcontext/`. Record the version in the EXECUTORS line (`agent-deployment.md` §8). If it does not answer after a user-scope install, fall back to graphify and say so.
 2. **Ask the owner before `cgc mcp setup`** and before any Neo4j install. Name the config file the wizard will change.
 3. **Find the index location, keep it apart from graphify's, and gitignore it.** The sources do not agree on where the embedded store lives; read it from the installed version's output, and confirm it is not inside `graphify-out/` and does not share a database with anything else (§2.2). A committed index is a stale index waiting to be trusted.
 4. **Confirm locality.** The tool indexes local code into a local database per its README. Check that against the installed version before a confidential project is indexed.

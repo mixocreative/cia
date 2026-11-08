@@ -57,15 +57,17 @@ For each step, enumerate the outcomes it can produce. Six come from the request 
 | **Unknown result** | the request may or may not have taken effect (timeout after send) | a read-back that decides which, or a visible "check status" — never a silent resend |
 | **Conflict / stale** | the record changed since the person loaded it | the person sees the current state and chooses; the older write does not overwrite silently |
 
-The outcome table is the same authority table S22.4 requires. A step whose capability has an error class the table does not name has an UNKNOWN outcome, and the report says so.
+The outcome table is the same authority table S22.4 requires. A step whose capability has an error class the table does not name has an undefined outcome (`U`), and the report says so.
 
 ---
 
 ## 4. The journey grid
 
-One grid per critical journey. Columns are the branch kinds that matter; rows are the steps. Each cell holds a verdict and a site.
+One grid per critical journey, with the eight columns below — fixed, so two people produce the same grid. Rows are the steps. Each cell holds a verdict symbol and its site: `path:line` for `●` and `○ n/a`, the trap (T1–T8) or walkthrough question (W1–W4) for `✕`; a reason longer than a few words goes in a numbered note under the grid. Before code exists (a build), cite the spec line or the JRN row instead; a cell becomes `●` only once code backs it.
 
-| Step | Happy | Reject | Refuse | Fail | Unknown | Conflict | Duplicate | Resume (refresh/back) |
+The S23 perturbations with no column of their own go in the nearest one: late and out-of-order arrivals and a second tab in **Conflict**; an arrival that never comes and an abandoned step in **Resume**.
+
+| Step | Happy | Reject | Refuse | Fail | Unknown result | Conflict | Duplicate | Resume (refresh/back) |
 |---|---|---|---|---|---|---|---|---|
 | 1. … | ● path:line | ● | ● | ✕ | U | ○ n/a | ● | ✕ |
 
@@ -73,7 +75,7 @@ Verdicts:
 
 - `●` handled and the outcome is visible — cite the message or state the person sees (path:line);
 - `✕` handled wrongly or not at all — say which of the §5 traps;
-- `U` unknown — the branch is not defined in code or in the spec; it becomes an open owner decision;
+- `U` undefined — the branch is not defined in code or in the spec (not the Unknown result column); it becomes an open owner decision;
 - `○ n/a` the branch cannot occur for this step — say why, with the guard that makes it impossible (path:line).
 
 A blank cell is an unswept cell and is counted as such.
@@ -109,7 +111,7 @@ For every step of a critical journey, a reader with no context (an EGM Goldfish 
 - **W3** — would I pick this one over its neighbours?
 - **W4** — after acting, do I know it worked and what comes next?
 
-A "no" is a finding on that grid cell, graded MEDIUM — HIGH when the step is critical and the wrong neighbour is irreversible. Record it as `●(read)`: a walkthrough judges wording and layout, never behaviour. Run it at Walk tier for every critical journey and at Screen tier for the primary one; real screens come from the running app (`companion-skills.md`, `stitch`).
+A "no" is a finding, recorded as `✕ W<n>` in the step's Happy cell and graded MEDIUM — HIGH when the step is critical and the wrong neighbour is irreversible. A "yes" on all four is recorded as `●(read)`: a walkthrough judges wording and layout, never behaviour. Run it at Walk tier for every critical journey and at Screen tier for the primary one; real screens come from the running app (`companion-skills.md`, `stitch`).
 
 ---
 
@@ -120,9 +122,9 @@ Journeys explode combinatorially: steps × outcomes × actors × states × confi
 1. **Equivalence classes per step.** Group the outcomes of one step into classes that the next step treats identically. Test one representative per class, plus the boundary values (S18 enumeration against the authority document).
 2. **Decision table for the rule.** When a step's outcome depends on several inputs (role × state × amount), write the table and cover every row. A table with an empty row is a finding (`evidence.md` §E5 bounded negatives).
 3. **All-pairs for configuration.** Configuration switches that a journey reads (feature flags, locales, plan tiers) are covered pairwise, not exhaustively; a pair that fails is a finding even when each switch alone passes.
-4. **Full grid only for critical journeys.** Non-critical journeys get the happy path, the refusal, and the unknown-result branch. The critical ones get the whole grid.
+4. **Full grid only for critical journeys.** Non-critical journeys get a three-column grid in the same format (Happy, Refuse, Unknown result) and count in the report line's G; critical ones get all eight columns.
 
-State the reduction in the report as a line: `reduced by classes (k), decision rows (r), pairwise configs (p); full grid for critical journeys J`.
+State the reduction in the §8 report line (`reduction: classes k, decision rows r, pairs p`), with k, r and p as totals across all journeys.
 
 ---
 
