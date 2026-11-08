@@ -165,5 +165,43 @@ class StatesTests(unittest.TestCase):
         self.assertIn("EXITLESS failed", out)
 
 
+class WalkedTests(StatesTests):
+    """--walked: the table is the test plan, and the walk log must cover it exactly (design-tools.md §4)."""
+    # Multi-line literals on purpose: one walked transition per line, exactly as a generated walk log is written.
+    ALL = """idle submit submitting
+submitting ok done
+submitting error failed
+failed submit submitting
+"""
+    UNWALKED_ROW = """submitting error failed
+"""
+    UNKNOWN_ROW = """done submit submitting
+"""
+    COMMENT = """# generated walk
+"""
+
+    def check_walk(self, log_text):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "table.json"
+            p.write_text(json.dumps(self.table()), encoding="utf-8")
+            w = Path(d) / "walk.log"
+            w.write_text(log_text, encoding="utf-8")
+            return run(dc.cmd_states, p, w)
+
+    def test_every_row_walked_passes(self):
+        code, out = self.check_walk(self.COMMENT + self.ALL)
+        self.assertEqual(code, 0, out)
+        self.assertIn("transitions walked 4/4", out)
+
+    def test_planted_unwalked_row_fails(self):
+        code, out = self.check_walk(self.ALL.replace(self.UNWALKED_ROW, ""))
+        self.assertEqual(code, 1, out)
+        self.assertIn("UNWALKED submitting x error -> failed", out)
+
+    def test_planted_unknown_walk_fails(self):
+        code, out = self.check_walk(self.ALL + self.UNKNOWN_ROW)
+        self.assertEqual(code, 1, out)
+        self.assertIn("UNKNOWN WALK done x submit -> submitting", out)
+
 if __name__ == "__main__":
     unittest.main()

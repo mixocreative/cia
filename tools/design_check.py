@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Design checks an AI can run: dependency rules, ADR hygiene, state-transition tables.
 
-One job per subcommand. Stdlib only, so it runs with nothing installed (executor level E0 in
+One job per subcommand. Stdlib only, so it runs with nothing installed (executor level X0 in
 references/agent-deployment.md). The rules these check are described in references/design-tools.md.
 
   deps   <root> [--rules design-rules.json]  import cycles, layer and forbidden-import violations
   adr    <dir>                               ADR files carry the required fields; supersedes links resolve
-  states <table.json>                        a transition table is total, reachable and has exits
+  states <table.json> [--walked <log>]       a transition table is total, reachable and has exits;
+                                             with --walked, every transition row was walked and no walk is unknown
 
 Exit 0 = clean. Exit 1 = findings, each printed with its site. Exit 2 = bad input or bad config.
 An exception without a reason and an owner is a config error: silence about a known breach is the finding.
@@ -303,7 +304,25 @@ def cmd_adr(adr_dir: Path) -> int:
 
 # ---------- states ----------
 
-def cmd_states(table_path: Path) -> int:
+def walked_rows(log_path: Path) -> set:
+    """One walked transition per line: `state event target` (commas allowed, `#` starts a comment)."""
+    try:
+        text = log_path.read_text(encoding="utf-8")
+    except OSError as e:
+        raise ConfigError(f"cannot read walk log {log_path}: {e}")
+    rows = set()
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].replace(",", " ").strip()
+        if not line:
+            continue
+        parts = line.split()
+        if len(parts) != 3:
+            raise ConfigError(f"walk log line is not 'state event target': {raw!r}")
+        rows.add(tuple(parts))
+    return rows
+
+
+def cmd_states(table_path: Path, walked_path: Path | None = None) -> int:
     try:
         t = json.loads(table_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as e:
@@ -340,7 +359,19 @@ def cmd_states(table_path: Path) -> int:
         exits = [c for c in trans.get(s, {}).values() if isinstance(c, str) and c != s]
         if not exits:
             findings.append(f"EXITLESS {s}: a non-terminal state with no way out")
+    walked_line = None
+    if walked_path is not None:
+        # A walk proves a row only if the row is in the table; a walk the table lacks means the table is incomplete.
+        table_rows = {(s, e, c) for s, row in trans.items() for e, c in row.items() if isinstance(c, str)}
+        walked = walked_rows(walked_path)
+        for s, e, c in sorted(table_rows - walked):
+            findings.append(f"UNWALKED {s} x {e} -> {c}: a row in the table with no walk")
+        for s, e, c in sorted(walked - table_rows):
+            findings.append(f"UNKNOWN WALK {s} x {e} -> {c}: walked but not in the table (table incomplete or walk wrong)")
+        walked_line = f"transitions walked {len(table_rows & walked)}/{len(table_rows)}"
     print(f"states: {len(states)} states x {len(events)} events = {len(states) * len(events)} cells; findings {len(findings)}")
+    if walked_line:
+        print(walked_line)
     for f in findings:
         print("  " + f)
     return 1 if findings else 0
@@ -363,8 +394,9 @@ def main(argv) -> int:
             return cmd_deps(root, rules)
         if len(argv) == 2 and argv[0] == "adr":
             return cmd_adr(Path(argv[1]))
-        if len(argv) == 2 and argv[0] == "states":
-            return cmd_states(Path(argv[1]))
+        if len(argv) >= 2 and argv[0] == "states":
+            walked = Path(argv[argv.index("--walked") + 1]) if "--walked" in argv else None
+            return cmd_states(Path(argv[1]), walked)
         print(USAGE)
         return 2
     except ConfigError as e:
