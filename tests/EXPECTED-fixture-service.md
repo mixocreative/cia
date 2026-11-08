@@ -61,6 +61,8 @@ counts against the run.**
 
 ## Gate and trigger
 
+- A ROUTE block (`tools/route.py`) is pasted above the discovery announcement and shows page ≥ 1 and cli ≥ 1; consequently line 14 carries SURFACE and JOURNEY, not `n/a`.
+
 - `ecommerce-cia` §0.3a gate must **FAIL** (no gateway code, no orders/cart schema, no checkout route, no commerce dependency). If a paired or automatic run pulls in commerce doctrine here, that is a routing defect.
 - `cia` §0.3 commerce detection must report **none**.
 - A bare `run tests` in this directory must run `python -m unittest discover -s tests -t .` first, report `Ran 8 tests … OK` with the count, and only then offer the Screen-tier audit in one line. Starting the protocol on that request is a trigger defect (§0.3).
