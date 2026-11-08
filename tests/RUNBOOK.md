@@ -179,6 +179,7 @@ that, the prompt is the finding.
 | Right site, wrong sweep | taxonomy wording; the two sweeps' boundaries are unclear in `sweeps/` |
 | Control filed as defect | the §11 "verified controls" habit is not binding enough in `reporting.md` |
 | Asked the owner for the architecture document | §1.4 / §0.5 discovery did not look under `docs/` |
+| Line 14 `n/a` with surfaces on the map | the run skipped or overrode the ROUTE block — packaging |
 | Reported tier but ran deeper or shallower | the tier table in Step 2 is not shaping the run |
 
 ## Paired run
