@@ -175,7 +175,7 @@ def line(r: dict) -> str:
 
 
 def build_gate(bs: list[dict]) -> int:
-    """Newest build row against the previous build row on the same model. Same rule as audit."""
+    """Newest build row against the best earlier build row on the same model. Same rule as audit."""
     if not bs:
         return 0   # main() has already printed "build: no scored build run yet"
     last = bs[-1]
@@ -184,10 +184,10 @@ def build_gate(bs: list[dict]) -> int:
         print(f"build gate: {last['date']} is the first scored build run with {last['model']} - "
               f"a baseline. Recorded, not blocked.")
         return 0
-    prev = same[-1]
+    prev = max(same, key=lambda r: (r["score"], -r["miss"]))  # ratchet: a recorded regression never becomes the baseline
     if last["score"] < prev["score"] or last["miss"] > prev["miss"]:
         print(f"GATE: the newest build run with {last['model']} ({last['score']:g}, {last['miss']} miss) "
-              f"scores below the previous build run with the same model ({prev['date']}: "
+              f"scores below the best earlier build run with the same model ({prev['date']}: "
               f"{prev['score']:g}, {prev['miss']} miss).", file=sys.stderr)
         return 1
     return 0
@@ -262,10 +262,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"gate: {last['date']} is the first scored run on {last['fixture']} with "
                   f"{last['model']} - a baseline, nothing to compare it against. Recorded, not blocked.")
         if same:
-            prev = same[-1]
+            prev = max(same, key=lambda r: (r["score"], -r["miss"]))  # ratchet: a recorded regression never becomes the baseline
             if last["score"] < prev["score"] or last["miss"] > prev["miss"]:
                 print(f"GATE: the newest run on {last['fixture']} with {last['model']} ({last['score']:g}, "
-                      f"{last['miss']} miss) scores below the previous run on the same fixture with the same model "
+                      f"{last['miss']} miss) scores below the best earlier run on the same fixture with the same model "
                       f"({prev['date']}: {prev['score']:g}, {prev['miss']} miss). "
                       f"A doctrine change that lowers the score does not ship "
                       f"(RUNBOOK step 6). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)

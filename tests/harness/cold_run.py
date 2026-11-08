@@ -203,7 +203,8 @@ def main(argv=None, runbook=None):
                          encoding="utf-8", timeout=TIMEOUT_S)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     day = datetime.date.today().isoformat()
-    path = OUT_DIR / f"{day}-{args.mode}-{args.runtime}.md"
+    stamp = datetime.datetime.now().strftime("%H%M%S")  # two same-day runs of one mode must not overwrite each other
+    path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{args.mode}-{args.runtime}.md"
     header = (
         f"<!-- skill commit {skill_commit()} | runtime {args.runtime} | "
         f"model {args.model or 'default'} | exit {res.returncode} -->\n"

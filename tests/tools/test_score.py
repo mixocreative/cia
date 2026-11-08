@@ -87,6 +87,17 @@ class ScoreTests(unittest.TestCase):
                       [row("2026-11-10", 9)])
         self.assertEqual(self.run_score(t, "--gate")[0], 1)
 
+    def test_audit_gate_is_a_ratchet(self):
+        # 12, then a recorded 10.5, then 11: 11 beats the previous row but not the best one, so it fails.
+        lowered = [row("2026-11-01", 12), row("2026-11-02", 9, near=3), row("2026-11-03", 11)]
+        self.assertEqual(self.run_score(runs_text(lowered, []), "--gate")[0], 1)
+        restored = [row("2026-11-01", 12), row("2026-11-02", 9, near=3), row("2026-11-03", 12)]
+        self.assertEqual(self.run_score(runs_text(restored, []), "--gate")[0], 0)
+
+    def test_build_gate_is_a_ratchet(self):
+        build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
+        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)
+
     def test_default_output_has_build_line(self):
         code, out, _ = self.run_score(runs_text(self.AUDIT, [row("2026-11-10", 9)]))
         self.assertEqual(code, 0)
