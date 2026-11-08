@@ -32,7 +32,7 @@ Walk down the ladder. Stop at the first level that can answer the question with 
 
 On a runtime without these models (Codex, or a smaller deployment), map each level to the cheapest available model that can follow a checklist; the order of the ladder and the verification rules stay the same.
 
-On Claude Code the plugin ships agents for three of these levels, so the brief is written once: `agents/cia-surface-mapper.md` (X3), `agents/cia-site-reviewer.md` (X4) and `agents/cia-cold-auditor.md` (X6). On Codex, or when an agent file is absent, brief a subagent from §4. The ladder and the verification in §5 are the same either way; the agent files hold no doctrine, which stays in `references/`.
+On Claude Code three of these levels have ready-made agents, so the brief is written once; they load when `skills-hub doctor -Fix` has linked them into `~/.claude/agents/` (a junction install alone does not load them) or when cia is installed as a plugin: `agents/cia-surface-mapper.md` (X3), `agents/cia-site-reviewer.md` (X4) and `agents/cia-cold-auditor.md` (X6). On Codex, or when an agent file is absent, brief a subagent from §4. The ladder and the verification in §5 are the same either way; the agent files hold no doctrine, which stays in `references/`.
 
 Two rules sit above the ladder:
 
