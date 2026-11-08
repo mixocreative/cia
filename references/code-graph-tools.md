@@ -50,9 +50,13 @@ Do not ask both graphs the same question to compare them: that doubles the token
 - A graph that disagrees with an architecture document is a drift question between the document and the code (`test-tools.md` §2). It is settled by reading both, never by trusting the graph.
 - No graph answer enters a report as a fact until the cited line has been read (`evidence.md` §E1).
 
-### 2.4 Measure, and keep CodeGraphContext only if it pays
+### 2.4 Both stay; measurement tunes the routing
 
-The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with CodeGraphContext, compare the tokens spent on code-relationship questions against a comparable task before it, with the same findings, and write both numbers in the handoff. If it did not reduce them, tell the owner, retire it, and let graphify answer both kinds of question.
+Both graphs help, so neither is retired for one bad result. What the measurement decides is **which questions go to which graph**:
+
+- after the first few real tasks, compare the tokens each graph spent per question type, with the same findings, and write the numbers in the handoff;
+- if a question type is answered more cheaply by the other graph (say graphify answers a call-chain question well enough on this codebase, or CodeGraphContext gives a better module overview), move that question type in the §2 table and say so in the handoff;
+- only if a graph cannot run at all (failed probe, no usable database on this platform) does the other answer both kinds of question, and the report says why.
 
 ---
 
