@@ -395,28 +395,22 @@ commits, the document or scene a user saves, a file on disk, an entitlement, a b
 stock — or on any operation that is irreversible or wide in blast radius; or asks whether
 something is "production-ready". Say which mode you are in, as §0.15 requires for setup mode.
 
-**The contract, and it is short because the whole of it is in `references/build-standard.md`:**
+**The report is this form. Copy it into the report before the first line of code and fill each block as its step finishes.** The rules behind each block are in `references/build-standard.md` §1–§3 and `references/build-orchestration.md`; read both in full, and the receipts line quotes both.
 
-0. **Write the obligation row first** (`references/evidence.md` §E3): the promise as a sentence
-   that can be false, where the intent came from, the case kinds it must survive, the authority
-   its proof needs (§E2), and the one owner the new code will be. The proof's test names carry the
-   obligation ID. Code with no row behind it is unowned behaviour, even when it is your own.
-1. **Name the operation's primary quantity and its observers** before writing anything. If you
-   cannot say which number must be right afterwards, and who will disagree about it, nothing
-   below matters yet.
-2. **Write the proof before the implementation.** Four properties, four checks: an injected fault
-   after the first write (atomic), two concurrent callers (race-free), the same key twice
-   (idempotent), a refusal and a fault asserted as *different types* (loud). They must fail
-   before the code exists.
-3. **Write it** to the mechanisms in `build-standard.md` §1 — the predicate inside the `UPDATE`,
-   the affected-row count as the decision, the idempotency key under a UNIQUE constraint inside
-   the same transaction, refusals returned and faults raised.
-4. **Run the proof and paste its output.** Not a description of it.
-5. **Fill the evidence ledger row from the artefact**, never from the code you just wrote. The
-   rule that reading never produces PASS applies hardest to an author reading their own work an
-   hour later.
+```text
+Mode: build mode — <operation>, <file>
+0 Obligation row (evidence.md §E3): ID <layer.family.name@1> | promise that can be false | intent source (the owner's words) | case kinds: concurrent, fault-after-first-write, duplicate, refused | authority needed ≥ A2 | one owner module
+1 Primary quantity: <the number that must be right afterwards> — observers: <row fields>, <screens>, <monitors>
+2 Proofs RED before the code exists — paste the runner output; test names carry the ID: atomic (fault after the first write), race-free (two concurrent callers), idempotent (same key twice), loud (a refusal and a fault as different types)
+3 Mechanism: predicate inside the UPDATE · affected-row count decides · idempotency key UNIQUE in the same transaction · refusals returned, faults raised
+4 Proofs GREEN after the code — paste · project suite — paste "Ran N tests … OK"
+5 Evidence ledger row (reporting.md §11a), filled from the artefact, never from the code: capability | verdict | authority required/reached | artefact | what it covered
+6 Closure gates CG1–CG13 (build-orchestration.md §9): a count, or n/a with the reason, for each
+7 Step 6 line 14: SURFACE · JOURNEY · DESIGN · GRAPH · EXECUTORS · TESTS · COMPANIONS
+8 Debt not taken, with the reason · reference receipts
+```
 
-**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. Write the build report as the form in `build-standard.md` §3a, every block filled or `n/a` with a reason; a report missing a block names it and never says done.
+A summary in place of this form misses every block it leaves out, and a report missing a block never says done.
 
 **The worked examples are executable.** The fixture's `claim_batch` (`tests/fixture-service/`) is the race-free property failing. `ecommerce-cia`'s `tools/reference/stock_reduction.php` and `prove_stock_reduction.php` prove all four properties in eight checks, including the fault injected after the write and before the commit, which separates an atomic implementation from a transaction-shaped one (`build-standard.md` §1 gives both shapes).
 
