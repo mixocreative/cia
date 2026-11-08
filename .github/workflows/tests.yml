@@ -19,3 +19,5 @@ jobs:
           assert m and len(m.group(2))<=1024
           print('ok', m.group(1), len(m.group(2)))
           PY
+      - name: Skill structure guard (nothing loose, S1-S24 once each, file-size debt named)
+        run: python tools/check_structure.py
