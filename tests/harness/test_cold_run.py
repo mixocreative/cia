@@ -68,6 +68,20 @@ class ColdRunTests(unittest.TestCase):
         res = run("bogus", RUNBOOK_BASE, ["--dry-run"])
         self.assertEqual(res.returncode, 2)
 
+    def test_audit_cannot_write_build_can(self):
+        # The allow-list enforces "do not modify the fixture"; only build mode (on a copy) may edit.
+        def tools(mode, text):
+            cmd = json.loads(run(mode, text, ["--dry-run"]).stdout.split("\n")[0])
+            return cmd[cmd.index("--allowedTools") + 1:]
+        for mode in ("audit", "run-tests"):
+            t = tools(mode, RUNBOOK_BASE)
+            self.assertNotIn("Write", t)
+            self.assertNotIn("Edit", t)
+            self.assertIn("Bash(python:*)", t)
+        b = tools("build", RUNBOOK_BASE + BUILD_SECTION)
+        self.assertIn("Write", b)
+        self.assertIn("Edit", b)
+
 
 if __name__ == "__main__":
     unittest.main()

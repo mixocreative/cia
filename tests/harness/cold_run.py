@@ -119,11 +119,25 @@ def build_prompt(mode, runbook_text):
     return f"{base}\n\n{hard_rules(runbook_text)}\n\n{SKILL_LINE}"
 
 
-def build_command(runtime, prompt, model):
+# A headless run has nobody to approve a tool call, so each mode gets a bounded allow-list instead.
+# Audit and run-tests get no Write/Edit: the fixture's planted defects must survive the run, and the
+# list enforces that rather than trusting the HARD RULES text. Build mode edits, but only ever on the
+# throwaway copy main() makes.
+READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)"]
+ALLOWED_TOOLS = {
+    "audit": READ_TOOLS,
+    "run-tests": READ_TOOLS,
+    "build": READ_TOOLS + ["Write", "Edit"],
+}
+
+
+def build_command(runtime, prompt, model, mode=None):
     if runtime == "claude":
         cmd = ["claude", "-p", prompt, "--output-format", "text"]
         if model:
             cmd += ["--model", model]
+        if mode in ALLOWED_TOOLS:
+            cmd += ["--allowedTools", *ALLOWED_TOOLS[mode]]
     else:  # codex - flags UNVERIFIED
         cmd = ["codex", "exec", prompt]
         if model:
@@ -153,7 +167,7 @@ def main(argv=None, runbook=None):
         print(f"error: {e}", file=sys.stderr)
         return 2
 
-    cmd = build_command(args.runtime, prompt, args.model)
+    cmd = build_command(args.runtime, prompt, args.model, args.mode)
 
     if args.mode == "build":
         if args.dry_run:
@@ -170,17 +184,34 @@ def main(argv=None, runbook=None):
         print(f"cwd: {cwd}")
         return 0
 
-    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=TIMEOUT_S)
+    # Trap 1: on Windows the CLIs are npm .CMD shims, which subprocess cannot start by bare name.
+    exe = shutil.which(cmd[0])
+    if exe is None:
+        print(f"error: {cmd[0]} is not on PATH", file=sys.stderr)
+        return 2
+    # Trap 2: a .CMD shim runs through cmd.exe, which cuts an argument at its first line break, and the
+    # prompt carries the multi-line HARD RULES block. claude -p reads the prompt from stdin instead.
+    if args.runtime == "claude":
+        argv = [exe] + [a for a in cmd[1:] if a != prompt]
+        stdin = prompt
+    else:  # codex: prompt stays an argument; UNVERIFIED on Windows (see module docstring)
+        argv = [exe] + cmd[1:]
+        stdin = None
+    res = subprocess.run(argv, cwd=cwd, input=stdin, capture_output=True, text=True,
+                         encoding="utf-8", timeout=TIMEOUT_S)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     day = datetime.date.today().isoformat()
     path = OUT_DIR / f"{day}-{args.mode}-{args.runtime}.md"
     header = (
         f"<!-- skill commit {skill_commit()} | runtime {args.runtime} | "
-        f"model {args.model or 'default'} -->\n"
+        f"model {args.model or 'default'} | exit {res.returncode} -->\n"
     )
-    path.write_text(header + res.stdout, encoding="utf-8")
+    # Trap 3: a failed run must not be saved as an empty report and exit 0 - that is the fail-open
+    # this skill audits for. Keep stderr in the artefact and return non-zero.
+    body = res.stdout if res.returncode == 0 else f"{res.stdout}\n\n<!-- stderr -->\n{res.stderr}"
+    path.write_text(header + body, encoding="utf-8")
     print(path)
-    return 0
+    return 0 if res.returncode == 0 else 1
 
 
 if __name__ == "__main__":
