@@ -13,8 +13,8 @@ A **loose end** is any artefact that lacks its next link. The artefacts and thei
 | Artefact | Owner link | Closing condition |
 |---|---|---|
 | Obligation (a promise the code must keep) | the one owner module (`evidence.md` §E3) | a proof that fails when the promise is broken |
-| Capability (`C-id`) | at least one surface, or a declared system-only owner (`surface-map.md` C1) | a `●` cell, or a named scheduled job / consumer |
-| Surface (`S-id`) | the capability it invokes | handler read, state branches rendered (C2, C4) |
+| Capability (`C-id`) | at least one surface, or a declared system-only owner (`surface-map.md` SC1) | a `●` cell, or a named scheduled job / consumer |
+| Surface (`S-id`) | the capability it invokes | handler read, state branches rendered (SC2, SC4) |
 | Journey (`JRN-id`) | its exits all have an owner decision | every grid cell has a verdict (`journey-map.md` §7) |
 | Doc line that describes behaviour | the code path it describes | updated in the same commit (§5) |
 | Generated artefact (graph, README map, seed) | its generator command | regenerated and read back (§6) |
@@ -134,27 +134,27 @@ Delegation of the mechanical parts of the build to cheaper executors follows `ag
 
 ---
 
-## 9. The closure gate — when the build is finished (G1–G13)
+## 9. The closure gate — when the build is finished (CG1–CG13)
 
 The build is finished when **all** of these hold, and the report lists each one with its count:
 
 | # | Check | Passes when |
 |---|---|---|
-| G1 | obligations | every `OBL-` row has a `TEST-` that fails when broken |
-| G2 | capabilities | zero orphans without a declared owner (`surface-map.md` C1) |
-| G3 | surfaces | zero dead controls; zero audience gaps (C2, C3) |
-| G4 | states | every `●` cell renders every state in Σ (C4) |
-| G5 | journeys | every critical journey grid has verdicts with zero unswept cells (`journey-map.md` §7) |
-| G6 | exits | zero exits without an owner decision, or each one listed as an open decision |
-| G7 | docs | cascade queue empty, or each open item has a written reason (§5) |
-| G8 | graph | `graphify update .` run after the last code change (`test-tools.md` §1) |
-| G9 | sweeps | S1–S24 each have a report line with sites (`sweeps/README.md`) |
-| G10 | operator surface | every condition the code cannot resolve shows on a screen the operator already opens (`SKILL.md` §0.11 item 6) |
-| G11 | dependency rules | zero violations and zero cycles from the configured tool; every exception listed with a reason and an owner; C4 arrows match code edges (`design-tools.md` §1–§3) |
-| G12 | decisions | every rule a guard enforces cites an accepted ADR; no accepted ADR without its check (`design-tools.md` §5) |
-| G13 | workflows | every stateful component and multi-step journey has a complete transition table; zero missing transitions, dead states or exit-less states (`design-tools.md` §4) |
+| CG1 | obligations | every `OBL-` row has a `TEST-` that fails when broken |
+| CG2 | capabilities | zero orphans without a declared owner (`surface-map.md` SC1) |
+| CG3 | surfaces | zero dead controls; zero audience gaps (SC2, SC3) |
+| CG4 | states | every `●` cell renders every state in Σ (SC4) |
+| CG5 | journeys | every critical journey grid has verdicts with zero unswept cells (`journey-map.md` §7) |
+| CG6 | exits | zero exits without an owner decision, or each one listed as an open decision |
+| CG7 | docs | cascade queue empty, or each open item has a written reason (§5) |
+| CG8 | graph | every graph in use refreshed after the last code change: `graphify update .`; `cgc index .` or a running watcher (`code-graph-tools.md` §4) |
+| CG9 | sweeps | S1–S24 each have a report line with sites (`sweeps/README.md`) |
+| CG10 | operator surface | every condition the code cannot resolve shows on a screen the operator already opens (`SKILL.md` §0.11 item 6) |
+| CG11 | dependency rules | zero violations and zero cycles from the configured tool; every exception listed with a reason and an owner; C4 arrows match code edges (`design-tools.md` §1–§3) |
+| CG12 | decisions | every rule a guard enforces cites an accepted ADR; no accepted ADR without its check (`design-tools.md` §5) |
+| CG13 | workflows | every stateful component and multi-step journey has a complete transition table; zero missing transitions, dead states or exit-less states (`design-tools.md` §4) |
 
-A build that closes G1–G10 with an open owner decision lists the decision first, with what it blocks. A build that does not close a gate says which gate and which count, and does not say "done".
+A build that closes CG1–CG10 with an open owner decision lists the decision first, with what it blocks. A build that does not close a gate says which gate and which count, and does not say "done".
 
 ---
 
@@ -164,3 +164,8 @@ A build that closes G1–G10 with an open owner decision lists the decision firs
 - Mapping functions to screens: `surface-map.md`. Workflows and their branches: `journey-map.md`.
 - How many agents to deploy and which executor takes each step: `agent-deployment.md`.
 - Graph, EGM reviews and drift checks used as tests: `test-tools.md`.
+
+---
+
+**Reading receipt: _every gate is a count, never a feeling_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

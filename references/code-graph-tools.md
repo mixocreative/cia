@@ -1,6 +1,6 @@
 # Code-graph tools — when a project has become complicated enough to need one, and which one
 
-> Job of this file: decide **when** the AI should bring in a code graph, **which** graph answers which question, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (rung 1).
+> Job of this file: decide **when** the AI should bring in a code graph, **which** graph answers which question, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (level E1).
 >
 > Two tools are named. **graphify** is already in use on this machine (`graphify-out/`, `graphify update .`). **CodeGraphContext** (`cgc`, an MCP server and CLI that indexes local code into a graph database) is the one the owner asked to add. It is not installed here and has not been run. Its README exists in several mirrors and forks whose versions and commands differ (`cgc start` versus `cgc mcp start`, Neo4j versus an embedded database), so this file names only what they agree on and says to check the installed version's own `--help` before relying on any detail. Sources are in §6.
 
@@ -68,9 +68,9 @@ The table in §2 says where to ask **first**; it is not a fence. Either graph ma
 | graphify | its markdown nodes show which doc sections describe a component, so a code change can be traced to the docs it may have made stale | the cascade check, `build-orchestration.md` §5 |
 | graphify | its communities give a first draft of the C4 component level, to be checked against the code | `design-tools.md` §1 |
 | graphify | `graphify diagnose multigraph` before a count from the graph is reported | `test-tools.md` §1 |
-| CodeGraphContext | callers and call chains for every capability, so orphans show up as nodes with no inbound edge | `surface-map.md` C1 (orphans), S13 |
+| CodeGraphContext | callers and call chains for every capability, so orphans show up as nodes with no inbound edge | `surface-map.md` SC1 (orphans), S13 |
 | CodeGraphContext | dead-code and complexity queries, **if the installed version offers them** (check its `--help` or MCP tool list; do not assume) | orphan candidates (S13); size-debt cut targets (`build-orchestration.md` §4) |
-| CodeGraphContext | the running watcher keeps the graph current during a long build session | the freshness check, §4 and G8 |
+| CodeGraphContext | the running watcher keeps the graph current during a long build session | the freshness check, §4 and CG8 |
 
 Each of these is a lead, not a verdict: the cited line is read before it enters a report (§2.3).
 
@@ -86,7 +86,7 @@ CodeGraphContext is a Python CLI plus a database plus an MCP server. Indexing re
 
 Before running it:
 
-1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Record the version in the report's rung line. If it does not answer after a user-scope install, fall back to graphify and say so.
+1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Record the version in the EXECUTORS line (`agent-deployment.md` §8). If it does not answer after a user-scope install, fall back to graphify and say so.
 2. **Ask the owner before `cgc mcp setup`** and before any Neo4j install. Name the config file the wizard will change.
 3. **Find the index location, keep it apart from graphify's, and gitignore it.** The sources do not agree on where the embedded store lives; read it from the installed version's output, and confirm it is not inside `graphify-out/` and does not share a database with anything else (§2.2). A committed index is a stale index waiting to be trusted.
 4. **Confirm locality.** The tool indexes local code into a local database per its README. Check that against the installed version before a confidential project is indexed.
@@ -98,7 +98,7 @@ Before running it:
 
 - **Ask the right graph before reading wide** (§2): CodeGraphContext for code relationships, graphify for architectural context. The answer replaces a multi-file read. Grade it as `test-tools.md` §1 says: a graph edge is a lead until the line is read.
 - **Feed it to the matrices.** A capability's callers feed `surface-map.md` (orphans, dead controls); a path feeds the blast radius in `test-tools.md` §3; components and arrows feed the C4 check in `design-tools.md` §1.
-- **Keep it fresh.** A graph older than the last code change is stale. The closure gate G8 in `build-orchestration.md` requires a refresh before the session finishes: `cgc index .` (or a running watcher) for CodeGraphContext, `graphify update .` for graphify. Refresh each one that is in use; a fresh graph next to a stale one is still a stale answer when the stale one is asked.
+- **Keep it fresh.** A graph older than the last code change is stale. The closure gate CG8 in `build-orchestration.md` requires a refresh before the session finishes: `cgc index .` (or a running watcher) for CodeGraphContext, `graphify update .` for graphify. Refresh each one that is in use; a fresh graph next to a stale one is still a stale answer when the stale one is asked.
 - **Do not let the graph grade or override.** It maps the code; it does not prove a behaviour, and it never outranks the code or the architecture documents (§2.3).
 
 ---
@@ -119,3 +119,8 @@ GRAPH — code relationships via <cgc|graphify> <version> (n queries); architect
 - Setup workflows: https://glama.ai/mcp/servers/@Shashankss1205/CodeGraphContext/blob/381af176fb34f46affe9c4771d6f7138754bfa72/docs/docs/setup_workflows.md
 - Listing and config: https://mcp.so/server/codegraphcontext
 - The original repository appears to be `Shashankss1205/CodeGraphContext`; it was not verified directly. Where the copies disagree, the installed version's own documentation wins.
+
+---
+
+**Reading receipt: _two graphs, two stores, one truth_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

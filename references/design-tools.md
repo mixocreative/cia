@@ -21,7 +21,7 @@
 **The check.** A map is a claim about the code, so it is tested against the code (the graph is the instrument, `test-tools.md` §1):
 
 - every **box** on the map has a code location (`path:line` or a directory) — a box with none is a planned component, and the report says so;
-- every **arrow** has a call or import the graph finds (`graphify path` between the two boxes' members). An arrow with no edge is stale;
+- every **arrow** has a call or import the code-relationship graph finds (CodeGraphContext once in place, else `graphify path`; `code-graph-tools.md` §2). An arrow with no edge is stale;
 - every **code edge** that crosses a container or component boundary appears as an arrow. A missing arrow is a hidden coupling, and it is the finding.
 
 **Sweep it with.** S11 (boundary contract), S15 (four-corner walk), S13 (orphan components). The report line:
@@ -67,7 +67,7 @@ Layers, from the top: `app` (startup, providers, routing) · `processes` (multi-
 1. no cycles between modules (`no-circular`);
 2. each layer or package imports only what its layer allows (the FSD rule in §2, or the stack's equivalent);
 3. the domain or core does not import infrastructure;
-4. a rule that must be broken has an exception with a reason and an owner — silence about a known breach is the finding (`build-orchestration.md` §4, principle 8).
+4. a rule that must be broken has an exception with a reason and an owner — silence about a known breach is the finding (code principle 8: debt not taken is written down; `build-orchestration.md` §5).
 
 **The check.** Run it as a guard test in CI, not as a manual review. The output is a count with sites; zero violations and zero cycles is the pass. A test that prints violations and exits 0 is a vacuous pass (S7/S21 applied to the rule itself): the run must fail on a planted violation, once, to show it can.
 
@@ -95,7 +95,7 @@ Layers, from the top: `app` (startup, providers, routing) · `processes` (multi-
 - a transition with no test that fails when it is broken → S21 and S8;
 - a machine in code that differs from the table in the docs → drift (`test-tools.md` §2, the EGM drift report).
 
-The state-delta ladder (`browser-walks.md` §12) observes the transitions on screen; the table is the spec it is checked against. `meddev-state-machines` (adapted in `journey-map.md` §1) adds the safe-state and timeout rules for devices and other safety-relevant flows.
+The state-delta ladder (`browser-walks.md` §12) observes the transitions on screen; the table is the spec it is checked against. `meddev-state-machines` (MIT) adds the safe-state and timeout rules for devices and other safety-relevant flows.
 
 **Run it.** `python tools/design_check.py states <table.json>` checks the table: missing cells, unreachable states, exit-less states.
 
@@ -138,18 +138,18 @@ Adopt in this order, because each one assumes the one before:
 
 | Step | Method | Gate it satisfies |
 |---|---|---|
-| 1 | ADR for the stack and the first structural choices | G12 (decisions recorded) |
-| 2 | C4 map of containers and components | G11 (dependency map exists to check against) |
-| 3 | Dependency rules in CI, FSD layers for UI | G11 (zero violations, zero cycles) |
-| 4 | State machine tables before each multi-step workflow is coded | G13 (every transition table complete) |
+| 1 | ADR for the stack and the first structural choices | CG12 (decisions recorded) |
+| 2 | C4 map of containers and components | CG11 (dependency map exists to check against) |
+| 3 | Dependency rules in CI, FSD layers for UI | CG11 (zero violations, zero cycles) |
+| 4 | State machine tables before each multi-step workflow is coded | CG13 (every transition table complete) |
 
-The three gates below join `build-orchestration.md` §9; they are numbered after G10 so existing references stay valid:
+The three gates below join `build-orchestration.md` §9; they are numbered after CG10 so existing references stay valid:
 
 | # | Check | Passes when |
 |---|---|---|
-| G11 | dependency rules | zero violations and zero cycles from the configured tool; every exception listed with a reason and an owner; C4 arrows match code edges (§1) |
-| G12 | decisions | every rule a guard enforces cites an accepted ADR; no accepted ADR without its check |
-| G13 | workflows | every stateful component and multi-step journey has a complete transition table; zero missing transitions, dead states or exit-less states |
+| CG11 | dependency rules | zero violations and zero cycles from the configured tool; every exception listed with a reason and an owner; C4 arrows match code edges (§1) |
+| CG12 | decisions | every rule a guard enforces cites an accepted ADR; no accepted ADR without its check |
+| CG13 | workflows | every stateful component and multi-step journey has a complete transition table; zero missing transitions, dead states or exit-less states |
 
 ---
 
@@ -167,5 +167,10 @@ DESIGN — C4 containers M/N, arrows A/E, hidden couplings H; FSD violations V; 
 - FSD: the public Feature-Sliced Design methodology; the layer order is its rule.
 - Dependency tools: named as they are commonly packaged; verify the name and version at adoption.
 - ADR: Michael Nygard's format.
-- State machines: the table method and the checks are this skill's; the safe-state and timeout rules come from `meddev-state-machines` (MIT, adapted in `journey-map.md`).
+- State machines: the table method and the checks are this skill's; the safe-state and timeout rules come from `meddev-state-machines` (MIT).
 - None of these tools is run by this skill's own repository; the checks apply to the audited project.
+
+---
+
+**Reading receipt: _the map is a claim the graph can disprove_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

@@ -194,9 +194,9 @@ A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable sy
 
 > 這是給 Claude Code 與 OpenAI Codex 使用的 Skill。它將整套程式碼視為 Stafford Beer 所定義的「可存活系統」（Viable System）來進行稽核，專門抓出只有從這個視野才能發現的 bug：**跨邊界不變量違反**（cross-boundary invariant violations），亦即**整合層級缺陷**或**湧現缺陷**。這類 bug 不會單獨存在於任何一個函式中，而是藏在兩個「各自運作正常」的函式交界處。
 
-Since v2.0 the skill is a runbook plus reference files: twenty-two sweeps instead of fourteen, depth tiers so a run says what it did and did not walk, sweep lines that name their sites and quote a line from one of them, a plain-language contract for owners who are not engineers, a paired run with `ecommerce-cia`, and a fixture project with an answer key that fresh agents are cold-tested against.
+Since v2.0 the skill is a runbook plus reference files: twenty-four sweeps instead of fourteen, depth tiers so a run says what it did and did not walk, sweep lines that name their sites and quote a line from one of them, a plain-language contract for owners who are not engineers, a paired run with `ecommerce-cia`, and a fixture project with an answer key that fresh agents are cold-tested against.
 
-> 自 v2.0 起，本 Skill 已演進為一套 Runbook 搭配參考文件：掃描項目（Sweeps）從原本的 14 項擴增至 22 項；導入深度分級機制（Depth Tiers），讓每次執行都能清楚交代檢視與未檢視的範圍；掃描結果行會直接標示檔案位置並引用相關程式碼；針對非工程背景的 Owner 提供白話文合約機制；支援與 `ecommerce-cia` 協同執行；並附帶包含標準答案的測試專案（Fixture），用於對全新的 Agent 進行冷測試（Cold test）。
+> 自 v2.0 起，本 Skill 已演進為一套 Runbook 搭配參考文件：掃描項目（Sweeps）從原本的 14 項擴增至 24 項；導入深度分級機制（Depth Tiers），讓每次執行都能清楚交代檢視與未檢視的範圍；掃描結果行會直接標示檔案位置並引用相關程式碼；針對非工程背景的 Owner 提供白話文合約機制；支援與 `ecommerce-cia` 協同執行；並附帶包含標準答案的測試專案（Fixture），用於對全新的 Agent 進行冷測試（Cold test）。
 
 <a id="how-this-is-different"></a>
 
@@ -330,12 +330,12 @@ This skill was built after exactly that happened on a production shop: four mone
 ## How the theory becomes procedure｜從理論轉化為實際稽核流程
 
 1. **Map the codebase onto Systems 1–5 first** (§0.9 step 0) and report the table: every component, its primary system, its channels as `producer → consumer`.
-2. **Walk the channels** with twenty-two mandatory sweeps (§0.9); each defect class below is a named kind of broken channel, and each sweep enumerates its sites from the map rather than from grep.
+2. **Walk the channels** with twenty-four mandatory sweeps (§0.9); each defect class below is a named kind of broken channel, and each sweep enumerates its sites from the map rather than from grep.
 3. **Grade viability, not just correctness**: §2 asks whether each of the five systems exists, whether System 3\* is independent of System 3, whether an algedonic path reaches System 5, whether variety is matched.
 4. **Report structurally**: every finding names its defect class and the VSM channel it sits on.
 
 > 1. **將程式碼對應至 System 1–5 架構**（§0.9 第 0 步），輸出結構化地圖：標示每個元件、其所屬的主要系統，以及對應的傳輸通道（`producer → consumer`）。
-> 2. **沿著通道進行深度排查**：執行二十二項強制掃描（§0.9）。後續列出的每種缺陷類型，本質上都是某種具名的通道中斷狀況；每個掃描檢查點皆建構自架構地圖，而非盲目使用 Grep 搜尋。
+> 2. **沿著通道進行深度排查**：執行二十四項強制掃描（§0.9）。後續列出的每種缺陷類型，本質上都是某種具名的通道中斷狀況；每個掃描檢查點皆建構自架構地圖，而非盲目使用 Grep 搜尋。
 > 3. **評估標準為「系統能否持續存活」，而非僅看「語法是否正確」**：§2 負責確認五個系統層級是否完備、System 3\* 是否獨立於 System 3 運作、痛覺傳導路徑是否能抵達 System 5，以及系統承載的多樣性變化量是否匹配。
 > 4. **產出結構化稽核報告**：每個發現的漏洞皆須明確標註其缺陷類型以及對應的 VSM 通道位置。
 
@@ -369,6 +369,8 @@ These are **cross-boundary invariant violations**: integration-level, emergent d
 | **Vacuous or too-late proof**｜無效或太遲的驗證 | a test asserting emptiness passes for an unrelated reason; or the guard sits so deep in a slow suite nobody reaches it｜斷言空值的測試因無關原因而通過；或是防禦機制放在執行極慢的測試集深處，根本沒人執行得到 |
 | **Redraw clobber**｜重繪覆蓋進行中狀態 | a page's own timer or poll redraws a control from its settled fields and wipes the progress, disabled state or open panel of work still running; the button looks like it undid itself｜頁面自己的計時器或輪詢依「已完成」欄位重繪控制項，把仍在進行中的進度條、停用狀態或已展開的面板清掉；按鈕看起來像自己復原了 |
 | **One thing, two names**｜一物多名 | the same view, place or action is called different things on different screens, or one word means two things; a message points to a name no screen shows｜同一個畫面、位置或動作在不同頁面有不同名稱，或同一個詞指兩件事；訊息指向一個沒有任何畫面顯示的名稱 |
+| **Order-dependent outcome / unhandled arrival**｜順序相依的結果／未處理的到達事件 | two arrivals that can interleave leave a different final state depending on which came first, or an arrival that can come twice, late, early or never has no handler｜兩個可能交錯的事件依先後順序留下不同的最終狀態，或是可能重複、延遲、提早或永不到達的事件沒有對應的處理 |
+| **Self-agreeing fake**｜自我認同的假資料 | the only test on a boundary feeds the parser a fixture its own author wrote, so both sides of the contract are ours｜邊界上唯一的測試餵給解析器的是作者自己寫的假資料，契約兩端都出自我方 |
 
 Prompt with any of those terms, or "audit the wiring and runtime behaviour, not the code", and the sweeps run first.
 
@@ -392,6 +394,8 @@ Each defect class above is a broken channel between two VSM systems; the sweeps 
 | System 3\* on itself (is the safety net still looking?)｜針對 System 3\* 本身的檢查（安全網是否仍在運作？） | blind instrument, vacuous or too-late proof｜盲檢工具、無效或太遲的驗證 |
 | Every party that holds the object｜持有該物件的各方 | corner disagreement (the four-corner walk), terminal-state accountability｜四角認知不一致（四角走查）、終態責任歸屬 |
 | System 1 → a screen someone opens｜System 1 → 使用者開啟的畫面 | unrendered surface, orphan capability, scope shadow, redraw clobber, one thing two names｜未渲染的介面、孤立功能、範圍陰影、重繪覆蓋進行中狀態、一物多名 |
+| System 2 ordering × System 4 arrivals｜System 2 順序 × System 4 到達事件 | order-dependent outcome / unhandled arrival (S23)｜順序相依的結果／未處理的到達事件（S23） |
+| System 3\* measuring System 1 against itself｜System 3\* 以自身衡量 System 1 | self-agreeing fake (S24)｜自我認同的假資料（S24） |
 
 A channel on the map with no sweep site named against it is reported as unswept.
 
@@ -402,7 +406,7 @@ A channel on the map with no sweep site named against it is reported as unswept.
 Given a repository, the skill:
 
 1. **Discovers the project's runtime bindings itself** (test runner, canonical environment, dev server, credentials file) and announces them before judging anything.
-2. **Maps the codebase onto the VSM (§0.9 step 0), then runs twenty-two mandatory sweeps (§0.9)** along that map's channels, catching the defect classes a green suite cannot.
+2. **Maps the codebase onto the VSM (§0.9 step 0), then runs twenty-four mandatory sweeps (§0.9)** along that map's channels, catching the defect classes a green suite cannot.
 3. **Applies a universal integrity doctrine**: evidence grading, context discovery, a Viable System Model governance pass, a universal test matrix from happy path through recovery, a domain checklist, and a severity model.
 4. **Executes the six-step pre-launch protocol (§0.6) autonomously**: fast lint and scope tests, doctrine audit, full suite in the canonical environment, runtime walk in a real browser or CLI, fix-or-escalate, numbered report with explicit deferrals.
 5. **Never green-lights on partial evidence.** Every skipped step carries the reason and the exact command the owner must run. Skipped DB tests are reported as unverified, never as green.
@@ -413,7 +417,7 @@ Given a repository, the skill:
 > 提供一個 Repository 給它，它會自動執行以下流程：
 >
 > 1. **自動探索專案的運作機制**（包含測試指令、正式環境、開發伺服器、憑證設定檔），並在做出任何判斷前先明確宣告已知資訊。
-> 2. **先繪製 VSM 架構圖（§0.9 第 0 步），接著沿著通道執行二十二項強制掃描（§0.9）**，精準抓出全綠測試也無法察覺的深層缺陷。
+> 2. **先繪製 VSM 架構圖（§0.9 第 0 步），接著沿著通道執行二十四項強制掃描（§0.9）**，精準抓出全綠測試也無法察覺的深層缺陷。
 > 3. **嚴格套用通用完整性教條**：包含證據等級分類、情境探索、VSM 治理檢查、從正常路徑到災難復原的通用測試矩陣、領域檢查清單，以及嚴謹的嚴重度評估模型。
 > 4. **自主執行六階段部署前稽核流程（§0.6）**：包含快速 Lint 與範圍測試、教條稽核、正式環境完整測試、真實瀏覽器或 CLI 實測、能自動修復就修復否則立即上報，最後產出附帶明確保留項目的編號報告。
 > 5. **證據不足時絕不盲目放行。** 每個被跳過的步驟都會附上原因，以及需要管理者手動執行的指令。被跳過的資料庫測試一律標記為「未驗證」，絕不給予綠燈標籤。
@@ -452,9 +456,9 @@ Four properties for any write that moves money, stock, a claim on work or an ent
 | **Idempotent 冪等** | 呼叫端提供的 key 加上 UNIQUE 約束，且寫在同一個 transaction 內 | 同一把 key 送兩次，第二次不得重複套用 |
 | **Loud 不吞錯** | 「拒絕」是回傳值，「故障」是例外，兩者永遠不同型別 | 兩者都要斷言 |
 
-`tools/reference/stock_reduction.php` implements all four for the operation shops get wrong most
-often, and `tools/reference/prove_stock_reduction.php` proves them in eight checks — run it
-yourself｜這兩個檔案是**可執行的範本**，不是示意用的程式碼片段，請直接跑起來看：
+`ecommerce-cia`'s `tools/reference/stock_reduction.php` implements all four for the operation shops get wrong most
+often, and its `tools/reference/prove_stock_reduction.php` proves them in eight checks — run them
+there｜這兩個檔案位於 `ecommerce-cia`，是**可執行的範本**，不是示意用的程式碼片段，請在該處直接跑起來看：
 
 ```
   PROVED  the happy path                        5 - 2 = 3, one movement row explaining it
@@ -518,11 +522,11 @@ When the request is in everyday words and the project carries no technical vocab
 
 ## Tested against a fixture, by fresh agents｜用有標準答案的專案冷測試
 
-`tests/fixture-service/` is runnable, and since 2026-09-24 `RUNS.md` scores a run in two halves — what it found by reading, and what it actually executed (ladders, the S2 concurrency probe fired rather than predicted, and an evidence ledger whose every PASS cites an artefact). It is a small Python job runner with ten planted defects under four green tests — a config key nothing reads, a SELECT-then-UPDATE that drops its predicate, a config loader that fails open, a monitor that prints "0 problems" while examining nothing, a heartbeat nothing reads, a state the status page cannot show, an orphaned retry helper, a vacuous test, a test that leaks into the runner's environment. `tests/EXPECTED.md` is the answer key; `tests/RUNBOOK.md` scores a run (hit, near, miss, false positive, control misfiled, vacuous line); `tests/RUNS.md` is the ledger. The fixture is deliberately not a shop, so it also proves the commerce gate stays closed and that "run tests" does not start a four-hour protocol. `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged.
+`tests/fixture-service/` is runnable, and since 2026-09-24 `RUNS.md` scores a run in two halves — what it found by reading, and what it actually executed (ladders, the S2 concurrency probe fired rather than predicted, and an evidence ledger whose every PASS cites an artefact). It is a small Python job runner with ten planted defects under four green tests — a config key nothing reads, a SELECT-then-UPDATE that drops its predicate, a config loader that fails open, a monitor that prints "0 problems" while examining nothing, a heartbeat nothing reads, a state the status page cannot show, an orphaned retry helper, a vacuous test, a test that leaks into the runner's environment. `tests/EXPECTED-fixture-service.md` is the answer key; `tests/RUNBOOK.md` scores a run (hit, near, miss, false positive, control misfiled, vacuous line); `tests/RUNS.md` is the ledger. The fixture is deliberately not a shop, so it also proves the commerce gate stays closed and that "run tests" does not start a four-hour protocol. `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged.
 
 > `tests/fixture-service/` 為可執行的服務；自 2026-09-24 起，`RUNS.md` 對執行的評估分為兩部分——透過閱讀所發現的內容，以及實際執行的成果（狀態差量走查、S2 併發探針為實際觸發而非僅作預測，以及一份每項 PASS 皆引用了產出物證明的證據帳本）。
 >
-> `tests/fixture-service/` 是一個小型 Python 任務執行器（Job Runner），在 4 個綠燈測試下埋藏了 10 個缺陷 —— 包含無任何程式讀取的 Config Key、遺失條件的 SELECT-then-UPDATE 查詢、預設放行的 Config Loader、什麼都沒檢查卻印出 "0 problems" 的 Monitor、無人讀取的 Heartbeat、狀態頁面無法顯示的狀態、孤立的 Retry Helper、無效測試（Vacuous Test），以及會洩漏至 Runner 環境的測試。`tests/EXPECTED.md` 為標準答案；`tests/RUNBOOK.md` 用於為執行結果評分（Hit、Near、Miss、False Positive、Control Misfiled、Vacuous Line）；`tests/RUNS.md` 則是紀錄帳冊。該 Fixture 刻意不設計成電商系統，藉此證明金流關卡保持關閉，且執行 "run tests" 不會啟動長達四小時的完整協定。`tools/sweep-diff.py` 則可用來比對本 Skill 與 `ecommerce-cia` 的 Sweeps 內文是否產生偏差。
+> `tests/fixture-service/` 是一個小型 Python 任務執行器（Job Runner），在 4 個綠燈測試下埋藏了 10 個缺陷 —— 包含無任何程式讀取的 Config Key、遺失條件的 SELECT-then-UPDATE 查詢、預設放行的 Config Loader、什麼都沒檢查卻印出 "0 problems" 的 Monitor、無人讀取的 Heartbeat、狀態頁面無法顯示的狀態、孤立的 Retry Helper、無效測試（Vacuous Test），以及會洩漏至 Runner 環境的測試。`tests/EXPECTED-fixture-service.md` 為標準答案；`tests/RUNBOOK.md` 用於為執行結果評分（Hit、Near、Miss、False Positive、Control Misfiled、Vacuous Line）；`tests/RUNS.md` 則是紀錄帳冊。該 Fixture 刻意不設計成電商系統，藉此證明金流關卡保持關閉，且執行 "run tests" 不會啟動長達四小時的完整協定。`tools/sweep-diff.py` 則可用來比對本 Skill 與 `ecommerce-cia` 的 Sweeps 內文是否產生偏差。
 
 <a id="install"></a>
 
@@ -580,7 +584,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | File｜檔案 | Purpose｜功能用途 |
 |---|---|
 | `SKILL.md` | the runbook: routing, runtime discovery, six-step protocol, autonomy ladder, sweep index, escalation, plain-language contract, start menu｜Runbook 本體：包含路由、執行期探索、六步驟協定、自主階梯、Sweep 索引、通報升級機制、白話文合約與啟動選單 |
-| `references/sweeps/` | S1–S24 with methods, gradings and report-line formats｜S1–S22 掃描項目，包含檢測方法、評級標準與報告輸出格式 |
+| `references/sweeps/` | S1–S24 with methods, gradings and report-line formats｜S1–S24 掃描項目，包含檢測方法、評級標準與報告輸出格式 |
 | `references/theory.md` | the Viable System Model applied to a codebase; Systems 1, 2, 3, 3*, 4, 5｜應用於程式碼庫的 Viable System Model（可行系統模型）；涵蓋 Systems 1, 2, 3, 3*, 4, 5 |
 | `references/doctrine.md` | evidence grading, context discovery, the universal test matrix, the domain checklist｜證據評級、上下文探索、通用測試矩陣、領域檢查清單 |
 | `references/context-templates.md` | Blender add-on · e-commerce platform · workflow orchestration｜Blender 外掛 · 電商平台 · 工作流編排 |
@@ -589,7 +593,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/wiring-walk.md` | feature list vs wiring: three layers, lifecycle state map, seven connection questions, faults G1–G7, question banks, rule traceability matrix, gap register｜功能 vs 串接：三層檢查、流程對照圖、每條串接七問、七種故障注入、問題清單、規則追溯矩陣、缺口登記表 |
 | `references/surface-map.md` | function-to-UI matrix: orphan capabilities, dead controls, field drift, state blindness, audience mismatch, reachability gaps｜功能到畫面的對應矩陣：孤兒功能、死按鈕、欄位飄移、狀態盲點、權限不符、無法到達的畫面 |
 | `references/journey-map.md` | critical workflows, every branch and its six outcomes, traps T1–T8, finite reduction of the possibility space｜關鍵流程、每個分支與六種結果、陷阱 T1–T8、有限化的可能性空間 |
-| `references/build-orchestration.md` | build mode for a multi-part app: no-loose-ends invariant, SEAMS spec gate, increment order, closure gate G1–G13｜多部分應用程式的建置模式：無鬆散結尾原則、規格閘門、增量順序、結案閘門 G1–G10 |
+| `references/build-orchestration.md` | build mode for a multi-part app: no-loose-ends invariant, SEAMS spec gate, increment order, closure gate CG1–CG13｜多部分應用程式的建置模式：無鬆散結尾原則、規格閘門、增量順序、結案閘門 CG1–CG13 |
 | `references/agent-deployment.md` | which executor takes each step: deterministic tool → graph → cheap subagent → main model → cold reviewer; verifying delegated results｜每個步驟由哪種執行者負責：確定性工具 → 圖譜 → 廉價子代理 → 主模型 → 冷讀審查者；驗證委派結果 |
 | `references/test-tools.md` | graphify blast radius and EGM cold reads as test tools; the gates a test must pass to count｜以 graphify 找影響範圍、以 EGM 冷讀作為測試工具；測試算數所需通過的閘門 |
 | `references/design-tools.md` | C4 maps, Feature-Sliced Design, dependency rules in CI, state-machine tables, ADRs — with their priorities and build order｜C4 架構圖、Feature-Sliced Design、CI 中的相依性規則、狀態機轉移表、ADR，附優先順序與建置順序 |

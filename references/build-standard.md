@@ -162,7 +162,7 @@ When the request is *"write this"* rather than *"audit this"*:
 4. **Run the proof**, and paste its output. A property nobody can point at is a property nobody
    has — the same rule this skill applies to its own reference (`prove_stock_reduction.php`) and
    to its own score.
-5. **Fill the evidence ledger row** (`reporting.md` §29a) from the proof's artefact, not from the
+5. **Fill the evidence ledger row** (`reporting.md` §11a) from the proof's artefact, not from the
    implementation's comments. Reading never produces PASS, and that includes reading code you
    wrote yourself an hour ago.
 

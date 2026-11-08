@@ -60,7 +60,7 @@ For each change, in order:
 2. **Map to the matrix** (`surface-map.md`) and the journeys (`journey-map.md`) → the cells and grid rows that depend on those capabilities.
 3. **List the proof each row needs**, by kind:
    - obligation → a guard test that fails when the promise is broken (`build-orchestration.md` §3 step 2);
-   - state branch → a test or fixture that returns that state (C4);
+   - state branch → a test or fixture that returns that state (`surface-map.md` SC4);
    - journey cell → an automated test or a state-delta walk (`browser-walks.md` §12); a cold read alone is `●(read)`;
    - document line → the EGM pass on the document, and the drift report.
 4. **Run the fast suite**, then the targeted tests from step 3. Record the command, the counts and the file list.
@@ -92,7 +92,7 @@ Before relying on either tool in a run, check it answers — rung 3 of the self-
 - graphify: `graphify --help` prints usage; `graphify query --help` prints the budget option; `graphify-out/graph.json` exists and is newer than the last code change. If the graph is stale, run `graphify update .` first.
 - EGM: the plugin directory `~/.claude/plugins/marketplaces/egm` exists and `/egm:egm-review` is listed. If it is missing, say so in the report and fall back to a manual cold read by a fresh subagent with the same brief; do not claim the EGM pass ran.
 
-State which tool ran, and its version or path, in the report's rung line (`agent-deployment.md` §8).
+State which tool ran, and its version or path, in the EXECUTORS line (`agent-deployment.md` §8).
 
 ---
 
@@ -103,3 +103,8 @@ TESTS — change touches C capabilities (graph: E extracted edges, I inferred, p
         EGM passes run D (documents), drift scanned Fd docs / Fc code files; gates: skipped-unverified K, written-not-run W.
         sites: <path:line per gap>; the command and counts of the fast suite, verbatim.
 ```
+
+---
+
+**Reading receipt: _a goldfish pass reads, it does not run_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

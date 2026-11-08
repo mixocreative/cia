@@ -6,7 +6,7 @@
 
 In the owner's words: *"One hole of that shape means the method that found it was wrong, not just the answer — so the fix is to walk every combination against the manuals rather than spot-check."*
 
-This is the sweep that makes the other seventeen honest. Every one of them can be run on a sample and reported as clean, and a sample is exactly what produced the defect this was written from: an auditor read the code for one delivery method, found the control, and wrote "the per-method toggle exists" into a plan. There were four methods, two gateways and a vendor manual on disk, and the claim was false for all of them.
+This is the sweep that makes the other twenty-three honest. Every one of them can be run on a sample and reported as clean, and a sample is exactly what produced the defect this was written from: an auditor read the code for one delivery method, found the control, and wrote "the per-method toggle exists" into a plan. There were four methods, two gateways and a vendor manual on disk, and the claim was false for all of them.
 
 **Two rules, and the first one is the one people skip.**
 
@@ -178,7 +178,7 @@ load balancers and CDN → the store split by domain → services → discovery 
 recommend the ladder — a system at stage one that is pushed to stage nine is vanity engineering —
 but to **audit stage N against what stage N+1 will break.** Every design that only works because
 there is one process, one disk, one clock or one box is a finding *now* if the plan names a move:
-sessions locked in files (the checkout's double-submit guard on this shop, §8ax), a cache that is
+sessions locked in files (the checkout's double-submit guard on this shop), a cache that is
 a PHP array, uploads on the local disk, a cron on one host, a lock that is a table row on one
 connection. Write the row with the stage that breaks it, and the plan's date for that stage; a
 finding with no such date is post-launch and says so.

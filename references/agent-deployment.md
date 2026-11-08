@@ -18,21 +18,21 @@ Bulk: reading large files, enumerating call sites, listing every conditional, co
 
 ## 2. The decision ladder — the cheapest executor that answers
 
-Walk down the ladder. Stop at the first rung that can answer the question with the evidence it needs.
+Walk down the ladder. Stop at the first level that can answer the question with the evidence it needs.
 
-| Rung | Executor | Use it for | Token cost to the main context |
+| Level | Executor | Use it for | Token cost to the main context |
 |---|---|---|---|
-| 0 | **Deterministic tool** — grep, the test runner, the linter, `tools/check_structure.py`, `tools/sweep-diff.py` | any question a command can answer exactly: does this symbol exist, do the tests pass, does the file still parse | none beyond the output line |
-| 1 | **Graph** — CodeGraphContext for code relationships and graphify for architectural context once the project passes the complexity signals; graphify alone below them. One question goes to one graph (`code-graph-tools.md` §2) | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
-| 2 | **Local model** (Ollama) — only after the probe in `token-economy-delegation` succeeds | bulky mechanical text work: summarising a long log, reformatting a table, first-pass tagging of many short items | the local answer; **untrusted until verified** |
-| 3 | **Explore subagent** — read-only fan-out search | "find every place that does X" across many directories, when the answer is a list of `path:line` | the list only |
-| 4 | **Cheapest capable subagent** (Haiku, then Sonnet if Haiku misses) | a bounded per-file review against an explicit checklist — for example, classify each catch block in eight files by the S3 posture | the verdict table |
-| 5 | **Main model** | judgment; reasoning across files; grading; confirmation; the final report | everything — keep it small by using rungs 0–4 first |
-| 6 | **Cold reviewer** — a fresh context with no memory of the author (EGM Goldfish, or a cold audit run) | "can someone who has only this document act on it?"; a second opinion on a finding | the reviewer's verdict list |
+| E0 | **Deterministic tool** — grep, the test runner, the linter, `tools/check_structure.py`, `tools/sweep-diff.py` | any question a command can answer exactly: does this symbol exist, do the tests pass, does the file still parse | none beyond the output line |
+| E1 | **Graph** — CodeGraphContext for code relationships and graphify for architectural context once the project passes the complexity signals; graphify alone below them. One question goes to one graph (`code-graph-tools.md` §2) | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
+| E2 | **Local model** (Ollama) — only after the probe in `token-economy-delegation` succeeds | bulky mechanical text work: summarising a long log, reformatting a table, first-pass tagging of many short items | the local answer; **untrusted until verified** |
+| E3 | **Explore subagent** — read-only fan-out search | "find every place that does X" across many directories, when the answer is a list of `path:line` | the list only |
+| E4 | **Cheapest capable subagent** (Haiku, then Sonnet if Haiku misses) | a bounded per-file review against an explicit checklist — for example, classify each catch block in eight files by the S3 posture | the verdict table |
+| E5 | **Main model** | judgment; reasoning across files; grading; confirmation; the final report | everything — keep it small by using levels 0–4 first |
+| E6 | **Cold reviewer** — a fresh context with no memory of the author (EGM Goldfish, or a cold audit run) | "can someone who has only this document act on it?"; a second opinion on a finding | the reviewer's verdict list |
 
 Two rules sit above the ladder:
 
-- **A cheaper rung never grades.** Rungs 0–4 return evidence. The main model (or the cold reviewer for a judgement about wording) decides what the evidence means.
+- **A cheaper level never grades.** Levels E0–E4 return evidence. The main model (or the cold reviewer for a judgement about wording) decides what the evidence means.
 - **Reuse before re-exploring.** Before any read, check in order: the graph report (`graphify-out/GRAPH_REPORT.md`), the sites already recorded in the handoff or the last report, and the deterministic checks in `tools/`. Every answer found there is cited, not re-derived. Re-reading a file to rediscover a site a prior report already names is the waste this rule exists to stop.
 - **A deterministic check replaces a reading when it can answer the question.** `tools/check_structure.py` for the skill's structure, `tools/design_check.py deps|adr|states` for rules, `tools/sweep-diff.py` for drift. Run the check, read its count and its sites, and open files only at those sites.
 - **Start at the top only when the answer is exact.** Do not use a grep to answer a question that needs reading, and do not read a file to answer a question a grep answers.
@@ -53,7 +53,7 @@ Do **not** deploy a delegate when:
 - the output decides a severity, a confirmation or an escalation;
 - the brief would have to paste the main model's conclusion in order to be understood ("based on the findings…" is not a brief).
 
-The threshold is a default. Record the choice and the reason in the report's rung line, so the next run can judge whether it was right.
+The threshold is a default. Record the choice and the reason in the EXECUTORS line (§8), so the next run can judge whether it was right.
 
 ---
 
@@ -96,7 +96,7 @@ Verification depends on what the result claims:
 
 ## 7. Choosing which reference files to load
 
-The protocol already routes by file (`SKILL.md` §0.13). Apply the same discipline to the executors: a delegate loads only the reference sections its checklist names, not the whole skill. The rules layer is the trigger table in §0.13; the keyword layer is the `When to apply` line of each reference; when both leave two candidates, the main model decides — it does not guess with a second model.
+The protocol already routes by file (`SKILL.md` §0.13). Apply the same discipline to the executors: a delegate loads only the reference sections its checklist names, not the whole skill. The rules layer is the trigger table in §0.13; the keyword layer is the `Job of this file` line of each reference and the `Load when` column of §0.13; when both leave two candidates, the main model decides — it does not guess with a second model.
 
 Prerequisites are loaded first. `build-orchestration.md` needs `build-standard.md` and `evidence.md` (the obligation ledger) before it can be applied; a delegate briefed on the orchestration without those is briefed on half of it.
 
@@ -107,10 +107,10 @@ Prerequisites are loaded first. `build-orchestration.md` needs `build-standard.m
 The Step 6 report carries one line per phase:
 
 ```
-EXECUTORS — phase <name>: <rung> <executor> for <what>; reason: <why this rung>; verified: <how many results read / sampled>; returned TRUNCATED: <n>.
+EXECUTORS — phase <name>: <level> <executor> for <what>; reason: <why this level>; verified: <how many results read / sampled>; returned TRUNCATED: <n>.
 ```
 
-This line is how the next run learns which rungs paid for themselves. A phase where every delegated result was wrong is a finding about the rung, and it is written down.
+This line is how the next run learns which levels paid for themselves. A phase where every delegated result was wrong is a finding about the level, and it is written down.
 
 ---
 
@@ -118,6 +118,11 @@ This line is how the next run learns which rungs paid for themselves. A phase wh
 
 Track these across runs in `tests/RUNS.md` (or the project's handoff), not as a guess:
 
-- share of delegated positive findings confirmed on read (low = the brief or the rung is wrong);
+- share of delegated positive findings confirmed on read (low = the brief or the level is wrong);
 - share of verified-sample negatives that turned out wrong (high = widen the sample);
 - tokens in the main context per phase, against the same phase run with everything inline.
+
+---
+
+**Reading receipt: _the brief is the only context the delegate has_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

@@ -83,7 +83,7 @@ A blank cell is an unswept cell and is counted as such.
 
 **T2 — Confirmation that lies.** The label or toast says a thing the handler did not do ("saved", "sent", "paid", "deleted") — compare the copy with the write, line by line. Queued is not saved; requested is not sent.
 
-**T3 — Reachable out of order.** Step *n* can be reached, or its action submitted, without the state step *n−1* produces. Check by opening step *n* directly, from a fresh session (`surface-map.md` C6).
+**T3 — Reachable out of order.** Step *n* can be reached, or its action submitted, without the state step *n−1* produces. Check by opening step *n* directly, from a fresh session (`surface-map.md` SC6).
 
 **T4 — Irreversible without a gate.** A step that changes the primary quantity or cannot be undone has no confirmation that describes the action, no undo, and no way to see it afterwards.
 
@@ -137,3 +137,8 @@ JOURNEY — J critical journeys (of J' found); steps T; grid cells G: ● P (rea
 ## 9. Where this sits in the protocol
 
 Journeys are built from the surface matrix, so run `surface-map.md` first. The journeys are the input to the browser walks (`browser-walks.md`) and to the four-corner walk (S15). For a build, the journey list is written before any code (`build-orchestration.md` §2).
+
+---
+
+**Reading receipt: _the author walked one path and called it the journey_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.

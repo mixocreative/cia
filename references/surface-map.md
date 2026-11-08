@@ -83,33 +83,33 @@ Blank cells are not allowed. A blank is an unswept cell, and the report counts i
 
 Run these over the matrix. Every failed check is a finding, graded under `reporting.md` §9.
 
-**C1 — Orphan.** A C-row with no `●` and no declared `○` owner → M1. Allowed only when the owner is a named scheduled job or event consumer, cited by path.
+**SC1 — Orphan.** A C-row with no `●` and no declared `○` owner → M1. Allowed only when the owner is a named scheduled job or event consumer, cited by path.
 
-**C2 — Dead control.** An S-row with `invokes = NONE`, or with a C-id that no longer exists in the C-list → M2. Grep the handler for the `data-action` value (S22.9): a rendered button is not a wired control until its handler is read.
+**SC2 — Dead control.** An S-row with `invokes = NONE`, or with a C-id that no longer exists in the C-list → M2. Grep the handler for the `data-action` value (S22.9): a rendered button is not a wired control until its handler is read.
 
-**C3 — Audience gap.** For every `●` cell: the actors that can see S must be a subset of the actors C allows. Visible-but-refused → M5. Also the reverse: allowed-but-hidden is a finding when the role has no other way in.
+**SC3 — Audience gap.** For every `●` cell: the actors that can see S must be a subset of the actors C allows. Visible-but-refused → M5. Also the reverse: allowed-but-hidden is a finding when the role has no other way in.
 
-**C4 — State coverage.** For every `●` cell, each state σ in Σ(C) must have a rendering branch on S: loading, success, each named error, partial, pending/async, conflict, forbidden, timeout, and "unknown result" (the request may have run). A missing branch → M4. Check the branch renders, not only that it exists: use the state-delta ladder (`browser-walks.md` §12) or a fixture that returns the state. A fixture the author wrote proves the author's assumption (S24).
+**SC4 — State coverage.** For every `●` cell, each state σ in Σ(C) must have a rendering branch on S: loading, success, each named error, partial, pending/async, conflict, forbidden, timeout, and "unknown result" (the request may have run). A missing branch → M4. Check the branch renders, not only that it exists: use the state-delta ladder (`browser-walks.md` §12) or a fixture that returns the state. A fixture the author wrote proves the author's assumption (S24).
 
-**C5 — Round trip.** For every input control on S: the name it submits matches the parameter C reads, the default when absent matches the default the user sees, and no field is dropped without a log line. Trace it with the four-corner walk (S15): control value → request body → handler → stored row → read-back to the same control. → M3.
+**SC5 — Round trip.** For every input control on S: the name it submits matches the parameter C reads, the default when absent matches the default the user sees, and no field is dropped without a log line. Trace it with the four-corner walk (S15): control value → request body → handler → stored row → read-back to the same control. → M3.
 
-**C6 — Reachability.** For every S: open it from a fresh session by its deep link, after a refresh, from the back button, and from a tab opened before the state changed. A surface that needs in-app state it cannot recover → M7.
+**SC6 — Reachability.** For every S: open it from a fresh session by its deep link, after a refresh, from the back button, and from a tab opened before the state changed. A surface that needs in-app state it cannot recover → M7.
 
-**C7 — Cross-surface consistency.** Two `●` cells on the same C row: validation rule, confirmation text and outcome text must match (or the difference must be declared). → M6.
+**SC7 — Cross-surface consistency.** Two `●` cells on the same C row: validation rule, confirmation text and outcome text must match (or the difference must be declared). → M6.
 
-**C8 — Irreversibility.** A `●` on a C that changes the primary quantity (`SKILL.md` §0 — the state the system exists to get right) must have a confirmation or an undo, and the confirmation must describe the same action the handler performs (not "saved" when the handler only queued it).
+**SC8 — Irreversibility.** A `●` on a C that changes the primary quantity (`SKILL.md` §0 — the state the system exists to get right) must have a confirmation or an undo, and the confirmation must describe the same action the handler performs (not "saved" when the handler only queued it).
 
 ---
 
 ## 5. Mechanical hunts, cheapest first
 
-Use the graph before reading files (`test-tools.md` §1): `graphify query "<capability name>"` returns its callers and the files they sit in, which narrows the grep to those files. Then:
+Use the graph before reading files, routed by `code-graph-tools.md` §2: CodeGraphContext for a capability's callers once it is in place, otherwise `graphify explain "<capability name>"`. The callers and their files narrow the grep. Then:
 
 1. `grep -rn "data-action\|onClick\|@click\|on:click" <ui-dir>` → the S-list raw hits.
 2. For each hit with a handler name, `grep -rn "<handler>"` → the C it reaches; a hit with no definition is M2 candidate.
 3. `grep -rn "<capability name>"` across the service and job dirs → callers; zero callers outside its own file and tests → M1 candidate.
 4. For each C, grep its error classes (`class .*Error`, `raise`, `throw new`, error-code enums) → Σ(C).
-5. For each S, grep for the branch on each σ in its component (`status ===`, `case '`, `if (error`, `.catch(`) → C4 check.
+5. For each S, grep for the branch on each σ in its component (`status ===`, `case '`, `if (error`, `.catch(`) → SC4 check.
 
 Each hunt's counts go in the report line with the sites. A count without sites is not evidence (S8 applied to the audit).
 
@@ -142,3 +142,8 @@ An `unswept U` above zero is printed, not hidden. Zero unswept cells is the only
 
 - The matrix is only as complete as the inventories. A capability registered dynamically (plugin loaders, reflection, generated routes) will be missed by grep; say so and list the registration mechanism as UNKNOWN (`evidence.md` §E4), do not call the matrix complete.
 - A `●` cell proves a path exists in the code. It does not prove a person can find it. Findability is a usability question: `journey-map.md` and the owner's own walkthrough decide it.
+
+---
+
+**Reading receipt: _every blank cell is a cell nobody swept_.** Quote this phrase on the report's receipts line (Step 6) to show this file was read rather than inferred from the skill's index.
+It appears nowhere else.
