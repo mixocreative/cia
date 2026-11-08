@@ -23,7 +23,7 @@ Walk down the ladder. Stop at the first rung that can answer the question with t
 | Rung | Executor | Use it for | Token cost to the main context |
 |---|---|---|---|
 | 0 | **Deterministic tool** — grep, the test runner, the linter, `tools/check_structure.py`, `tools/sweep-diff.py` | any question a command can answer exactly: does this symbol exist, do the tests pass, does the file still parse | none beyond the output line |
-| 1 | **Graph** — `graphify query`, `path`, `explain` | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
+| 1 | **Graph** — `graphify query`, `path`, `explain`, or GitNexus when the project passes the complexity signals in `code-graph-tools.md` | structural questions: who calls X, what sits between an entry point and a sink, what is the blast radius of a change | the query's bounded answer (`test-tools.md` §1) |
 | 2 | **Local model** (Ollama) — only after the probe in `token-economy-delegation` succeeds | bulky mechanical text work: summarising a long log, reformatting a table, first-pass tagging of many short items | the local answer; **untrusted until verified** |
 | 3 | **Explore subagent** — read-only fan-out search | "find every place that does X" across many directories, when the answer is a list of `path:line` | the list only |
 | 4 | **Cheapest capable subagent** (Haiku, then Sonnet if Haiku misses) | a bounded per-file review against an explicit checklist — for example, classify each catch block in eight files by the S3 posture | the verdict table |
