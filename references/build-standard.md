@@ -148,8 +148,6 @@ that stops at four has stopped early:
 
 ## §3 — Using this in build mode
 
-**Open the report first.** Before step 1, copy the form in §3a (below) into the build report. Each step that follows fills one of its blocks; three runs that read this file and wrote a prose summary instead left the ledger row, line 14 and the closure gates out every time (`tests/RUNS.md`, build rows of 2026-11-09).
-
 **Before anything below: the obligation row** (`evidence.md` §E3) — statement, intent source, case kinds,
 required authority, the one owner. The four properties are case kinds of that row (`fault-after-first-write`,
 `concurrent`, `duplicate`, `refused`); the proof's test names carry its ID.
