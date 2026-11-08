@@ -101,7 +101,7 @@ def backticked(text, wanted):
     raise RunbookError(f"RUNBOOK Procedure has no backticked prompt {wanted!r}")
 
 
-def build_prompt(mode, runbook_text):
+def build_prompt(mode, runbook_text, skill_line=SKILL_LINE):
     """Mode prompt + HARD RULES + skill-reading line, all sourced from the RUNBOOK."""
     if mode == "build":
         try:
@@ -116,7 +116,7 @@ def build_prompt(mode, runbook_text):
         base = backticked(
             proc, "pre-launch audit, Screen tier" if mode == "audit" else "run tests"
         )
-    return f"{base}\n\n{hard_rules(runbook_text)}\n\n{SKILL_LINE}"
+    return f"{base}\n\n{hard_rules(runbook_text)}\n\n{skill_line}"
 
 
 # A headless run has nobody to approve a tool call, so each mode gets a bounded allow-list instead.
@@ -164,11 +164,21 @@ def main(argv=None, runbook=None):
     ap.add_argument("--runtime", default="claude", choices=["claude", "codex"])
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--model")
+    # One launcher for sibling skills (ecommerce-cia): their RUNBOOK, fixture and skill path, not a copy of this script.
+    ap.add_argument("--skill-root", help="skill repo whose tests/RUNBOOK.md and fixture to use (default: this repo)")
+    ap.add_argument("--fixture", default="fixture-service", help="folder under <skill-root>/tests/")
     args = ap.parse_args(argv)  # argparse exits 2 on a malformed --mode
 
-    rb_path = Path(runbook or os.environ.get("CIA_RUNBOOK") or DEFAULT_RUNBOOK)
+    skill_root = Path(args.skill_root).resolve() if args.skill_root else REPO
+    fixture = skill_root / "tests" / args.fixture
+    if not fixture.is_dir():
+        print(f"error: no fixture at {fixture}", file=sys.stderr)
+        return 2
+    skill_line = SKILL_LINE if skill_root == REPO else (
+        f"You may and should read the skill at {skill_root} (SKILL.md and references/), per its own reference index.")
+    rb_path = Path(runbook or os.environ.get("CIA_RUNBOOK") or (skill_root / "tests" / "RUNBOOK.md"))
     try:
-        prompt = build_prompt(args.mode, rb_path.read_text(encoding="utf-8"))
+        prompt = build_prompt(args.mode, rb_path.read_text(encoding="utf-8"), skill_line)
     except (RunbookError, OSError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
@@ -180,10 +190,10 @@ def main(argv=None, runbook=None):
             cwd = os.path.join(tempfile.gettempdir(), f"cia-{args.mode}-<new-copy>")
         else:
             cwd = tempfile.mkdtemp(prefix=f"cia-{args.mode}-")
-            shutil.copytree(FIXTURE, cwd, dirs_exist_ok=True)
+            shutil.copytree(fixture, cwd, dirs_exist_ok=True)
             print(f"{args.mode} copy: {cwd}", file=sys.stderr)
     else:
-        cwd = str(FIXTURE)
+        cwd = str(fixture)
 
     if args.dry_run:
         print(json.dumps(cmd))
@@ -209,7 +219,8 @@ def main(argv=None, runbook=None):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     day = datetime.date.today().isoformat()
     stamp = datetime.datetime.now().strftime("%H%M%S")  # two same-day runs of one mode must not overwrite each other
-    path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{args.mode}-{args.runtime}.md"
+    tag = "" if skill_root == REPO else f"{skill_root.name}-{args.fixture}-"
+    path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{tag}{args.mode}-{args.runtime}.md"
     header = (
         f"<!-- skill commit {skill_commit()} | runtime {args.runtime} | "
         f"model {args.model or 'default'} | exit {res.returncode} -->\n"

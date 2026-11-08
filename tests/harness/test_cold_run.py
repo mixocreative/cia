@@ -95,5 +95,23 @@ class CodexTests(unittest.TestCase):
         self.assertTrue(cmd[-1].startswith("pre-launch audit, Screen tier"))
         self.assertIn("cia-audit-<new-copy>", res.stdout)  # never the repo fixture
 
+
+class SiblingSkillTests(unittest.TestCase):
+    def test_skill_root_points_at_its_own_fixture_and_skill(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "other-skill"
+            (root / "tests" / "shop").mkdir(parents=True)
+            (root / "tests" / "RUNBOOK.md").write_text(RUNBOOK_BASE, encoding="utf-8")
+            res = subprocess.run([sys.executable, str(SCRIPT), "--mode", "audit", "--dry-run",
+                                  "--skill-root", str(root), "--fixture", "shop"],
+                                 capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, res.stderr)
+            self.assertIn(str(root / "tests" / "shop"), res.stdout)
+            self.assertIn(str(root.resolve()), prompt_of(res))
+
+    def test_missing_fixture_exits_2(self):
+        res = run("audit", RUNBOOK_BASE, ["--dry-run", "--fixture", "no-such-fixture"])
+        self.assertEqual(res.returncode, 2)
+
 if __name__ == "__main__":
     unittest.main()
