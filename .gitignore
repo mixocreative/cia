@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .vendor-docs/
 graphify-out/
+tests/harness/out/
