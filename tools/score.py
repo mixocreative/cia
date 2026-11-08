@@ -15,11 +15,20 @@ counts against. Rows with no numbers (the placeholder row) are ignored.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
 
-RUNS = Path(__file__).resolve().parent.parent / "tests" / "RUNS.md"
+# CIA_RUNS lets a test point the scorer at synthetic text instead of the real ledger.
+RUNS = Path(os.environ.get("CIA_RUNS") or
+            Path(__file__).resolve().parent.parent / "tests" / "RUNS.md")
+
+# Build-mode runs live in their own table at the END of RUNS.md. The trap: the build table has the
+# same columns as the fixture table, so a reader that only checks "| 20" and the cell count would
+# take a build row for an audit row and let a build score move (or hide) the audit gate. Every
+# audit reader therefore stops at this heading, and only build_rows() reads past it.
+BUILD_HEADING = "## Build-mode runs"
 
 
 def runtime_rows() -> list[dict]:
@@ -117,9 +126,10 @@ def fixture_of(tier: str) -> str:
     return "default"
 
 
-def rows() -> list[dict]:
+def _parse(lines) -> list[dict]:
+    """Shared cell parsing for the audit table and the build table (same column positions)."""
     out = []
-    for line in RUNS.read_text(encoding="utf-8").splitlines():
+    for line in lines:
         if not line.startswith("| 20"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
@@ -142,23 +152,60 @@ def rows() -> list[dict]:
     return out
 
 
+def rows() -> list[dict]:
+    """Audit (fixture) rows: everything BEFORE the build-mode heading, never after it."""
+    text = RUNS.read_text(encoding="utf-8")
+    return _parse(text.split(BUILD_HEADING, 1)[0].splitlines())
+
+
+def build_rows() -> list[dict]:
+    """Build-mode rows: only those after the build-mode heading. Placeholder dash rows drop out
+    in _parse (no integers), so "no scored build run yet" is simply an empty list."""
+    text = RUNS.read_text(encoding="utf-8")
+    if BUILD_HEADING not in text:
+        return []
+    section = text.split(BUILD_HEADING, 1)[1]
+    section = section.split(chr(10) + "## ", 1)[0]
+    return _parse(section.splitlines())
+
+
 def line(r: dict) -> str:
     return (f"{r['date']} {r['commit']}: hits {r['hits']} / near {r['near']} / miss {r['miss']} / "
             f"false+ {r['false']} -> score {r['score']:g}")
 
 
-def main() -> int:
+def build_gate(bs: list[dict]) -> int:
+    """Newest build row against the previous build row on the same model. Same rule as audit."""
+    if not bs:
+        return 0   # main() has already printed "build: no scored build run yet"
+    last = bs[-1]
+    same = [r for r in bs[:-1] if r["model"] == last["model"]]
+    if not same:
+        print(f"build gate: {last['date']} is the first scored build run with {last['model']} - "
+              f"a baseline. Recorded, not blocked.")
+        return 0
+    prev = same[-1]
+    if last["score"] < prev["score"] or last["miss"] > prev["miss"]:
+        print(f"GATE: the newest build run with {last['model']} ({last['score']:g}, {last['miss']} miss) "
+              f"scores below the previous build run with the same model ({prev['date']}: "
+              f"{prev['score']:g}, {prev['miss']} miss).", file=sys.stderr)
+        return 1
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv if argv is None else argv
     rs = rows()
     if not rs:
         print("score: no scored run in tests/RUNS.md - the gate has nothing to hold", file=sys.stderr)
         return 1
-    if "--badge" in sys.argv:
+    if "--badge" in argv:
         r = rs[-1]
         print(f"**Last scored fixture run:** {r['date']} - {r['hits']} hits / {r['near']} near / "
               f"{r['miss']} miss / {r['false']} false positives (`python tools/score.py`)")
         return 0
     rt = runtime_rows()
-    if "--runtime" in sys.argv:
+    if "--runtime" in argv:
         if not rt:
             print("runtime: no runtime-scored run in tests/RUNS.md - the running half is unmeasured",
                   file=sys.stderr)
@@ -180,7 +227,7 @@ def main() -> int:
         print(f"cheap model: {c['date']} [{c['fixture']} / {c['model']}] scored {c['score']:g}{gap}")
 
     cr = corpus_rows()
-    if "--corpus" in sys.argv:
+    if "--corpus" in argv:
         if not cr:
             print("corpus: no entries scored yet - the ground truth nobody planted is still empty,"
                   " and an empty corpus proves nothing (tests/corpus/README.md)", file=sys.stderr)
@@ -198,7 +245,16 @@ def main() -> int:
         print(f"runtime: {r['date']} {r['fixture']}: ladders {r['ladders']} / probes {r['probes']} / "
               f"ledger {r['ledger']} / PASS without artefact {r['pass_without_artefact']}")
 
-    if "--gate" in sys.argv:
+    bs = build_rows()
+    if bs:
+        b = bs[-1]
+        print(f"build: [{b['model']}] " + line(b))
+    else:
+        print("build: no scored build run yet")
+
+    if "--gate" in argv:
+        if bs and build_gate(bs):
+            return 1
         last = rs[-1]
         same = [r for r in rs[:-1]
                 if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
