@@ -172,9 +172,36 @@ otherwise — who writes plausible code and ships it unproven. It is false where
 named and each one is demonstrated by something that fails when the property is absent. The
 difference is not the author. It is whether the proof exists, and whether anyone ran it.
 
-## §3a — The build report
+## §3a — The build report: fill every block, in this order
 
-The build report is the form in `SKILL.md` §0.10a, which every run reads; it is kept there, once, so this file and SKILL cannot drift apart. Each block of that form maps to a step above: the obligation row to step 0, the primary quantity to step 1, the red proofs to step 2, the mechanism to step 3, the green output to step 4, the ledger row to step 5, then the closure gates and line 14.
+A build report that leaves a block out has not finished; a block that does not apply says `n/a` and why. This is the shape `SKILL.md` §0.10a requires, as a form to fill rather than a list to remember.
+
+```text
+Mode: build mode — <operation>, <file>
+
+Obligation row (evidence.md §E3)
+| ID | Promise (can be false) | Intent source (owner's words, quoted) | Case kinds | Authority needed | Owner |
+| <layer.family.name@1> | ... | "..." | concurrent, fault-after-first-write, duplicate, refused | A2 or higher | <one module> |
+
+Primary quantity and observers: <the number that must be right> — observed by <row fields>, <screens>, <monitors>
+
+Proofs, red before the code (paste the runner output; test names carry the obligation ID)
+  atomic | race-free | idempotent | loud  ->  <pasted failing output>
+
+Implementation: <predicate in the UPDATE, affected-row count, transaction, refusals returned / faults raised>
+
+Proofs, green after the code: <pasted passing output, test names visible>
+Project suite: <pasted "Ran N tests ... OK">
+
+Evidence ledger row (reporting.md §11a)
+| Capability | Verdict | Authority required / reached | Artefact | What it covered |
+
+Closure gates (build-orchestration.md §9): CG1 <count> · CG2 … CG13 <count or n/a + reason>
+
+Step 6 line 14: SURFACE … · JOURNEY … · DESIGN … · GRAPH … · EXECUTORS … · TESTS … · COMPANIONS …
+
+Debt not taken, with the reason · Reference receipts
+```
 
 ---
 
