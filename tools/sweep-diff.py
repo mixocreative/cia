@@ -66,7 +66,7 @@ def subheads(s: str) -> set[str]:
 
 
 
-SHARED = ["sweeps.md", "doctrine.md", "reporting.md", "theory.md", "browser-walks.md"]
+SHARED = ["sweeps.md", "doctrine.md", "reporting.md", "theory.md", "browser-walks.md", "evidence.md"]
 
 
 def file_table() -> None:

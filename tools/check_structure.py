@@ -32,7 +32,7 @@ DEBT_LIMIT = 600    # over this, the file is named as debt below, with its next 
 
 # file (relative to HERE) -> the next cut, written down. Empty when nothing is over DEBT_LIMIT.
 DEBT = {
-    "SKILL.md": "passes 600 lines: next cut is §0.14–§0.16 (runtime bindings, start menu) to references/runtime.md",
+    "SKILL.md": "passes 600 lines: next cut is §0.14–§0.16 to a new runtime reference (name chosen at the cut)",
     "references/sweeps/05-surface-completeness.md": "S22 alone is ~660 lines: next cut is S22.1–S22.5 (method) to references/sweeps/05a-surface-method.md; S22.6–S22.10 (rules) stay",
     "README.md": "passes 600 lines: next cut is the per-file reference tables to references/README.md",
 }

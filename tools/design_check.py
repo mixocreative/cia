@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Design checks an AI can run: dependency rules, ADR hygiene, state-transition tables.
 
-One job per subcommand. Stdlib only, so it runs with nothing installed (rung 0 in
+One job per subcommand. Stdlib only, so it runs with nothing installed (executor level E0 in
 references/agent-deployment.md). The rules these check are described in references/design-tools.md.
 
   deps   <root> [--rules design-rules.json]  import cycles, layer and forbidden-import violations

@@ -33,6 +33,15 @@ def scan() -> tuple[dict[str, str], list[str]]:
             found[path.name] = m.group(1)
         else:
             missing.append(path.name)
+    # Since 2026-11-09 the sweeps are a folder of six files read as one reference: one receipt covers it.
+    sweeps = REFERENCES / "sweeps"
+    if sweeps.is_dir():
+        hits = [(p.name, PATTERN.search(p.read_text(encoding="utf-8"))) for p in sorted(sweeps.glob("*.md"))]
+        hits = [(name, m.group(1)) for name, m in hits if m]
+        if hits:
+            found["sweeps/" + hits[0][0]] = hits[0][1]
+        else:
+            missing.append("sweeps/ (no receipt in any file)")
     return found, missing
 
 
