@@ -83,6 +83,10 @@ class ColdRunTests(unittest.TestCase):
         self.assertIn("Write", b)
         self.assertIn("Edit", b)
 
+    def test_prompt_states_the_permission_shape(self):
+        # Without it, runs wrap node in `cd && ...` and the headless allow-list refuses the whole walk.
+        self.assertIn("no `cd ... &&`", prompt_of(run("audit", RUNBOOK_BASE, ["--dry-run"])))
+
     def test_every_mode_runs_on_a_copy(self):
         # An audit's runtime walk writes the fixture's state; no mode may run in the repo fixture.
         for mode, text in (("audit", RUNBOOK_BASE), ("run-tests", RUNBOOK_BASE),

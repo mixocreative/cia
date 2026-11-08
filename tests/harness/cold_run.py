@@ -15,9 +15,9 @@ Where things come from
     this so they do not depend on the live RUNBOOK's progress).
 
 Working directory
-    audit / run-tests: tests/fixture-service.
-    build: a fresh tempfile.mkdtemp() copy of the fixture. A build run changes code;
-    it must never change the planted defects the audit scoring depends on.
+    Every mode: a fresh tempfile.mkdtemp() copy of the fixture (tests/fixture-service, or
+    --skill-root/tests/--fixture). A build run changes code and an audit's runtime walk
+    writes the fixture's state; neither may change the planted defects the scoring depends on.
 
 Output
     Non-dry-run writes stdout to tests/harness/out/<YYYY-MM-DD>-<mode>-<runtime>.md,
@@ -52,6 +52,17 @@ TIMEOUT_S = 3600
 SKILL_LINE = (
     f"You may and should read the skill at {SKILL_DIR} (SKILL.md and references/) "
     "per its section 0.13."
+)
+# What an interactive owner would have approved, said up front. The allow-list matches a command by
+# its first word, so `cd dir && node x`, `VAR=1 node x` and `node x | grep` are refused in a headless
+# run, and runs that composed commands that way could not start the shop: three of ten on 2026-11-09
+# (E, H, I) were downgraded to code reviews and graded the race from reading. This is the session's
+# permission shape, not doctrine: it names no defect and no method.
+SHELL_LINE = (
+    "Shell commands in this session are pre-approved only when the command itself starts with python, py, "
+    "node, curl, ls, wc, ruff or pytest, run from the working directory: no `cd ... &&`, no `VAR=value` "
+    "prefix, no pipes into other programs. Set environment variables inside your own script "
+    "(process.env / os.environ), and start a server with the Bash tool's run_in_background option."
 )
 
 
@@ -116,7 +127,7 @@ def build_prompt(mode, runbook_text, skill_line=SKILL_LINE):
         base = backticked(
             proc, "pre-launch audit, Screen tier" if mode == "audit" else "run tests"
         )
-    return f"{base}\n\n{hard_rules(runbook_text)}\n\n{skill_line}"
+    return f"{base}\n\n{hard_rules(runbook_text)}\n\n{skill_line}\n\n{SHELL_LINE}"
 
 
 # A headless run has nobody to approve a tool call, so each mode gets a bounded allow-list instead.
