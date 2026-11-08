@@ -78,9 +78,17 @@ class ColdRunTests(unittest.TestCase):
             self.assertNotIn("Write", t)
             self.assertNotIn("Edit", t)
             self.assertIn("Bash(python:*)", t)
+            self.assertIn("Bash(node:*)", t)  # a Node fixture's runtime walk; without it every probe is blocked
         b = tools("build", RUNBOOK_BASE + BUILD_SECTION)
         self.assertIn("Write", b)
         self.assertIn("Edit", b)
+
+    def test_every_mode_runs_on_a_copy(self):
+        # An audit's runtime walk writes the fixture's state; no mode may run in the repo fixture.
+        for mode, text in (("audit", RUNBOOK_BASE), ("run-tests", RUNBOOK_BASE),
+                           ("build", RUNBOOK_BASE + BUILD_SECTION)):
+            res = run(mode, text, ["--dry-run"])
+            self.assertIn(f"cwd: {os.path.join(tempfile.gettempdir(), f'cia-{mode}-<new-copy>')}", res.stdout)
 
 
 

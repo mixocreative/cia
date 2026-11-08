@@ -9,7 +9,7 @@ fixture-service/         a Python job runner with 12 planted defects and 8 verif
 EXPECTED-fixture-service.md      the audit answer key: sweep, path:line, minimum grade — kept OUTSIDE the fixture on purpose
 EXPECTED-build-fixture.md        the build-mode answer key: the artefacts §0.10a must produce, in order
 RUNS.md                    one row per run (append; never rewrite history)
-harness/cold_run.py        launches one cold run (audit | build | run-tests); prompts are read from this file
+harness/cold_run.py        launches one cold run (audit | build | run-tests) on a throwaway copy of the fixture; prompts are read from this file
 ```
 
 ## Procedure

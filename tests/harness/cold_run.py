@@ -124,8 +124,12 @@ def build_prompt(mode, runbook_text, skill_line=SKILL_LINE):
 # list enforces that rather than trusting the HARD RULES text. Build mode edits, but only ever on the
 # throwaway copy main() makes.
 # The project's own linter and test runner are part of Step 1; a run that cannot call them reports NOT RUN.
+# node and curl are the runtime walk of a Node fixture (ecommerce-cia's fixture-shop-node): without them
+# the run cannot fire a probe, so it grades every race from reading, one level low. Measured 2026-11-09:
+# two runs blocked this way scored 3.5 and 3.0 where probing runs score 4. They add no write power that
+# python does not already have; the planted code is protected by running on a copy (see main).
 READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)",
-              "Bash(ruff:*)", "Bash(pytest:*)"]
+              "Bash(ruff:*)", "Bash(pytest:*)", "Bash(node:*)", "Bash(curl:*)"]
 ALLOWED_TOOLS = {
     "audit": READ_TOOLS,
     "run-tests": READ_TOOLS,
@@ -151,9 +155,10 @@ def build_command(runtime, prompt, model, mode=None):
     return cmd
 
 
-def skill_commit():
+def skill_commit(root=REPO):
+    # The commit of the skill under test - a sibling skill's own HEAD, not this repo's.
     out = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True
+        ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True
     )
     return out.stdout.strip() or "unknown"
 
@@ -185,18 +190,19 @@ def main(argv=None, runbook=None):
 
     cmd = build_command(args.runtime, prompt, args.model, args.mode)
 
-    if args.mode == "build" or args.runtime == "codex":
-        if args.dry_run:
-            cwd = os.path.join(tempfile.gettempdir(), f"cia-{args.mode}-<new-copy>")
-        else:
-            cwd = tempfile.mkdtemp(prefix=f"cia-{args.mode}-")
-            shutil.copytree(fixture, cwd, dirs_exist_ok=True)
-            print(f"{args.mode} copy: {cwd}", file=sys.stderr)
+    # Every run works on a throwaway copy of the fixture: build edits it, codex sandboxes the whole run,
+    # and an audit's runtime walk (node server.js --reset, a probe) writes the fixture's own state. The
+    # planted code and the repo's working tree cannot change by construction, whatever the run executes.
+    if args.dry_run:
+        cwd = os.path.join(tempfile.gettempdir(), f"cia-{args.mode}-<new-copy>")
     else:
-        cwd = str(fixture)
+        cwd = tempfile.mkdtemp(prefix=f"cia-{args.mode}-")
+        shutil.copytree(fixture, cwd, dirs_exist_ok=True)
+        print(f"{args.mode} copy of {fixture}: {cwd}", file=sys.stderr)
 
     if args.dry_run:
         print(json.dumps(cmd))
+        print(f"fixture: {fixture}")
         print(f"cwd: {cwd}")
         return 0
 
@@ -222,7 +228,7 @@ def main(argv=None, runbook=None):
     tag = "" if skill_root == REPO else f"{skill_root.name}-{args.fixture}-"
     path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{tag}{args.mode}-{args.runtime}.md"
     header = (
-        f"<!-- skill commit {skill_commit()} | runtime {args.runtime} | "
+        f"<!-- skill commit {skill_commit(skill_root)} | runtime {args.runtime} | "
         f"model {args.model or 'default'} | exit {res.returncode} -->\n"
     )
     # Trap 3: a failed run must not be saved as an empty report and exit 0 - that is the fail-open
