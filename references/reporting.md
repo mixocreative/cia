@@ -59,8 +59,6 @@ the auditor cannot decide whether a threshold is met, it is met: file at the hig
 confidence POSSIBLE and let the fix-or-escalate pass settle it. Filing costs a paragraph. Not
 filing costs the defect.
 
-**One invariant, one finding.** A paragraph that breaks three invariants — a setting nothing reads *and* a state no screen renders *and* a job nothing advances — is three findings with three IDs, each under its own sweep with its own `path:line` and grade, however tightly the code ties them together. A bundle cannot be closed one part at a time, cannot be graded (the CRITICAL member carries the MEDIUM ones), and keeps the site and the sweep of its first member only. Cross-reference the members; never merge them.
-
 **And a site in a sweep line is not a finding.** The first cold run of the live fixture
 (2026-09-24) listed `public/index.php:91-93` — the checkout quantity, "`(int)` cast, no bounds"
 — among the sites of its S11 line, and never filed the defect. A customer ordering `-3` raised
