@@ -147,6 +147,9 @@ def audit_gate(rs: list[dict]) -> int:
         print("gate: every scored run is on a reverted commit - nothing under test.")
         return 0
     last = live[-1]
+    # Debt, known: this pools launcher (cold_run.py) rows with cold-subagent rows. ecommerce-cia split them
+    # on 2026-11-09 (instrument_of), where the launcher measured half a row under a subagent on one doctrine.
+    # Here both instruments have scored 12 on fixture-service, so the split is not taken; take it if they diverge.
     pool = [r for r in rs if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
     group = [r for r in pool if r["token"] == last["token"]]
     earlier = [r for r in pool if r["token"] != last["token"]]
