@@ -1,8 +1,8 @@
 # Code-graph tools — when a project has become complicated enough to need one, and which one
 
-> Job of this file: decide **when** the AI should bring in a code graph, **which** graph to use, and what to check before letting a graph tool write into the project. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (rung 1).
+> Job of this file: decide **when** the AI should bring in a code graph, **which** graph to use, and what to check before a graph tool installs anything or edits configuration. The graph answers "what touches what" cheaply; `test-tools.md` §1 says how to read it, `agent-deployment.md` says where it sits on the executor ladder (rung 1).
 >
-> Two tools are named. **graphify** is already in use on this machine (`graphify-out/`, `graphify update .`). **GitNexus** is the one the owner asked to add. Its public description is at https://cdn.jsdelivr.net/gh/abhigyanpatwari/GitNexus@main/README.md and its overview at https://aiagentstore.ai/ai-agent/gitnexus. Those sources disagree on details (MCP tool count, storage format), so this file names only what they agree on, and says to check the installed version's own help before relying on any detail.
+> Two tools are named. **graphify** is already in use on this machine (`graphify-out/`, `graphify update .`). **CodeGraphContext** (`cgc`, an MCP server and CLI that indexes local code into a graph database) is the one the owner asked to add. It is not installed here and has not been run. Its README exists in several mirrors and forks whose versions and commands differ (`cgc start` versus `cgc mcp start`, Neo4j versus an embedded database), so this file names only what they agree on and says to check the installed version's own `--help` before relying on any detail. Sources are in §6.
 
 ---
 
@@ -27,49 +27,54 @@ Below the thresholds, `grep` and the test runner are enough. Say so in the repor
 
 | Situation | Use |
 |---|---|
-| Two or more complexity signals hold (§1) | **GitNexus** — from now on the AI's code graph for this project, after the checks in §3. It serves the graph over MCP and its hooks add graph context to searches, so later sessions stop re-exploring the same code. If the repo also has `graphify-out/`, stop refreshing it once GitNexus is in place: two graphs double the stale-index risk |
-| Several repos that must be queried together | GitNexus (its README describes a global registry for multi-repo use) |
-| Below the thresholds, or a one-off audit | graphify (`graphify update .`) or grep — nothing is installed into the project |
+| Two or more complexity signals hold (§1) | **CodeGraphContext** — from now on the AI's code graph for this project, after the checks in §3. It serves the graph over MCP, so later sessions query it instead of re-exploring the same code, and `cgc watch .` keeps it current while code changes. If the repo also has `graphify-out/`, stop refreshing it once CodeGraphContext is in place: two graphs double the stale-index risk |
+| Below the thresholds, or a one-off audit | graphify (`graphify update .`) or grep — nothing is installed and no configuration is edited |
+| CodeGraphContext cannot run here (no embedded database on this platform, Neo4j not available, probe fails) | graphify, and the report says why |
 
-**Never run two graph tools that both write indexes or agent files into the same repository.** Pick one per repository and say which in the handoff.
+**Never keep two graph tools indexing the same repository.** Pick one per repository and say which in the handoff.
+
+**Then measure, and keep it only if it pays.** The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with CodeGraphContext, compare the tokens spent on exploration against a comparable task before it, with the same findings, and write both numbers in the handoff. If CodeGraphContext did not reduce them, tell the owner and fall back to graphify.
 
 ---
 
-**Then measure, and keep it only if it pays.** The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with GitNexus, compare the tokens spent on exploration against a comparable task before it, with the same findings, and write both numbers in the handoff. If GitNexus did not reduce them, tell the owner and fall back to graphify.
+## 3. What CodeGraphContext changes on the machine — check before running it
 
-## 3. What GitNexus does to a project — check before running it
+CodeGraphContext is a Python CLI plus a database plus an MCP server. Indexing reads the code; three other steps change things outside the project's source:
 
-GitNexus is an installer as much as an indexer. Its `analyze` step, per its README, indexes the code into a local store, installs agent skills, registers Claude Code hooks, and creates `AGENTS.md` and `CLAUDE.md` context files. `setup` writes the MCP configuration. Each of those is a change to the project or to the user's configuration.
+- **installing it** (a Python package) — user-scope, rung 3 of the self-service ladder (`SKILL.md` §0.8): `pipx` or a user `pip install`, never `sudo` or a system package manager;
+- **`cgc mcp setup`** — a wizard that edits the AI client's configuration (Claude, VS Code, Cursor, Windsurf, per its README). That is persistent configuration: **ask the owner first** and say which file it will edit;
+- **the database** — an embedded database by default per its README; Neo4j is optional, and one mirror says it is needed on Windows without WSL. A Neo4j server is a system-level install, which is a rung-5 owner decision. This machine is Windows: probe whether the embedded database works before planning on it.
 
 Before running it:
 
-1. **Read the existing `CLAUDE.md` and `AGENTS.md`.** The project's contract files are read first in §0.5 of the skill. If `analyze` would create or overwrite them, stop: merge by hand or ask the owner. Overwriting a project's contract file is the rung-5 owner decision in `SKILL.md` §0.8.
-2. **Ask the owner before any install that writes hooks or config** (`settings.json`, MCP config, project `CLAUDE.md`). These are persistent configuration; the owner decides them, the audit does not.
-3. **Add the index directory to `.gitignore`** (GitNexus keeps its index in `.gitnexus/` per its README; check the installed version's output for the exact path). A committed index is a stale index waiting to be trusted.
-4. **Probe before relying on it.** Run the tool's own help or version command; if it answers, record the version in the report's rung line. If it does not, fall back to graphify or to `grep` and say that in the report.
-5. **Confirm locality.** The README says the index is built and queried locally. Check that claim against the installed version before the project's code is indexed; a project under a confidentiality rule is not indexed by a tool whose network behaviour is unverified.
+1. **Probe.** `cgc --help` (or `codegraphcontext --help` in some copies) must answer. Record the version in the report's rung line. If it does not answer after a user-scope install, fall back to graphify and say so.
+2. **Ask the owner before `cgc mcp setup`** and before any Neo4j install. Name the config file the wizard will change.
+3. **Find the index location and gitignore it.** The sources do not agree on where the embedded store lives; read it from the installed version's output. A committed index is a stale index waiting to be trusted.
+4. **Confirm locality.** The tool indexes local code into a local database per its README. Check that against the installed version before a confidential project is indexed.
+5. **Watch the watcher.** `cgc watch .` is a background process. If it dies, the graph goes stale silently and every later answer is about old code — the dead-watchdog defect of S20 applied to the graph. Before trusting an answer, check the graph is newer than the last code change; if the watcher is not running, re-index.
 
 ---
 
 ## 4. How the AI uses it
 
-- **Ask the graph before reading wide.** The graph's answer (callers, callees, the path from an entry point to a write) replaces a multi-file read. The answer is `[EXTRACTED]` or `INFERRED` and graded as `test-tools.md` §1 says.
+- **Ask the graph before reading wide.** The graph's answer (callers, callees, the path from an entry point to a write) replaces a multi-file read. Grade it as `test-tools.md` §1 says: a graph edge is a lead until the line is read.
 - **Feed it to the matrices.** A capability's callers feed `surface-map.md` (orphans, dead controls); a path feeds the blast radius in `test-tools.md` §3; components and arrows feed the C4 check in `design-tools.md` §1.
-- **Keep it fresh.** A graph older than the last code change is stale. The closure gate G8 in `build-orchestration.md` requires a refresh before the session finishes.
-- **Do not let the graph grade.** It maps the code; it does not prove a behaviour. A graph edge is a lead until the line is read (`evidence.md` §E1).
+- **Keep it fresh.** A graph older than the last code change is stale. The closure gate G8 in `build-orchestration.md` requires a refresh before the session finishes: `cgc index .` (or a running watcher) for CodeGraphContext, `graphify update .` for graphify.
+- **Do not let the graph grade.** It maps the code; it does not prove a behaviour (`evidence.md` §E1).
 
 ---
 
 ## 5. Report line
 
 ```
-GRAPH — tool <name> <version> (probed); trigger signals held <list>; index path <path>, fresh as of <commit>; queries <n>, truncated <t>; edges used E (extracted X, inferred I); stale-check: <pass|fail>.
+GRAPH — tool <name> <version> (probed); trigger signals held <list>; index path <path>, fresh as of <commit>; watcher <running|not used|dead>; queries <n>, truncated <t>; edges used E; stale-check: <pass|fail>.
 ```
 
 ---
 
 ## 6. Sources
 
-- GitNexus README (per the search result, the `cdn.jsdelivr.net` copy of `abhigyanpatwari/GitNexus` on `main`): https://cdn.jsdelivr.net/gh/abhigyanpatwari/GitNexus@main/README.md
-- GitNexus overview: https://aiagentstore.ai/ai-agent/gitnexus
-- Where the details disagree (tool count, storage format, LLM use for wiki generation), the installed version's own documentation wins over both.
+- CodeGraphContext README (mirror of `Shashankss1205/CodeGraphContext`): https://glama.ai/mcp/servers/@Shashankss1205/CodeGraphContext/blob/5cf5aa8eaf2d6bd6f407dca9dfa7203b157d30ba/README.md
+- Setup workflows: https://glama.ai/mcp/servers/@Shashankss1205/CodeGraphContext/blob/381af176fb34f46affe9c4771d6f7138754bfa72/docs/docs/setup_workflows.md
+- Listing and config: https://mcp.so/server/codegraphcontext
+- The original repository appears to be `Shashankss1205/CodeGraphContext`; it was not verified directly. Where the copies disagree, the installed version's own documentation wins.

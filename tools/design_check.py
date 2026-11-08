@@ -22,7 +22,7 @@ import re
 import sys
 from pathlib import Path
 
-SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__", ".venv", "venv", "graphify-out", ".gitnexus"}
+SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__", ".venv", "venv", "graphify-out"}
 PY_EXT = {".py"}
 JS_EXT = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"}
 JS_IMPORT = re.compile(
