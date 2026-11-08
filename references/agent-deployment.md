@@ -33,6 +33,8 @@ Walk down the ladder. Stop at the first rung that can answer the question with t
 Two rules sit above the ladder:
 
 - **A cheaper rung never grades.** Rungs 0–4 return evidence. The main model (or the cold reviewer for a judgement about wording) decides what the evidence means.
+- **Reuse before re-exploring.** Before any read, check in order: the graph report (`graphify-out/GRAPH_REPORT.md`), the sites already recorded in the handoff or the last report, and the deterministic checks in `tools/`. Every answer found there is cited, not re-derived. Re-reading a file to rediscover a site a prior report already names is the waste this rule exists to stop.
+- **A deterministic check replaces a reading when it can answer the question.** `tools/check_structure.py` for the skill's structure, `tools/design_check.py deps|adr|states` for rules, `tools/sweep-diff.py` for drift. Run the check, read its count and its sites, and open files only at those sites.
 - **Start at the top only when the answer is exact.** Do not use a grep to answer a question that needs reading, and do not read a file to answer a question a grep answers.
 
 ---

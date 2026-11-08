@@ -498,8 +498,9 @@ Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map,
 
 - **Multi-part app build** (several surfaces, roles, real state): say build mode; write the spec gate and the closure gate of `references/build-orchestration.md` before the first increment; map every capability to a surface (`surface-map.md`) and every critical workflow to its branches (`journey-map.md`) before the increment that depends on them.
 - **Reading wide, or repeating one check across many files**: choose the executor by `references/agent-deployment.md` §2 (deterministic tool, then graph, then cheapest subagent, then the main model). Verify every delegated result before it enters a report.
+- **Reuse before re-exploring**: check the graph report, the sites already recorded and the deterministic checks before any read (`references/agent-deployment.md` §2).
 - **Blast radius and tests**: `graphify` first (`references/test-tools.md` §1); EGM cold reads for specs and journeys (§2). A cold-read PASS is recorded `●(read)`, never as a run pass.
-- **Complicated project**: when two or more complexity signals in `references/code-graph-tools.md` §1 hold, use a code graph: graphify if it is already present, otherwise GitNexus after the checks in §3 of that file. Design checks for a UI or multi-module build are in `references/design-tools.md`.
+- **Complicated project**: when two or more complexity signals in `references/code-graph-tools.md` §1 hold, use **GitNexus** as the project's code graph, after the checks in §3 of that file (owner sign-off before it writes `CLAUDE.md`, `AGENTS.md` or hooks), then measure whether it cut exploration tokens (§2). Below the thresholds, graphify or grep. Design checks for a UI or multi-module build are in `references/design-tools.md`.
 - The Step 6 report carries the EXECUTORS line and the TESTS line.
 - **Size debt** (code principle 5): this file now passes 600 lines. Next cut: move §0.14–§0.16 out to a new runtime reference (name chosen at the cut; the debt entry lives in `tools/check_structure.py`).
 

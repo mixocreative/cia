@@ -27,14 +27,15 @@ Below the thresholds, `grep` and the test runner are enough. Say so in the repor
 
 | Situation | Use |
 |---|---|
-| The project already has `graphify-out/` | keep graphify; a second graph in the same repo doubles the stale-index risk |
-| No graph yet, one repo, Claude Code is the agent | GitNexus is the stronger fit: it serves the graph over MCP and adds hooks that enrich search calls with graph context |
-| Several repos that must be queried together | GitNexus; its README describes a global registry for multi-repo use |
-| Graph wanted only for a one-off audit | graphify (`graphify update .`) — nothing is installed into the project |
+| Two or more complexity signals hold (§1) | **GitNexus** — from now on the AI's code graph for this project, after the checks in §3. It serves the graph over MCP and its hooks add graph context to searches, so later sessions stop re-exploring the same code. If the repo also has `graphify-out/`, stop refreshing it once GitNexus is in place: two graphs double the stale-index risk |
+| Several repos that must be queried together | GitNexus (its README describes a global registry for multi-repo use) |
+| Below the thresholds, or a one-off audit | graphify (`graphify update .`) or grep — nothing is installed into the project |
 
 **Never run two graph tools that both write indexes or agent files into the same repository.** Pick one per repository and say which in the handoff.
 
 ---
+
+**Then measure, and keep it only if it pays.** The aim is less repeated exploration, fewer regressions and fewer total tokens, not more tools. After the first few real tasks with GitNexus, compare the tokens spent on exploration against a comparable task before it, with the same findings, and write both numbers in the handoff. If GitNexus did not reduce them, tell the owner and fall back to graphify.
 
 ## 3. What GitNexus does to a project — check before running it
 
