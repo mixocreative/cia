@@ -492,6 +492,8 @@ Paths are relative to this skill's directory. "Read" means read the whole file; 
 | `references/test-tools.md` | Choosing what a change must test; before the suite; after any code change | the graphify blast-radius recipe; EGM cold-read and drift passes; the gates a test must pass to count; the TESTS report line |
 | `references/design-tools.md` | Any build with a UI or more than one module; before the first multi-step workflow is coded; when an architectural decision is made | C4 maps checked against code, Feature-Sliced Design layers, dependency rules in CI, state-machine transition tables, ADRs; the five methods with priorities and build order; gates CG11–CG13 |
 | `references/code-graph-tools.md` | A project passes two or more complexity signals in the file; before installing any graph tool | when a project needs a code graph; graphify or CodeGraphContext (`cgc`); the checks before it installs or edits config (`cgc mcp setup` edits the AI client's config; Neo4j on Windows is an owner decision); the GRAPH report line |
+| `references/paired-run.md` | The user names both /cia and /ecommerce-cia in one request | which skill is the spine, how the steps fold together, one register and one report |
+| `references/plain-language.md` | §0.15 detection fires, before the first reply | the eight rules of voice for a user who is not an engineer; rule 8, the owner paragraph |
 
 Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map, connections, G1–G7, rule matrix) → sweeps S1–S24 (S15 first when time is short) → surface-map then journey-map (any project with a UI or more than one surface) → doctrine §1 → doctrine §3 (+ a context template if one fits) → theory §2 against that profile → doctrine §7 and §8 → reporting → evidence (claim tags, obligation ledger, unknowns). Every finding is graded against the invariant stated in-line in those files, not against generic "what if" reasoning.
 
@@ -526,29 +528,13 @@ omitted line is read the same way a missing sweep line is.
 
 `tests/fixture-service/` is the harness: a planted-defect, non-commerce service with an answer key that also tests the commerce gate and the bare `run tests` trigger. Any change to this file or to `references/` is run against it before it is committed (S8 applies to the skill). `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged, so a lesson that landed in one only is a decision, not an accident.
 
-### 0.14 Paired Run With `ecommerce-cia` — explicit request only
+### 0.14 Paired Run — `references/paired-run.md`
 
-Runs only when the user names both skills in one request ("run /cia and /ecommerce-cia", "both auditors", "full audit with both"). Neither skill auto-loads the other (§0.2). When paired, the two overlap almost entirely — same theory, same map, same S1–S24 numbering, same protocol steps — so the paired run does the shared work **once** and the disjoint work **both**:
+Runs only when the user names both skills in one request; neither skill auto-loads the other (§0.2). Read the file, then run.
 
-1. **On a commerce project, `ecommerce-cia`'s §0.6 is the spine** — its seven steps are a superset of this skill's six (it adds the sandbox gateway walk, host-capability reconciliation and the detector roll call as protocol steps). This skill's steps fold in: Step 1 → its Step 1; Step 2 → its Step 3; Step 3 → its Step 4; Step 4 → its Step 5 (contribute any non-web smoke commands for CLI / service parts); Step 5 → the §0.8 fix-vs-ask pass; Step 6 → its Step 7. Do not re-run discovery, the fast suite, the full suite, the runtime walk or the map.
-2. **This skill contributes what the sibling does not have:** the extra §0.5 bindings (analyser / linter / dependency-audit configs, CI workflow file, fast-suite filter); its `references/sweeps/` as the *universal* text of every sweep, read alongside the commerce text so each sweep runs once with the union of both texts' checks and emits one report line tagged `S<n> [cia + ecommerce-cia]`; §0.10 AI / LLM boundary sweeps when AI components are found; §3 context profiling with a matching context template; §7 universal test matrix on the non-commerce critical flows; §8 domain checklist. A finding both texts would raise is filed once, under the invariant of the more specific text.
-3. **One register, one ID sequence, one report,** in the sibling's Step 7 format, with lines added for this skill's §3 profile, §7 matrix, §8 checklist and §0.10 sweeps. One depth tier, declared once, binds both.
-4. **Paired on a non-commerce project** (the user asked for both anyway): this skill's §0.6 is the spine; `ecommerce-cia`'s §0.5 discovery reports that no payment integration, commerce schema or checkout route exists; its commerce sweep text adds no sites; say so in one line and run this skill's protocol.
+### 0.15 Plain-Language Contract — `references/plain-language.md`
 
-### 0.15 Plain-Language Contract — when the user is not an engineer
-
-Detect it, do not ask: the request is in everyday words ("怎麼開始", "my app lost my work", "is it safe to launch"), the directory is empty or has no tests, the user has not used a technical term. Then, for the rest of the session, every user-facing message obeys:
-
-1. **One thing at a time.** One question, 2–4 choices, one-line consequence each. One next action at the end of every message, in bold.
-2. **Say what it means, not what it is called.** Sweep ids, section numbers, VSM systems and taxonomy terms stay in the report file; to the user, "a setting nothing reads, so switching it does nothing" — never "S5 dead control". The first use of any unavoidable term gets a six-word gloss.
-3. **Show the road.** The first reply draws the whole path as 4–6 numbered stops and says which stop we are at; every later reply says "stop N of M".
-4. **Never hand them a command you can run.** §0.8 applies doubly: the AI runs the probe, the fetch, the test, the tunnel. The user's own actions are only the ones the hard limits reserve for them (identity, passwords, account creation, console changes on a fresh yes), and each is one exact click with a link.
-5. **Errors are translated, not quoted.** A stack trace, an exit code or a vendor code comes back as: what happened, why, the one thing to do, who does it. The raw text appears once, in a collapsed block or brackets.
-6. **Waits are named.** Anything that depends on a vendor or a host is a line: who, what was asked, since when, what it blocks — on the readiness card, not in prose.
-7. **Money, identity and irreversible steps get the slow voice.** Before any step that touches real money, a production console, the user's identity, or deletes or overwrites the user's own data, drop the shorthand: full sentences, what will happen, what cannot be undone, and an explicit yes.
-8. **Reports get an owner paragraph first.** Any audit or setup report opens with ≤ 5 plain lines: what is safe, what is not, what to do first — before the numbered lines (§0.6 Step 6).
-
-The doctrine does not change; only the voice does. A finding is still graded, cited and filed exactly as §0.9 and `reporting.md` require.
+Detect it, do not ask: everyday words, no tests, no technical term. Then read the file and obey its eight rules for the rest of the session; rule 8 (the owner paragraph) is what Step 6 and §0.16 cite as §0.15.8.
 
 ### 0.16 Start Menu — the first reply on a fresh project
 
@@ -573,7 +559,6 @@ When neither an explicit skill call nor a clear trigger word settles the mode, a
 - **Blast radius and tests**: `graphify` first (`references/test-tools.md` §1); EGM cold reads for specs and journeys (§2). A cold-read PASS is recorded `●(read)`, never as a run pass.
 - **Complicated project**: when two or more complexity signals in `references/code-graph-tools.md` §1 hold, add **CodeGraphContext** after the checks in §3 of that file (owner sign-off before `cgc mcp setup` edits client config or a Neo4j install). Then ask CodeGraphContext for code relationships and graphify for architectural context, the second only when the first cannot answer; keep their indexes in separate locations; the code and architecture documents stay authoritative over both (§2). Below the thresholds, graphify or grep. Design checks for a UI or multi-module build are in `references/design-tools.md`.
 - The Step 6 report carries these as line 14 (SURFACE, JOURNEY, DESIGN, GRAPH, EXECUTORS, TESTS — each as it applies).
-- **Size debt** (code principle 5): this file now passes 600 lines. Next cut: move §0.14–§0.16 out to a new runtime reference (name chosen at the cut; the debt entry lives in `tools/check_structure.py`).
 
 ## The Final Cybernetic Question
 
