@@ -134,7 +134,7 @@ Delegation of the mechanical parts of the build to cheaper executors follows `ag
 
 ---
 
-## 9. The closure gate — when the build is finished
+## 9. The closure gate — when the build is finished (G1–G13)
 
 The build is finished when **all** of these hold, and the report lists each one with its count:
 
@@ -150,6 +150,9 @@ The build is finished when **all** of these hold, and the report lists each one 
 | G8 | graph | `graphify update .` run after the last code change (`test-tools.md` §1) |
 | G9 | sweeps | S1–S24 each have a report line with sites (`sweeps/README.md`) |
 | G10 | operator surface | every condition the code cannot resolve shows on a screen the operator already opens (`SKILL.md` §0.11 item 6) |
+| G11 | dependency rules | zero violations and zero cycles from the configured tool; every exception listed with a reason and an owner; C4 arrows match code edges (`design-tools.md` §1–§3) |
+| G12 | decisions | every rule a guard enforces cites an accepted ADR; no accepted ADR without its check (`design-tools.md` §5) |
+| G13 | workflows | every stateful component and multi-step journey has a complete transition table; zero missing transitions, dead states or exit-less states (`design-tools.md` §4) |
 
 A build that closes G1–G10 with an open owner decision lists the decision first, with what it blocks. A build that does not close a gate says which gate and which count, and does not say "done".
 

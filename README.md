@@ -589,9 +589,10 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `references/wiring-walk.md` | feature list vs wiring: three layers, lifecycle state map, seven connection questions, faults G1–G7, question banks, rule traceability matrix, gap register｜功能 vs 串接：三層檢查、流程對照圖、每條串接七問、七種故障注入、問題清單、規則追溯矩陣、缺口登記表 |
 | `references/surface-map.md` | function-to-UI matrix: orphan capabilities, dead controls, field drift, state blindness, audience mismatch, reachability gaps｜功能到畫面的對應矩陣：孤兒功能、死按鈕、欄位飄移、狀態盲點、權限不符、無法到達的畫面 |
 | `references/journey-map.md` | critical workflows, every branch and its six outcomes, traps T1–T8, finite reduction of the possibility space｜關鍵流程、每個分支與六種結果、陷阱 T1–T8、有限化的可能性空間 |
-| `references/build-orchestration.md` | build mode for a multi-part app: no-loose-ends invariant, SEAMS spec gate, increment order, closure gate G1–G10｜多部分應用程式的建置模式：無鬆散結尾原則、規格閘門、增量順序、結案閘門 G1–G10 |
+| `references/build-orchestration.md` | build mode for a multi-part app: no-loose-ends invariant, SEAMS spec gate, increment order, closure gate G1–G13｜多部分應用程式的建置模式：無鬆散結尾原則、規格閘門、增量順序、結案閘門 G1–G10 |
 | `references/agent-deployment.md` | which executor takes each step: deterministic tool → graph → cheap subagent → main model → cold reviewer; verifying delegated results｜每個步驟由哪種執行者負責：確定性工具 → 圖譜 → 廉價子代理 → 主模型 → 冷讀審查者；驗證委派結果 |
 | `references/test-tools.md` | graphify blast radius and EGM cold reads as test tools; the gates a test must pass to count｜以 graphify 找影響範圍、以 EGM 冷讀作為測試工具；測試算數所需通過的閘門 |
+| `references/design-tools.md` | C4 maps, Feature-Sliced Design, dependency rules in CI, state-machine tables, ADRs — with their priorities and build order｜C4 架構圖、Feature-Sliced Design、CI 中的相依性規則、狀態機轉移表、ADR，附優先順序與建置順序 |
 | `tools/check_structure.py` | structure guard, run in CI: nothing loose, nothing missing, S1–S24 each once, file-size debt named｜結構守衛，CI 執行：無鬆散檔、無遺漏、S1–S24 各一次、檔案大小債務需具名 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |
 
