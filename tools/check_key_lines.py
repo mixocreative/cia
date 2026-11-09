@@ -127,7 +127,7 @@ def main() -> int:
             print(f"  - {line}")
         return 1
 
-    print(f"key lines: every citation resolves and every cited file matches its pin")
+    print("key lines: every citation resolves and every cited file matches its pin")
     return 0
 
 

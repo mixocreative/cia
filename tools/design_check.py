@@ -379,7 +379,7 @@ def cmd_states(table_path: Path, walked_path: Path | None = None) -> int:
 
 # ---------- entry ----------
 
-USAGE = __doc__.split("\n\n")[0] + "\n\n" + "\n".join(l for l in __doc__.splitlines() if l.startswith("  deps") or l.startswith("  adr") or l.startswith("  states"))
+USAGE = __doc__.split("\n\n")[0] + "\n\n" + "\n".join(ln for ln in __doc__.splitlines() if ln.startswith(("  deps", "  adr", "  states")))
 
 
 def main(argv) -> int:
