@@ -65,10 +65,34 @@ def descendants(procs, roots):
     return out
 
 
-def owned_by_run(left, copy_dir, seen=None):
-    """The leftovers that are certainly this run's: their command line names its own throwaway copy, or
+MARK = "CIA_HARNESS_RUN"   # set to the copy path on the agent; every child inherits it
+
+
+def marked(pids, copy_dir):
+    """The PIDs whose environment carries this run's MARK. Empty without psutil (the harness's only
+    optional dependency): attribution then falls back to the command line and the tree.
+
+    Why: run 2026-11-10 C21 started `graphify watch .` through `pwsh -> python -c Popen(...)`; the
+    python parent exited inside one 5 s poll, so the tree never saw the link and the command line
+    names no copy. The environment survives a vanished parent; a PID or a command line does not."""
+    try:
+        import psutil
+    except ImportError:
+        return set()
+    out = set()
+    for pid in pids:
+        try:
+            if psutil.Process(pid).environ().get(MARK) == copy_dir:
+                out.add(pid)
+        except (psutil.Error, OSError):
+            pass   # gone, or not ours to read: no attribution, never a stop
+    return out
+
+
+def owned_by_run(left, copy_dir, seen=None, marks=()):
+    """The leftovers that are certainly this run's: their command line names its own throwaway copy,
     the process was seen descending from the run's agent with the same command line (`seen`, from
-    run_watched).
+    run_watched), or its environment carries the run's MARK (`marks`, from marked()).
 
     Only these are stopped (the owner approved this on 2026-11-10). Codex obeys a user's global
     AGENTS.md, and one that says "keep a graphify watch running per project" started a watcher in every
@@ -78,7 +102,7 @@ def owned_by_run(left, copy_dir, seen=None):
     skill audits for."""
     seen = seen or {}
     return [p for p in left if (copy_dir and copy_dir.lower() in p["cmd"].lower())
-            or seen.get(p["pid"]) == p["cmd"]]
+            or seen.get(p["pid"]) == p["cmd"] or p["pid"] in marks]
 
 
 POLL_S = 5   # a watcher's parent shell lives seconds; slower polling loses the link to the run
@@ -88,7 +112,8 @@ def run_watched(argv, cwd, prompt, timeout):
     """Run the agent like subprocess.run, and return (result, {pid: cmd} of every process seen
     descending from it while it ran). A failed listing only loses attribution, never the run."""
     proc = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, text=True, encoding="utf-8")
+                            stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                            env={**os.environ, MARK: str(cwd)})
     box = {}
 
     def talk():

@@ -70,7 +70,7 @@ OUT_DIR = REPO / "tests" / "harness" / "out"
 SKILL_DIR = r"S:\ai\skills\cia"
 TIMEOUT_S = 3600
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from procs import (descendants, leftovers, list_processes, owned_by_run,  # noqa: E402,F401  tests reach them here
+from procs import (descendants, leftovers, list_processes, marked, owned_by_run,  # noqa: E402,F401  tests reach them here
                    run_watched, stop)
 
 SKILL_LINE = (
@@ -524,7 +524,8 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     body += collected
     path.write_text(header + body, encoding="utf-8")
     if left:
-        stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd), seen)]))
+        marks = marked([p["pid"] for p in left], str(cwd))
+        stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd), seen, marks)]))
         # stop() ends the whole tree (taskkill /T), so a child of a stopped leftover is stopped too; the
         # first live run (C18) logged two such children as "left running" that were already gone.
         stopped |= set(descendants(left, stopped))

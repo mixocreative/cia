@@ -278,6 +278,25 @@ class LeftoverTests(unittest.TestCase):
         self.assertEqual((res.returncode, res.stdout.strip()), (0, "hello"))
         self.assertTrue(any("time.sleep(8)" in c for c in seen.values()))
 
+    def test_a_detached_grandchild_whose_parent_exited_is_still_marked_as_the_runs(self):
+        # Run C21: pwsh -> python Popen(graphify watch .) -> python exits inside one poll; only the
+        # inherited environment still ties the watcher to the run.
+        try:
+            import psutil
+        except ImportError:
+            self.skipTest("psutil not installed; marked() is empty by design")
+        cwd = tempfile.mkdtemp(prefix="cia-audit-mark-")
+        code = ("import subprocess,sys; p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],"
+                "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); print(p.pid)")
+        res, _ = self.cr.run_watched([sys.executable, "-c", code], cwd, "", 60)
+        gc = int(res.stdout.strip())
+        try:
+            self.assertEqual(self.cr.marked([gc, os.getpid()], cwd), {gc})
+            left = [{"pid": gc, "ppid": 99999, "cmd": "python -c sleep"}]
+            self.assertEqual(self.cr.owned_by_run(left, cwd, {}, {gc}), left)
+        finally:
+            psutil.Process(gc).kill()
+
     def test_orphans_and_copy_processes_are_reported_and_old_or_parented_ones_are_not(self):
         after = [
             {"pid": 1, "ppid": 0, "cmd": "explorer.exe"},                                # existed before
