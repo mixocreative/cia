@@ -359,6 +359,27 @@ def build_rows() -> list[dict]:
     return _parse(section.splitlines())
 
 
+OTHER_HEADING = "## Other runtimes"
+
+
+def codex_rows() -> list[dict]:
+    """Codex audit rows: the "Other runtimes" section only, gated against Codex's own history.
+
+    Joined 2026-11-10 under the rule written when Codex was first measured: it joins once two Codex runs
+    on one commit have no miss (C16, C17 on 798ee54). Never pooled with Claude's rows: Codex's means sat
+    two rows under Claude's for the same doctrine, so pooling would make every Codex pair a regression."""
+    text = RUNS.read_text(encoding="utf-8")
+    if OTHER_HEADING not in text:
+        return []
+    section = text.split(OTHER_HEADING, 1)[1].split(chr(10) + "## ", 1)[0]
+    return [r for r in _parse(section.splitlines()) if r["model"] == "codex" and r["fixture"] != "default"]
+
+
+def codex_gate(cs: list[dict]) -> int:
+    """The audit rule (commit_gate) over Codex rows: the newest live Codex commit, its own floor."""
+    return commit_gate(cs, "codex gate") if cs else 0
+
+
 def line(r: dict) -> str:
     return (f"{r['date']} {r['commit']}: hits {r['hits']} / near {r['near']} / miss {r['miss']} / "
             f"false+ {r['false']} -> score {r['score']:g}")
@@ -435,8 +456,14 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("build: no scored build run yet")
 
+    cs = codex_rows()
+    if cs:
+        print(f"codex: [{cs[-1]['fixture']}] " + line(cs[-1]))
+
     if "--gate" in argv:
         if bs and build_gate(bs):
+            return 1
+        if codex_gate(cs):
             return 1
         if audit_gate(rs):
             return 1

@@ -181,6 +181,26 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(len(score.build_rows()), 2)
         self.assertEqual(self.run_score(t, "--gate")[0], 0)
 
+    def test_codex_rows_have_their_own_gate(self):
+        svc = "Screen on **fixture-service**"
+        cx = lambda h, n=0, m=0, c="aaaaaaa", note="n": row("2026-11-12", h, near=n, miss=m, runtime="**Codex**",  # noqa: E731
+                                                          tier=svc, commit=c, note=note)
+        other = lambda rows: "\n## Other runtimes (2026-11-09 onward)\n\n" + HDR + "\n" + "\n".join(rows) + "\n"  # noqa: E731
+        base = runs_text(self.AUDIT, [])
+        history = [cx(10, m=1, note="missed: row 8"), cx(9, m=1, note="missed: row 10")]   # floor: 9.5-0.5, best-1
+        self.use(base + other(history))
+        self.assertEqual(len(score.codex_rows()), 2)
+        self.assertEqual(len(score.rows()), 2)                                                # never pooled with Claude
+        self.assertEqual(self.run_score(base + other(history + [cx(11, 1, c="bbbbbbb"), cx(11, 1, c="bbbbbbb")]),
+                                        "--gate")[0], 0)                                     # 11.5 clears its floor
+        code, _, err = self.run_score(base + other(history + [cx(7, m=2, c="bbbbbbb"), cx(7, m=2, c="bbbbbbb")]),
+                                      "--gate")
+        self.assertEqual(code, 1)
+        self.assertIn("CODEX GATE", err)                                                     # 5 < floor 9
+        clean = history + [cx(11, 1, c="bbbbbbb"), cx(11, 1, c="bbbbbbb")]
+        both = clean + [cx(11, m=1, c="ccccccc", note="missed: row 12"), cx(11, m=1, c="ccccccc", note="missed: row 12")]
+        self.assertEqual(self.run_score(base + other(both), "--gate")[0], 1)                 # a shared miss is doctrine
+
     def build_gate_on(self, groups):
         """groups: list of (commit, [scores...]) as clean build runs; returns the --gate exit code."""
         build = [row(f"2026-11-{i + 10:02d}", s, commit=c) for i, (c, ss) in enumerate(groups) for s in ss]
