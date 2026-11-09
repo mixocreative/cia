@@ -37,12 +37,10 @@ DEBT_LIMIT = 600    # over this, the file is named as debt below, with its next 
 # route_render.py; output byte-identical before and after.
 DEBT: dict[str, str] = {}
 
-# Named, not yet debt: SKILL.md sits at the limit. A file AT the limit cannot carry a DEBT entry
-# (the stale-entry check below refuses it), so its next cut lives here. When an edit would cross
-# 600, cut the two real duplicates first, one gate pair for the move: Step 4's browser-walk
-# restatement (it repeats browser-walks.md §12-§13; keep a six-line pointer) and §0.4 (it restates
-# §0.2-§0.3; keep six lines). Step 4 (a)-(g), the S22 guards and the Final Question are NOT
-# duplicates: they live only in SKILL.md, so moving them is a doctrine change, run-tested.
+# SKILL.md was at the 600 limit until 2026-11-09, when the two named duplicates were cut: §0.4 (it restated
+# §0.2-§0.3) and Step 4's restatement of browser-walks.md §8a and §10 (now pointers). Next cut when it
+# nears 600 again: none of the rest is a duplicate. Step 4 (a)-(g), the S22 guards and the Final Question
+# live only in SKILL.md, so moving them is a doctrine change, run-tested.
 
 failures: list[str] = []
 

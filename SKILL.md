@@ -76,32 +76,9 @@ Explicit `/cia` invocation bypasses all of this (§0.2 rules apply). The trigger
 
 ### 0.4 Commerce Boundary
 
-CIA may audit the code integrity of a commerce application exactly as
-it may audit any other software.
+CIA audits a commerce application's code integrity as it would any software: state ownership, atomicity, idempotency, concurrency, persistence, serialization, API contracts, recovery, migrations, UI/backend consistency. Commerce doctrine (payment settlement, order lifecycle policy, inventory reservation, refund accounting, tax and invoices, promotions, fulfilment, digital entitlements) belongs to the separate `ecommerce-cia` skill.
 
-Generic CIA concerns include:
-
-- state ownership
-- atomicity
-- idempotency
-- concurrency
-- persistence
-- serialization
-- API contracts
-- recovery
-- migrations
-- UI/backend consistency
-
-Commerce-specific doctrine such as payment settlement semantics,
-order lifecycle policy, inventory reservation, refund accounting,
-tax/invoice rules, promotions, fulfillment, and digital entitlements
-belongs to the separate `ecommerce-cia` skill.
-
-Never activate `ecommerce-cia` merely because the audited application is
-an e-commerce application.
-
-Never activate or import `ecommerce-cia` during an explicit `/cia`
-invocation unless the user explicitly requests both skills. A commerce project heard on the §0.3 trigger words is still audited here in full; the Step 6 report then tells the user to run `/ecommerce-cia` separately.
+Never activate `ecommerce-cia` merely because the audited application sells things, and never activate or import it during an explicit `/cia` invocation unless the user explicitly requests both skills. A commerce project heard on the §0.3 trigger words is still audited here in full; the Step 6 report then tells the user to run `/ecommerce-cia` separately.
 
 ### 0.5 Project Runtime Discovery (bootstrap on invocation)
 
@@ -167,13 +144,13 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 fourth says how much was run, and a run that swept everything and executed nothing is a code
 review at whatever depth — its first line says so.
 
-A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitted, so a later reader knows what was not walked. **The budget line in the report is the tier's budget, not a promise the doctrine can keep at every tier.**
+A cell, flow or site the tier excluded is reported as `UNVERIFIED`, never omitted, so a later reader knows what was not walked. **The budget line in the report is the tier's budget, not a promise the doctrine can keep at every tier.** The minutes printed on each step (Step 4's 15–30, and the rest) are a Screen-tier guide and yield to the tier's budget: a Walk or Full run spends what the tier allows, and a step that needs more than its guide says so on line 6 rather than cutting the step.
 
 **If §0.3 commerce detection was positive:** this step's report line must tell the user to invoke `/ecommerce-cia` separately for the commerce-domain doctrine this skill does not own — or to ask for a paired run (§0.14), which does the shared work once. Do not auto-import it.
 
 **Step 3 — Full test suite in the project's canonical environment (60–150 min). THE AGENT RUNS THIS.** Complete run, no group exclusions, on the canonical environment (docker for docker-first projects, native otherwise). If the environment is down, bring it up per §0.8 (rung 1). Run it in the background and keep working Steps 4–5 while it executes; collect the result before Step 6. Non-parallel with any other suite (DB contention). **Never green-light without a full-suite result on the latest HEAD.** **A full-suite result is evidence about the environment it ran on (S19.3).** Before a green light, the parity matrix names every environment the code will run on — every CI leg, the production host, and any engine or host a stated move names — and each cell is RAN with its count line or NOT RUN; a single-engine local run is not a green light when the target is another engine. And the CI run for the audited commit is read, not assumed (S20.6): its id and conclusion go in the report. A result with skipped DB/network/browser tests is "N unverified", not green (§0.9 S7); every test added this session must show its real run line (§0.9 S8). Only an exhausted §0.8 ladder produces a ⏭, and that line names the rung reached.
 
-**Step 4 — Runtime walk (15–30 min). THE AGENT DRIVES THIS.** Exercise the critical flows §0.5 / doctrine §3 identified, in the real running app, not just tests. For a web project: start the dev server per §0.8 if needed, drive the browser with the available automation (claude-in-chrome, Playwright MCP, `npx playwright` — install per §0.8 rung 2 if absent), log in with the project's documented dev credentials for authenticated routes, cover every locale and every critical route at desktop + mobile (390 × 844) breakpoints, screenshot each as an artefact. Check semantic HTML (`<h1>` per page), `aria-expanded` matches visible state, no console / stderr errors, no mobile horizontal overflow, no child element protruding outside its card/panel at narrow width, focus rings visible, every form labelled. **Every user action in a walked flow is its own closed loop:** before the click the screen explains scope and availability; immediately after the click the user sees that something started; while work runs the control is disabled or shows progress; success, failure, retry and follow-up states are visible; if the result is detected later, a refresh/recheck path is present and works; and the final screen proves the action completed or says what is still missing. A button that opens a shell, starts a job, submits a form, saves settings, dismisses a badge, copies text, installs something, or rechecks status is not verified until the walk records what a user sees at each of those points. If simple and advanced UIs expose the same capability, both controls must be walked to the same endpoint or command allowlist; a shortcut that only opens a blank terminal, an invalid copied command for the target shell, or a quick action without a nearby detailed setup/recheck path is a finding. If a good click and a broken click look the same, file S22/S5. For a CLI / library / service: run the documented smoke commands or an equivalent scripted exercise and apply the same closed-loop rule to prompts, progress, exit text and next action. **Write the walks to `references/browser-walks.md`'s conventions** — page objects, session reuse, artefacts on failure only, no clock waits — or a theme change breaks every walk at once.
+**Step 4 — Runtime walk (15–30 min). THE AGENT DRIVES THIS.** Exercise the critical flows §0.5 / doctrine §3 identified, in the real running app, not just tests. For a web project: start the dev server per §0.8 if needed, drive the browser with the available automation (claude-in-chrome, Playwright MCP, `npx playwright` — install per §0.8 rung 2 if absent), log in with the project's documented dev credentials for authenticated routes, cover every locale and every critical route at desktop + mobile (390 × 844) breakpoints, screenshot each as an artefact, and run `browser-walks.md` §10's checks on every route, plus no child element protruding outside its card or panel at narrow width. **Every user action in a walked flow is its own closed loop**: the eight points of `browser-walks.md` §8a, from what the screen says before the click to the final screen that proves the action completed or says what is still missing. A button that opens a shell, starts a job, submits a form, saves settings, dismisses a badge, copies text, installs something, or rechecks status is not verified until the walk records what a user sees at each point. If simple and advanced UIs expose the same capability, both controls must be walked to the same endpoint or command allowlist; a shortcut that only opens a blank terminal, an invalid copied command for the target shell, or a quick action without a nearby detailed setup/recheck path is a finding. If a good click and a broken click look the same, file S22/S5. For a CLI / library / service: run the documented smoke commands or an equivalent scripted exercise and apply the same closed-loop rule to prompts, progress, exit text and next action. **Write the walks to `references/browser-walks.md`'s conventions** — page objects, session reuse, artefacts on failure only, no clock waits — or a theme change breaks every walk at once.
 
 **What the walk fetches, beyond the page (2026-09-18, from three misses in one morning).** A page
 that answers 200 with the right markup is not rendered until what it links arrives, so for every
