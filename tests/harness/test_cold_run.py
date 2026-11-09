@@ -204,11 +204,14 @@ class PartialReadTests(unittest.TestCase):
     def test_refs_opened_names_each_reference_once(self):
         sys.path.insert(0, str(SCRIPT.parent))
         import cold_run
-        log = ("exec Get-Content S:\\ai\\skills\\cia\\references\\reporting.md\n"
-               "exec cat references/sweeps/04-enumeration-environment-liveness.md\n"
-               "exec rg receipt references/reporting.md\n")
-        self.assertEqual(cold_run.refs_opened(log),
-                         ["reporting.md", "sweeps/04-enumeration-environment-liveness.md"])
+        log = ("exec\npwsh -Command \"Get-Content S:\\ai\\skills\\cia\\references\\reporting.md\" in C:\\tmp\n"
+               " succeeded in 20ms:\n| `references/theory.md` | Step 2 |\n"   # file output naming another ref
+               "exec\ncat references/sweeps/04-enumeration-environment-liveness.md in C:\\tmp\n"
+               "exec\nrg receipt references/reporting.md in C:\\tmp\n"
+               "exec\npython -c \"root=Path(r'S:\\\\ai\\\\skills\\\\cia\\\\references'); names=['evidence.md']\" in C:\\tmp\n")
+        names = ["evidence.md", "reporting.md", "theory.md", "sweeps/04-enumeration-environment-liveness.md"]
+        self.assertEqual(cold_run.refs_opened(log, names),   # theory.md appears only in output: not opened
+                         ["evidence.md", "reporting.md", "sweeps/04-enumeration-environment-liveness.md"])
 
 
 class EgmTests(unittest.TestCase):

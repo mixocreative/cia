@@ -158,13 +158,21 @@ def partial_reads(text):
     return sum(1 for line in text.splitlines() if PARTIAL_READ.search(line))
 
 
-REF_PATH = re.compile(r"references[\\/]((?:sweeps[\\/])?[\w.-]+\.md)")
-
-
-def refs_opened(transcript):
-    """The reference files a transcript names (any separator), as a sorted list. A name in the log means a
-    command touched it - a cat, a grep, a sed of the last lines - so this bounds reading from above."""
-    return sorted({m.replace("\\", "/") for m in REF_PATH.findall(transcript)})
+def refs_opened(transcript, names):
+    """Which of the skill's reference files (`names`, paths relative to references/) Codex's commands name:
+    an upper bound on reading (a grep or a tail counts too). Two traps met on the first real log: the log
+    also holds every file's *output*, and SKILL.md's index names all nineteen references, so only the
+    command line after each `exec` marker is read; and Codex opens files from Python one-liners
+    (`root=Path('...references'); names=['theory.md', ...]`), so a bare file name counts when the same
+    command mentions `references`, not only a `references/x.md` path."""
+    lines = transcript.splitlines()
+    commands = [lines[i + 1] for i, line in enumerate(lines[:-1]) if line.strip() == "exec"]
+    hit = set()
+    for cmd in (c.replace("\\\\", "/").replace("\\", "/") for c in commands):
+        if "references" not in cmd:
+            continue
+        hit.update(n for n in names if n in cmd or n.split("/")[-1] in cmd)
+    return sorted(hit)
 
 
 EGM_REVIEWERS = ("comprehension", "structural", "style", "design", "codebase-details",
@@ -411,7 +419,8 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         # Codex's -o keeps only its final message; its stdout is the event log of what it opened and ran.
         # Kept beside the report because "did it read the references?" is otherwise unanswerable.
         path.with_suffix(".transcript.log").write_text(res.stdout + "\n" + res.stderr, encoding="utf-8")
-        label += f"refs-opened {len(refs_opened(res.stdout + res.stderr))} | "
+        refs = sorted(str(f.relative_to(root / "references")).replace("\\", "/") for f in (root / "references").rglob("*.md"))
+        label += f"refs-opened {len(refs_opened(res.stdout + res.stderr, refs))}/{len(refs)} | "
     if facts:
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
     rq = receipts_quoted(out_text, root) if receipts else None
