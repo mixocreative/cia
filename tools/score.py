@@ -209,11 +209,10 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
     # a bar it was never measured against and blocked every push.
     findable = [r for r in rs[:first] if r["fixture"] == fixture]
     if any(r["miss"] == 0 and r["false"] == 0 for r in findable):
-        dirty = [r for r in group_any if r["miss"] or r["false"]]
-        if dirty:
-            r = dirty[-1]
-            print(f"{name.upper()}: a run on {token} has {r['miss']} miss / {r['false']} false positive on {fixture}, "
-                  f"where an earlier run had none. A miss is doctrine, never noise (RUNBOOK step 6).", file=sys.stderr)
+        blocking = doctrine_misses(group_any)
+        if blocking:
+            print(f"{name.upper()}: on {token}, {blocking} on {fixture}, where an earlier run had none. A miss the "
+                  f"paired run did not make up for is doctrine, never noise (RUNBOOK step 6).", file=sys.stderr)
             return 1
     if not earlier:
         print(f"{name}: {token} is the first scored commit on {fixture} with {model} - "
@@ -234,6 +233,37 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
     print(f"{name}: {token} on {fixture}: mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
           f"no miss, no false positive.")
     return 0
+
+
+MISSED = re.compile(r"missed:\s*([^.;|*]+)", re.I)
+
+
+def missed_of(note: str):
+    """Row ids from a `missed: E8, row 10` tag in the note, as a set; None when there is no tag."""
+    m = MISSED.search(note)
+    if not m:
+        return None
+    return {" ".join(x.split()).lower() for x in m.group(1).split(",") if x.strip()}
+
+
+def doctrine_misses(group: list[dict]) -> str:
+    """What blocks a commit: any false positive, an untagged miss, or a row EVERY run on it missed.
+
+    Since 2026-11-09 a row one run missed and its paired run found is attention variance, not doctrine:
+    the pair proves the doctrine finds it, and the miss still costs a row in the mean. Before that, one
+    run's miss blocked the commit, and on fixture-editor rows a sound run finds seven times in nine
+    (E8, E12) that made the gate a coin flip on a sound commit. A row lost by doctrine is lost by both
+    runs, and that still blocks."""
+    false = [r for r in group if r["false"]]
+    if false:
+        return f"a run has {false[-1]['false']} false positive"
+    dirty = [r for r in group if r["miss"]]
+    if not dirty:
+        return ""
+    if any(r.get("missed") is None for r in dirty):
+        return f"a run has {dirty[-1]['miss']} miss with no `missed:` tag naming the rows"
+    common = set.intersection(*[(r.get("missed") or set()) for r in group])
+    return f"every run missed {', '.join(sorted(common))}" if common else ""
 
 
 def floor_parts(earlier: list[dict]) -> tuple[float, float]:
@@ -281,6 +311,9 @@ def _parse(lines) -> list[dict]:
             # A row whose commit cell says "reverted" measured doctrine that no longer ships: it stays in the
             # history and in the floor, but it is never the commit under test.
             "reverted": "reverted" in cells[1].lower(),
+            # The rows a run missed, when the scorer tags them in the note (`missed: E8, row 10`). None when
+            # untagged: the paired-miss rule then cannot tell variance from doctrine and blocks.
+            "missed": missed_of(cells[9]) if len(cells) > 9 else None,
         })
     return out
 

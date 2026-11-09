@@ -12,8 +12,8 @@ import score  # noqa: E402
 HDR = "| Date | Skill commit | Runtime | Tier | Hits | Near | Miss | False+ | Minutes | Note |"
 
 
-def row(date, hits, near=0, miss=0, false=0, runtime="Claude Opus", tier="Screen", commit="abc"):
-    return f"| {date} | `{commit}` | {runtime} | {tier} | {hits} | {near} | {miss} | {false} | 5 | n |"
+def row(date, hits, near=0, miss=0, false=0, runtime="Claude Opus", tier="Screen", commit="abc", note="n"):
+    return f"| {date} | `{commit}` | {runtime} | {tier} | {hits} | {near} | {miss} | {false} | 5 | {note} |"
 
 
 def runs_text(audit, build, runtime_ok=True):
@@ -115,6 +115,21 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(self.run_score(runs_text(both, []), "--gate")[0], 0)
         weak = both[:-1] + [row("2026-11-02", 9, near=1, commit="bbbbbbb", tier=svc)]
         self.assertEqual(self.run_score(runs_text(weak, []), "--gate")[0], 1)       # 10.75 < 11 on one fixture
+
+    def test_a_row_one_run_missed_and_its_pair_found_is_variance_not_doctrine(self):
+        base = [row("2026-11-01", 11, commit="aaaaaaa"), row("2026-11-01", 11, commit="aaaaaaa")]
+        pair = base + [row("2026-11-02", 12, commit="bbbbbbb"),
+                       row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="**11.** missed: E8. rest")]
+        self.assertEqual(self.run_score(runs_text(pair, []), "--gate")[0], 0)    # mean 11 >= floor 10.5, E8 found by the pair
+        both = base + [row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: E8"),
+                       row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: E8, row 3")]
+        code, _, err = self.run_score(runs_text(both, []), "--gate")
+        self.assertEqual(code, 1)
+        self.assertIn("every run missed e8", err)
+        untagged = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 11, miss=1, commit="bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(untagged, []), "--gate")[0], 1)   # no tag: cannot tell, blocks
+        false = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 12, false=1, commit="bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(false, []), "--gate")[0], 1)      # a false positive always blocks
 
     def test_floor_follows_recent_median_and_cannot_drift_more_than_a_row(self):
         lucky = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(11, 1, 0), (11, 1, 0)]) for c in "bcde"]
