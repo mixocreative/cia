@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # untested.py reads the doctrine history
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: Fixture service tests (must be green - the defects sit under a green suite)
@@ -17,6 +18,8 @@ jobs:
         run: node --test
       - name: Lint (ruff over tools/ and the harness)
         run: pip install ruff==0.11.9 && ruff check tools/ tests/harness/cold_run.py tests/harness/test_cold_run.py tests/tools/
+      - name: Doctrine is never shipped untested (newest SKILL/references commit has scored runs)
+        run: python tools/untested.py
       - name: Skill frontmatter sanity
         run: |
           python - <<'PY'
