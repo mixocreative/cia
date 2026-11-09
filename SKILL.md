@@ -153,7 +153,7 @@ Six steps. Every step has a purpose no other step covers. Project runtime bindin
 
 **Step 1 — Fast lint + scope tests (5–10 min).** Run the fast-suite command; the static analyser; the style linter; the dependency vulnerability audit. Fail-stop on red architecture / contract tests before proceeding. Follow the project's `fix-red-tests` protocol memory if one exists — reds are the next task, not a footnote.
 
-**Step 2 — Universal integrity audit (this skill's doctrine).** Load and execute the reference files in the §0.13 order: FIRST the VSM map of the codebase (`references/theory.md`, then §0.9 step 0 in `references/sweeps/`: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN `references/wiring-walk.md` on that map — the wiring question written for this system in the report's first paragraph, the lifecycle state map (reference / expected path · our path · failure/retry path · operator-visible result), seven answers for every connection, the fault set G1–G7 (recovery or a visible operator problem — nothing else passes), the per-lifecycle question banks, and the rule traceability matrix with a gap register, every finding naming its layer (function logic, relationship wiring, lifecycle rule) — THEN the twenty-four mandatory sweeps of §0.9 / `references/sweeps/` (S1–S24, of which **S15 is the highest-value sweep wherever the primary quantity crosses components or parties, or a step cannot be undone** — scene state to file, job claim to result, rows to a downstream consumer, money to a provider — and runs first when time is short) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `references/doctrine.md` §1 Fundamental Audit Doctrine (evidence grading), §3 Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — load the matching §4–§6 template from `references/context-templates.md` if one fits), `references/theory.md` §2 VSM Governance Model (Systems 1–5 against that profile), doctrine §7 Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and doctrine §8 Domain Audit Checklist. Write every finding in the `references/reporting.md` §9 format and grade it on its §10 severity model. Grade against the invariant stated in-line, not against generic "what if".
+**Step 2 — Universal integrity audit (this skill's doctrine).** No finding is written until every receipt the §0.13 receipt rule names can be quoted; a run short of time narrows the tier's matrices, never the reading. Load and execute the reference files in the §0.13 order: FIRST the VSM map of the codebase (`references/theory.md`, then §0.9 step 0 in `references/sweeps/`: every component to Systems 1–5 / 3\* and its channels, reported as a table), THEN `references/wiring-walk.md` on that map — the wiring question written for this system in the report's first paragraph, the lifecycle state map (reference / expected path · our path · failure/retry path · operator-visible result), seven answers for every connection, the fault set G1–G7 (recovery or a visible operator problem — nothing else passes), the per-lifecycle question banks, and the rule traceability matrix with a gap register, every finding naming its layer (function logic, relationship wiring, lifecycle rule) — THEN the twenty-four mandatory sweeps of §0.9 / `references/sweeps/` (S1–S24, of which **S15 is the highest-value sweep wherever the primary quantity crosses components or parties, or a step cannot be undone** — scene state to file, job claim to result, rows to a downstream consumer, money to a provider — and runs first when time is short) for cross-boundary invariant violations (integration-level / emergent defects), each enumerated along the map's channels and each with its own report line — this is the audit's primary target and it runs before any function-level reading; THEN `references/doctrine.md` §1 Fundamental Audit Doctrine (evidence grading), §3 Context Discovery (profile the system's type, state scope, concurrency, failure tolerance — load the matching §4–§6 template from `references/context-templates.md` if one fits), `references/theory.md` §2 VSM Governance Model (Systems 1–5 against that profile), doctrine §7 Universal Test Matrix (happy path through recovery, applied to the critical flows §0.5 and §3 identified), and doctrine §8 Domain Audit Checklist. Write every finding in the `references/reporting.md` §9 format and grade it on its §10 severity model. Grade against the invariant stated in-line, not against generic "what if".
 
 **Depth tiers — say which one ran.** The sweeps as written are days of work at full depth on a real system, and a run that silently sampled is S18's original sin. So the run names its tier in the first line of the report, and the tier fixes what "swept" means:
 
@@ -498,12 +498,16 @@ Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map,
 
 ### The reading receipt — how a miss names its own cause
 
-**A run that cannot quote the receipts has run the index, not the doctrine — and says so in its
-first line.** `SKILL.md` is a runbook; the audit is in `references/`. A run that works from this
-file's sweep index alone will produce plausible sweep lines with no method behind them, and until
-the receipts existed that was indistinguishable in the report from a doctrine gap. It is not a
-failure to admit; it is a failure to hide. Two of six cold runs on 2026-09-24 did exactly this
-and both declared it, which is why both are diagnosable.
+**A missing receipt is a step not yet done, not a line to confess.** `SKILL.md` is a runbook; the
+audit is in `references/`. Before the first finding is written, the run has read every Step 2 file
+§0.13 lists for this system — theory, sweeps/, wiring-walk, doctrine, reporting, evidence, and
+surface-map then journey-map when the ROUTE block shows a page, CLI or API — and can quote each
+receipt. A file it cannot quote yet is read now. A run that works from this file's sweep index
+writes plausible sweep lines with no method behind them: on 2026-11-09 (RUNS, audits O–W, the same
+doctrine) the runs that skipped the references and *declared* it scored 7.1, the runs that read
+them 9.8. Declaring the skip made it diagnosable; it did not make it an audit. The only receipt a
+run may leave unquoted is a file it could not open — a refused read, a missing path — and that
+line quotes the refusal.
 
 
 **Every** reference file this skill loads ends with a **receipt line** — every one, checked by `tools/receipts.py`, because a file with no receipt cannot be told apart from a file nobody opened, and that is the confusion receipts exist to remove. A run that reads a reference file carrying no receipt says so on the line, as one did on the day they were introduced, rather than inventing a phrase or dropping the line: a short phrase that appears
@@ -520,8 +524,9 @@ cover the defect**, or **the file carrying that doctrine was never opened**. Tho
 fixes, and for a year the harness could not tell them apart. A missing receipt means the run
 worked from this file's index instead of the doctrine, and the fix is packaging, not text.
 
-A run that cannot produce a receipt says so plainly on that line rather than omitting it; an
-omitted line is read the same way a missing sweep line is.
+An omitted receipts line is read the same way a missing sweep line is, and a receipts line that
+lists a Step 2 file as "not read" when nothing refused the read is a step skipped, not a step
+reported.
 
 **Testing this skill.** `tests/RUNBOOK.md` and `tests/fixture-service/` are the harness, and since 2026-09-24 it is scored in two halves: the planted defects a reading finds, and — in `RUNS.md`'s runtime table — what the run actually executed (ladders, probes, and an evidence ledger whose PASS rows cite artefacts). The fixture is runnable, so its S2 race is fired, not predicted (RUNBOOK, "the live probe"). **After any edit to this skill, before the push:** run `python tests/harness/cold_run.py --mode audit --model sonnet` twice (and `--mode build` when build doctrine changed), score each against its `tests/EXPECTED-*.md` key, record the rows in `tests/RUNS.md`, and let `python tools/score.py --gate` decide: no miss, no false positive, and a two-run mean within half a row of the best earlier commit. The pre-push hook and CI enforce the gate; the runs are what feed it.
 
