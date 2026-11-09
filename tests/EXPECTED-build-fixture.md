@@ -70,7 +70,7 @@ From `EXPECTED-fixture-service.md` "Verified controls". Each is correct, and thr
 Every file this key cites, with the sha256 it had when a person last read the ranges against it. A changed digest fails `tools/check_key_lines.py` — re-read, then re-pin.
 
 - `config.yaml` 236e936fd0caabf9628ee9c0d615cc76d2510f6cd382acd66104eaab3ef2685e
-- `runner/cli.py` 377bf46cec016e955a09fefe778934701b6b20c884c2297956f8ea4cd7dce5a3
+- `runner/cli.py` 1bee9aa0e7a966ba4b64d730a4bbcb8e26dee20d753a50ffcca43099473a7d57
 - `runner/db.py` f1e578bb84cc4ef308e0365f8a72d137715feccf936af26f24e9953993c3995b
 - `runner/digest.py` 192cdae138e05ddb4f36f20da254844980c8e8f0777df613f2bd7dc36cdeed24
 - `runner/scheduler.py` df6beee030d10d869e7fe875f728edf1e92133d06c4935a2f5481660d9c9c0ba

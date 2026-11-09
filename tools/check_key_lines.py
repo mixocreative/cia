@@ -92,7 +92,9 @@ def main() -> int:
                         f"- the key's {label} of a range has drifted"
                     )
 
-            seen[rel] = hashlib.sha256(target.read_bytes()).hexdigest()
+            # Line endings are normalised before hashing: the same content checked out with CRLF
+            # (Windows, core.autocrlf) must not fail a pin that was taken on LF, or the reverse.
+            seen[rel] = hashlib.sha256(target.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
         for rel, digest in sorted(seen.items()):
             if rel not in recorded:
