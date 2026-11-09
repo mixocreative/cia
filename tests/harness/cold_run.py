@@ -521,15 +521,18 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         label += f"refs-opened {len(refs_opened(res.stdout + res.stderr, refs))}/{len(refs)} | "
     if facts:
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
-    rq = receipts_quoted(out_text, root) if receipts else None
-    if rq:
-        label += (f"receipts {rq[0]}/{rq[1]} | partial-reads {partial_reads(out_text)} | "
-                  f"sweep-sites {sweep_sites(out_text)}/24 | ")
-    if traces:
-        label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
     collected = ""
     if report_file:
         label, collected = collect_report(Path(cwd) / report_file, root, label)
+    # The report is the collected file when there is one; the reply is then a summary, and counting
+    # receipts in it printed "receipts 0/19" on runs whose report quoted all nine.
+    report = collected or out_text
+    rq = receipts_quoted(report, root) if receipts else None
+    if rq:
+        label += (f"receipts {rq[0]}/{rq[1]} | partial-reads {partial_reads(report)} | "
+                  f"sweep-sites {sweep_sites(report)}/24 | ")
+    if traces:
+        label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
     header = (
         f"<!-- skill commit {commit} | runtime {runtime} | "
         f"model {model or 'default'} | {label}exit {res.returncode} -->\n"
