@@ -123,6 +123,15 @@ class ScoreTests(unittest.TestCase):
         first = audit[:2] + [row("2026-11-02", 11, miss=1, commit="bbbbbbb", runtime=res)]
         self.assertEqual(self.run_score(runs_text(first, []), "--gate")[0], 1)   # even on a model's first commit
 
+    def test_other_runtimes_section_is_not_a_gate_input(self):
+        # A runtime's first measurement cannot be a regression; its rows live after the build table.
+        other = "\n## Other runtimes (2026-11-09 onward)\n\n" + HDR + "\n" + row("2026-11-12", 0, near=10, miss=2, runtime="Codex") + "\n"
+        t = runs_text(self.AUDIT, [row("2026-11-10", 5), row("2026-11-11", 8)]) + other
+        self.use(t)
+        self.assertEqual(len(score.rows()), 2)
+        self.assertEqual(len(score.build_rows()), 2)
+        self.assertEqual(self.run_score(t, "--gate")[0], 0)
+
     def test_build_gate_is_a_ratchet(self):
         build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
         self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)

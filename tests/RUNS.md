@@ -238,6 +238,8 @@ should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `b058b61` (reverted in `1913add`) | Claude **Sonnet** (harness, audit run AE; resolved claude-sonnet-5-5, $1.39, 40 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 3.6 | **11.5. Receipts 9/19.** Near: row 6 (stuck renderer under S16/S13b; S22 named only on the sweep line). Kept the 200-row window as a verified control. Mean of AD and AE 11, with a false positive: reverted under the pre-registered rule. |
 | 2026-11-09 | `920a1d4` (fixture gains `cli show`; doctrine = `db6fd0f`) | Claude **Sonnet** (harness, audit run AF; resolved claude-sonnet-5-5, $1.09, 37 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 2.6 | **11.5. Receipts 9/19, but five of them earned by reading 'only the closing receipt line, not the whole file'** (doctrine, evidence, browser-walks, both maps), declared. Near: row 8 (`with_backoff` under S12). Row 5 a hit inside F8 (`scheduler.py:105`, S20). Kept the D5 cap as deliberate. |
 | 2026-11-09 | `920a1d4` (as AF) | Claude **Sonnet** (harness, audit run AG; resolved claude-sonnet-5-5, $1.90, 46 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 1 | 7.3 | **10.5. Receipts 9/19, read in full.** Near: row 10 (LOW, no sweep). **False positive:** RUN-017 files the D5 cap as MEDIUM, 'an ADR decided this, so I escalate it', which SKILL.md line 116 instructs ('a finding that contradicts a recorded ADR is escalated'). RUN-002 (cancel acknowledged, then a claim overwrites it) is the known true extra. |
+| 2026-11-09 | `9d30f64` | Claude **Sonnet** (harness, audit run AH; resolved claude-sonnet-5-5, $1.39, 42 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 3.6 | **11.5. Receipts 9/19.** The ADR rule at work: 'The 200-row page cap is D5's decision', under 'Not filed, on purpose', and the digest catch kept because 'its premises hold'. Unanchored: row 7 (CIA-04 S16, no line). |
+| 2026-11-09 | `9d30f64` | Claude **Sonnet** (harness, audit run AI; resolved claude-sonnet-5-5, $1.43, 40 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 4.3 | **11. Receipts 9/19.** Near: row 8 (`with_backoff` LOW at `legacy_retry.py:19-21`; S13 orphan list unanchored). Unanchored: row 5 (heartbeat orphan F7 S20.1 and S20 'outermost NONE', no line). F15 applies the new rule: D5's premise 'the CLI reaches any job by id' is false *in the shipped config* because the CLI is on `:memory:` (row 11's consequence, which the key names); 'D5's design choice itself ... I did not file it'. Judged a true extra. Mean of AH and AI 11.25: the rule ships. |
 
 **The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
 12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
@@ -290,7 +292,21 @@ with or without `shell_environment_policy.inherit=all` or `disk-full-read-access
 System32 starts. So the Windows restricted-token sandbox cannot execute a per-user Python install.
 The fixes are `-s danger-full-access` or a different Codex Windows sandbox setup; each loosens a
 security boundary and is the owner's decision, so neither is taken. Until then the README claims
-Codex trigger behaviour only, and no Codex audit score exists.
+Codex trigger behaviour only, and no Codex audit score exists. **Superseded the same afternoon:** the owner granted
+Codex full access (`ab8a466`); see "Other runtimes" at the end of this file.
+
+**Two precision lessons from runs AD-AI (2026-11-09).** (1) *A recorded decision is not a finding
+because another design was possible.* SKILL.md line 116 said "a finding that contradicts a recorded
+ADR is escalated", and runs AD and AG did exactly that to D5's capped list: two false positives in
+six runs, both instructed. `9d30f64` makes a decision a finding only when a premise it states is
+false in the code, and disagreement an ungraded owner question; AH and AI then kept the cap unfiled,
+and AI found the one premise that *is* false in practice (row 11's consequence). (2) *A receipt can
+be earned without the reading.* Run AF quoted all nine receipts and said that for five files it
+"read only the closing receipt line, not the whole file". The receipt rule ("not security - an
+auditor that wants to fake it can") has met its predicted limit on the first model that is pushed
+to quote them. It was declared, so the instrument still sees it; the fix is a question for the
+doctrine, not a quiet tightening: a receipt placed at the file's end proves the end was reached,
+and the cheapest way to reach the end is to jump there. Named, not yet taken.
 
 ## Build-mode runs (2026-11-09 onward)
 
@@ -303,3 +319,25 @@ Codex trigger behaviour only, and no Codex audit score exists.
 | 2026-11-09 | `a462b62` (build form reverted in `9ba7e3c`) | Claude **Sonnet** (harness `cold_run.py --mode build`, throwaway copy) | `build mode: make the job claim in runner/scheduler.py race-free and crash-safe, production-ready` | 4 | 4 | 4 | 0 | n/r | **4/4/4/0 = 2, below the best 4.** Still a prose summary; no obligation row, ledger row, line 14 or closure gates, and no receipts - build-standard.md was never opened, so the 'report is the form' wording (SKILL 0.10a and build-standard 3) did not reach it. Hits B1, B5, B8, B9; engineering sound again. Reverted under the ratchet. |
 | 2026-11-09 | `0aebd2b` (build form reverted in `3db4312`) | Claude **Sonnet** (harness, build run 5) | `build mode: make the job claim in runner/scheduler.py race-free and crash-safe, production-ready` | 4 | 5 | 3 | 0 | n/r | **3.5.** The inlined form reached it: a well-formed obligation ID `JOB.CLAIM.exclusive@1` and receipts for build-standard. Still no ledger row or line 14; closure gates skipped because build-orchestration was not read. Test names carry no ID. |
 | 2026-11-09 | `0aebd2b` (build form reverted in `3db4312`) | Claude **Sonnet** (harness, build run 6) | `build mode: make the job claim in runner/scheduler.py race-free and crash-safe, production-ready` | 4 | 4 | 4 | 0 | n/r | **2.** Prose summary; tests named `OBL_CLAIM_001_*` by property; no obligation row, ledger row, line 14 or closure gates; no receipts. Third build-doctrine attempt reverted: the report gap is a known limitation. |
+
+## Other runtimes (2026-11-09 onward)
+
+Rows for a runtime other than the one the gate is calibrated on. Not read by `tools/score.py`: a
+runtime's first measurement cannot be a regression, and the miss rule (any model, never pooled)
+would otherwise block every commit until a new runtime is perfect. A runtime joins the gate once it
+has two runs on one commit and its own rule is written here. Scored with the RUNBOOK's categories;
+the note gives the sweep-free count too, because Codex does not label a sweep per finding.
+
+| Date | Skill commit | Runtime | Tier | Hits | Near | Miss | False+ | Minutes | Note |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-09 | `920a1d4` | **Codex** (codex-cli 0.157, model default, `-s danger-full-access` on a throwaway copy) | `run tests` alone on **fixture-service** | - | - | - | - | 0.8 | **Trigger passes in full:** `python -m unittest` ran, "8 tests ran, 0 failures", line 7 `not run (harness fence)`, the audit offered in one line. The earlier run under workspace-write could not start Python. |
+| 2026-11-09 | `920a1d4` | **Codex** (as above, audit run C1) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 0 | 11 | 1 | 0 | 10.1 | **4.5 by the RUNBOOK; 9.5 sweep-free** (10 hit, 1 near: row 12 MEDIUM, 1 miss). Miss: row 8, `with_backoff` only as 'the handler/retry promise still unwired', no site, no grade. No sweep per finding (one S1-S24 disposition paragraph), no Step 6 lines, receipts 0/19. Row 5 found (heartbeat file 'never reads it', `scheduler.py:99`). All controls kept. Ran probes, graphify and an Ollama probe on its own. |
+| 2026-11-09 | `9d30f64` (launched while HEAD was `920a1d4`; the commit landed mid-run) | **Codex** (as above, audit run C2) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 0 | 10 | 2 | 0 | 5.8 | **3 by the RUNBOOK; 8 sweep-free** (10 hit, 2 miss). Misses: row 5 (no heartbeat-file or outermost-check finding), row 8 (absent). Same format gap, receipts 0/19. D5 window and D4 kept as controls. |
+
+**What the two Codex audits say.** Codex finds the defects a careful reviewer finds (10 of 12 rows
+anchored at their grade, every control kept, no false positive) and misses the two cia teaches and
+the rival arms also miss: S20's dead watchdog and S13's orphan capability. It does not follow the
+report contract at all - no sweep per finding, no receipts, no Step 6 lines - so the reading rule
+that fixed Claude's runs has not reached it. Sweep-free it scores 8.75, between ponytail (6.5) and
+cia on Claude (11.25); by cia's own rules it scores 3.75. The next Codex question is whether it
+loads the references at all, which its reports never say.
