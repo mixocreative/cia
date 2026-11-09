@@ -447,6 +447,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-10 | `798ee54` (as C16) | **Codex** (as above, audit run C17) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 6.9 | **11.5 on its file (5/6, titled 'protocol incomplete': it says the reference set was not fully read).** Row 12 filed CIA-004 HIGH. Near: row 5 (CIA-011 files the missing outer check on the monitor; CIA-012 at `:99-105` is a row/file disagreement, not the unread file). **First Codex pair with no miss: row 12 HIGH in both, against missed or MEDIUM in 6 of the 15 runs before. The reading and the report form are what still vary.** |
 | 2026-11-10 | `798ee54` (HEAD `f98055a`, doctrine unchanged) | **Codex** (as above, audit run C20) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 14.8 | **9.5 on its file (6/6), receipts 9/19, refs opened 16/26, sweep-sites 23/24.** missed: row 9 - its S21 line names `test_no_jobs_are_stuck_on_a_fresh_db` at `:25-28` as 'only a negative, no stale-job positive' and its P2 says to add one, never filed or graded (S21 grades a vacuous pass on a safety net HIGH). Near: row 5 (F6 files the monitor's missing schedule, not the unread heartbeat file). Row 12 F10 HIGH. |
 | 2026-11-10 | `798ee54` (as C20) | **Codex** (as above, audit run C21) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 9.2 | **9.5 on its file (6/6), receipts 9/19, refs opened 16/26, sweep-sites 23/24.** missed: row 9 (its S21 line checks the cancel test's sibling and never reaches `:25-28`). Near: row 5 (F4 'no outer liveness check', the table's heartbeat row at `:99` not the file). Row 12 F11 HIGH. F2 (a late `finish` turns `done` back into `queued`; no owner or state predicate) is a true extra, not the bounded-retry control, which is about the loop ending. **Report form held in both: 6/6, every part present. Over four runs on `798ee54` the file was written 3 of 4 times (C16 none) and row 9 was found 2 of 4.** |
+| 2026-11-10 | `798ee54` (HEAD `37905ba`, doctrine unchanged) | **Codex** (as above, `--effort high`, audit run C22) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 11.2 | **12 on its file (6/6), receipts 12/19, refs opened 19/26, sweep-sites 21/24: the first Codex run to find every row.** Row 5 filed CIA-08 HIGH (`scheduler.py:104-105` 'writes a heartbeat file, with no reader', 'an outer dead-man check'); row 9 CIA-13 HIGH. True extras: CIA-11 (late `finish` overwrites `cancelled`) and CIA-15 (every `IntegrityError` read as a duplicate - run Y's RUN-13, not the idempotency control, which it lists as verified). |
+| 2026-11-10 | `798ee54` (as C22) | **Codex** (as above, `--effort high`, audit run C23) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 10.0 | **10 on its file (6/6), receipts 9/19, refs opened 18/26, sweep-sites 24/24.** missed: row 5 - its lead dispositions call `scheduler.py:99` 'also orphaned ... not a liveness proof until a detector reads it' and S20 says 'no outer watchdog', never filed or graded (C12's rule). Row 9 CIA-13 HIGH. **The high-effort pair: 12 and 10, mean 11, against 10.5 for the four medium runs on the same doctrine; row 9 filed in both (2 of 4 at medium), and the pair read together misses nothing.** |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
@@ -501,6 +503,13 @@ of S3's kind: S21's grading already says a vacuous pass on a safety net is HIGH,
 site and then did not file it, the "named, not filed" pattern the sweep-line rule (C7) and the
 filing check (the sixth mechanism) were measured against and did not move. So the advice stays
 "run twice and read both", stated as what it buys: fewer misses, not none.
+**The one lever never measured: reasoning effort (C22/C23, 2026-11-10).** C1-C21 all ran at the
+owner's `config.toml` default, `medium`. One pair at `--effort high` on the same doctrine scored 12
+and 10 (mean 11 against 10.5 at medium), filed row 9 in both, gave Codex its first full-score run,
+and read together missed nothing; it cost about the same time (10-11 min against 9-15). Two runs are
+a direction, not a result, so `score.py` gates each effort as its own series (`model_of` names a row
+`codex-high`; `codex_gate` runs per series) and README recommends high effort with the measured
+numbers beside it. The medium series stays gated as it was.
 
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
@@ -530,3 +539,6 @@ was reported "left running" (stopped by hand the same hour). The agent now runs 
 `CIA_HARNESS_RUN=<copy>` in its environment, which every child inherits, and `procs.marked` reads it
 back (psutil, the harness's one optional dependency; without it the rule is off and the other two
 stand). Test: `test_a_detached_grandchild_whose_parent_exited_is_still_marked_as_the_runs`.
+**Verified live on C22/C23 (run in parallel):** C22 started `graphify watch .` (no copy in its command
+line) and stopped it as its own; C23, ending first, saw that same watcher, left it running as not
+its own, and stopped its own `graphify watch <tmp copy>`. No `graphify` process was alive after both.
