@@ -34,7 +34,8 @@ jobs:
       - name: Design-check guard tests (each rule fails on a planted defect)
         run: python -m unittest discover -s tests/design-check -t tests/design-check
       - name: Harness launcher tests (prompts read from RUNBOOK, build runs on a copy)
-        run: python -m unittest discover -s tests/harness -t tests/harness
+        # psutil: procs.marked's only dependency; without it the env-mark test skips instead of running
+        run: pip install psutil==7.1.1 && python -m unittest discover -s tests/harness -t tests/harness
       - name: Agent definition tests (no doctrine duplicated outside references/)
         run: python -m unittest discover -s tests/plugin -t tests/plugin
       - name: Scorer tests (build rows never move the audit gate)
