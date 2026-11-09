@@ -1,6 +1,6 @@
 # fixture-editor — answer key
 
-**Eleven** planted defects and **seven** verified controls in a Node notes editor whose primary
+**Twelve** defects (eleven planted, one the fixture acquired by accident) and **seven** verified controls in a Node notes editor whose primary
 quantity is **the saved document on disk**. A Screen-tier `/cia` run on this directory must report
 every row below with a sweep, a `path:line` inside the cited range, and a grade no lower than
 shown. Scored like `EXPECTED-fixture-service.md`: hit 1, near (late, a grade low, or unanchored)
@@ -29,8 +29,17 @@ Run the suite first (`node --test`): 8 tests, all green. Every defect below sits
 | E9 | **S11** boundary / S11.1 byte splitting | `src/titles.js:7` | `fileNameFor` truncates the UTF-8 **bytes** to `maxTitleBytes` and decodes, so a title with a multi-byte character at the cut ends in `U+FFFD`, and two titles that differ only after the cut export to the same file name. | Text is cut on characters, not bytes | MEDIUM |
 | E10 | **S21** runner contamination | `tests/editor.test.js:56-59` | The test sets `config.maxTitleBytes = 8` on the **shared** config object and never restores it (the `afterEach` restores only `dataDir`), so every later test in the process runs with an 8-byte title limit; `export writes the document as markdown` passes only because it computes its expectation through the same mutated function. | A test leaves shared state as it found it | MEDIUM |
 | E11 | **S21** vacuous pass | `tests/editor.test.js:49-54` | `a fresh session has no conflicts` asserts `conflicts()` is empty, and no test anywhere makes it non-empty, so it would pass if `conflicts()` always returned `[]`. Beside it, the listing tests (`:38-47`) are the paired shape done right. | A test asserting emptiness needs a sibling proving non-emptiness | MEDIUM |
+| E12 | **S1 / S23** stale entry under an in-flight save (not planted) | `src/autosave.js:10-13`, `:20-22` | `edit()` replaces the map entry while `saveAll` holds the old one; the save then advances the **old** entry's `baseVersion`, so the new entry still carries the version before the save and every later tick is refused as a conflict with the session's own save. Typed text never reaches disk, and E7 means nobody is told. | One owner of a document's base version; a save advances the entry the editor is using | HIGH |
 
 Also expected, not separately scored: **S14** — the run states its scope as this directory; **S19** — `dataDir` resolves against the project root (`src/config.js:19`), so no host requirement is in question; `titleBar` (`src/render.js:20`) has no caller in the tree (there is no window host here), which a run may file as S13 or name as a boundary; one corrupt document in `listDocs` (`src/store.js:46`) fails the whole start screen, a true extra.
+
+### A note on E12's provenance
+
+E12 was **not planted**. `edit()` was written to keep the base version of an open document, and it
+does, on a new object, while `saveAll` advances the old one. Both cold runs on the first day (EA,
+EB) found it with a probe, before anyone had read it as a defect. It is kept for the reason
+fixture-service keeps its row 11: a defect a fresh run found that the author did not know was there
+is the best evidence the fixture is not just the author's list.
 
 ## Verified controls (must appear under Verified Controls, not as findings)
 
