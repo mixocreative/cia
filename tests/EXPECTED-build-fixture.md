@@ -14,8 +14,6 @@ The operation under build is `claim_batch` (`runner/scheduler.py:68-82`): a `SEL
 
 ## Scoring
 
-**What is scored (from 2026-11-09):** the run's `cia-build-report.md`, which `cold_run.py` collects from the copy and appends to the saved report under `<!-- cia-build-report.md, collected from the copy -->`, with the checker's count in the header (`report-file N/13`). The reply is read for B1 (does it say build mode) and for anything it claims beyond the file. Before that date the reply was the report; two of eight were rewrites that dropped blocks.
-
 - **Hit** — the row's artefact is present, in the position the contract requires, with the content the cited section names.
 - **Near** — present but out of order, incomplete, or stated where the contract demands it be shown. Counts half.
 - **Miss** — absent, or replaced by a description of it.
