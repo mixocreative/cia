@@ -175,9 +175,9 @@ Don't — trust the evidence. Reading code never produces PASS in this skill; on
 <details>
 <summary><strong>Which agents does it run on?｜支援哪些 Agent？</strong></summary>
 
-Tested on Claude Code (plugin or skill directory), where the harness scores every change. Tested on OpenAI Codex (codex-cli 0.157, Windows, full access on a throwaway copy): a bare `run tests` behaves as specified, and two audits found 10 of the 12 planted defects each with no false positive, but Codex does not yet follow cia's report contract (no sweep per finding, no reading receipts) and misses the dead-watchdog and orphan-capability classes (`tests/RUNS.md`, "Other runtimes"). The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+Tested on Claude Code (plugin or skill directory), where the harness scores every change. Tested on OpenAI Codex (codex-cli 0.157, Windows, full access on a throwaway copy): a bare `run tests` behaves as specified, and since Step 6 says the final reply is the report, Codex audits follow cia's report form (sweep per finding, numbered lines, reading receipts) and score 10 of 12 against Claude's 11.5, each run missing one planted defect (`tests/RUNS.md`, "Other runtimes"). The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
 
-已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。也已在 OpenAI Codex（codex-cli 0.157，Windows，在拋棄式副本上給予完整權限）上測試：單獨說 `run tests` 的行為符合規格；兩次稽核各找到 12 個預埋缺陷中的 10 個，沒有誤報。但 Codex 目前還不遵守 cia 的報告格式（每項發現未標明掃描項目，也沒有閱讀收據），而且漏掉「失效看門狗」與「孤立功能」這兩類缺陷（見 `tests/RUNS.md` 的「Other runtimes」）。
+已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。也已在 OpenAI Codex（codex-cli 0.157，Windows，在拋棄式副本上給予完整權限）上測試：單獨說 `run tests` 的行為符合規格；自從 Step 6 規定「最後的回覆就是報告」之後，Codex 的稽核也遵守 cia 的報告格式（每項發現標明掃描項目、編號清單、閱讀收據），得分 10／12，Claude 為 11.5，每次各漏掉一個預埋缺陷（見 `tests/RUNS.md` 的「Other runtimes」）。
 </details>
 
 ---
