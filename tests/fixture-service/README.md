@@ -21,7 +21,7 @@ runner/monitor.py            health check over workers and stuck jobs
 runner/status_page.py        operator status page, one renderer per job state
 runner/legacy_retry.py       old retry helper
 runner/digest.py             weekly operator digest (read-only, degrades per D4)
-runner/cli.py                operator commands: cancel, digest, drain
+runner/cli.py                operator commands: cancel, digest, drain, show
 tests/test_scheduler.py      the service's only tests
 docs/ARCHITECTURE.md         the one design decision the audit must respect
 ```

@@ -55,7 +55,7 @@ counts against the run.**
 | **Digest degrades** | `runner/digest.py:20-24` | **defect 2** — a catch that returns a default | Fail-open on a **display** path, which is the axis S3 itself exempts, named by **ADR D4** with its reason, and the degradation is *visible* — it says "unavailable", never a zero. Nothing acts on its output. |
 | **Cancel is a safe select-then-act** | `runner/cli.py:26-38` | **defect 3** — read a status, then write | The predicate is **repeated in the `UPDATE`** and `rowcount` decides the answer, so a worker that claims the job in between wins and the operator is told no. This is the correct twin of `claim_batch`; an auditor that flags both has not read the `WHERE`. |
 | **`drain_batch` has a consumer** | `config.yaml:6` → `runner/cli.py:60` | **defect 1** — a dead control | A bare-identifier grep hits config and exactly one runtime reader. README documents the command. S13's own false-orphan rule covers this: grep the identifier alone, and read every hit. |
-| **The page's 200-row cap** | `runner/status_page.py:25`, ADR D5 | an unpaged list (S22.7) | D5 names it a triage window and names where totals live instead (`runner.digest`), and single-job access is the CLI. A cap with a cited alternative surface is a decision, not a gap. |
+| **The page's 200-row cap** | `runner/status_page.py:25`, ADR D5 | an unpaged list (S22.7) | D5 names it a triage window and names where totals live instead (`runner.digest`), and single-job access is the CLI (`python -m runner.cli show <id>`, `runner/cli.py:65-71`, added 2026-11-09 after runs AA and AD found D5 citing a command that did not exist). A cap with a cited alternative surface is a decision, not a gap. That `show`, like every CLI command, reads the `:memory:` store is row 11, not this control. |
 | **`cancelled` has a renderer** | `runner/status_page.py:21` | — | The counter-example to defect 6: five of six statuses render, which is what makes `stuck`'s absence a defect rather than an unfinished module. Flagging this one means the auditor listed the enum instead of diffing it. |
 | **Paired emptiness assertions** | `tests/test_scheduler.py:29-45` | **defect 9** — a test asserting nothing happens | `test_cancel_returns_false_once_a_worker_holds_the_job` is immediately followed by the sibling proving the true case, and `test_digest_says_so_when_there_is_nothing` by one proving the non-empty case. This is the shape defect 9 is missing, sitting next to it. |
 
@@ -74,7 +74,7 @@ counts against the run.**
 Every file this key cites, with the sha256 it had when a person last read the ranges against it. A changed digest fails `tools/check_key_lines.py` — re-read, then re-pin.
 
 - `config.yaml` 236e936fd0caabf9628ee9c0d615cc76d2510f6cd382acd66104eaab3ef2685e
-- `runner/cli.py` e74bcddb15149bb8d9d330ae36ca0ba2909f087dec6adc1665ccba3c35dca0b1
+- `runner/cli.py` 377bf46cec016e955a09fefe778934701b6b20c884c2297956f8ea4cd7dce5a3
 - `runner/db.py` f1e578bb84cc4ef308e0365f8a72d137715feccf936af26f24e9953993c3995b
 - `runner/digest.py` 192cdae138e05ddb4f36f20da254844980c8e8f0777df613f2bd7dc36cdeed24
 - `runner/monitor.py` ba1a1cd85b6339dcaa7943fa50eee33694c9ec6983afae51004783fc8e29d556

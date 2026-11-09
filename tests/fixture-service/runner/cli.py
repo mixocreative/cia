@@ -3,9 +3,9 @@
     python -m runner.cli cancel <job-id>     cancel a job that has not started
     python -m runner.cli digest              print the weekly digest
     python -m runner.cli drain               claim and report one batch, then exit
+    python -m runner.cli show <job-id>       print one job: status, attempts, claimed_by, last_error
 
-`drain_batch` in config.yaml is read here and nowhere else; it is the batch size an
-operator draining a backlog by hand gets per invocation. README.md documents the command.
+`drain_batch` (config.yaml) is read here only: the batch size of one drain. README documents it.
 """
 from __future__ import annotations
 
@@ -61,6 +61,14 @@ def main(argv: list[str]) -> int:
         claimed = claim_batch(conn, worker=identity["name"], limit=size)
         print(f"drain: claimed {len(claimed)} of at most {size}")
         return 0
+
+    if command == "show":
+        row = conn.execute(
+            "SELECT id, kind, status, attempts, claimed_by, last_error FROM jobs WHERE id = ?",
+            (int(argv[1]),),
+        ).fetchone()
+        print(dict(row) if row else f"no job {argv[1]}")
+        return 0 if row else 1
 
     print(f"unknown command: {command}", file=sys.stderr)
     return 2
