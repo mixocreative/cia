@@ -61,7 +61,7 @@ the references; the other six worked from SKILL.md and one to three sweep files.
 |---|---|---|---|---|
 | no skill | 2 | 2.75 | 3 | $0.26 |
 | ponytail-audit | 2 | 6.0 | 2 | $0.21 |
-| cia `119040b`-`a30edff` (six runs, AL-AQ) | 6 | 11.75 | 0 | $1.55 |
+| cia `119040b`-`a30edff` (six runs, AL-AQ: 12, 12, 11, 12, 11.5, 11.5) | 6 | 11.67 | 0 | $1.52 |
 | cia on Codex (`a30edff`, C4-C5) | 2 | 10 | 1 | n/r |
 
 - Read cia now leads ponytail by about six rows on this model. The rows the rivals miss every run are
