@@ -158,6 +158,31 @@ def partial_reads(text):
     return sum(1 for line in text.splitlines() if PARTIAL_READ.search(line))
 
 
+# A 2a sweep line that names sites. Added 2026-11-09: Codex runs C4 and C5 each closed a sweep with
+# a finding ref and no site list, and each missed the second instance of a class in a file whose
+# first instance it had filed. A sweep line is one that STARTS with its id ("- **S3:**", "S3 swept",
+# "| S3 |"); its indented sub-lines belong to it. Finding rows ("| RUN-1 | S3 |") are not sweep lines,
+# so a finding ref cannot stand in for a site list here either. A count of sweeps whose line carries
+# a path, not a proof that every site was read.
+SWEEP_START = re.compile(r"^(\s*)[-*|]?\s*\**S(\d{1,2})(?:\.\d+)?\b")
+PATHLIKE = re.compile(r"[\w.-]+/[\w./-]+|\b[\w-]+\.(?:py|js|ts|php|go|rb|json|toml|ya?ml|sql)\b")
+
+
+def sweep_sites(text):
+    """How many of S1-S24 have a sweep line (or its indented sub-lines) carrying a path."""
+    ids, cur, depth = set(), None, 0
+    for line in text.splitlines():
+        m = SWEEP_START.match(line)
+        if m:
+            depth = len(m.group(1))
+            cur = int(m.group(2)) if 1 <= int(m.group(2)) <= 24 else None
+        elif len(line) - len(line.lstrip()) <= depth:   # back at or above the sweep line's indent
+            cur = None
+        if cur and PATHLIKE.search(line):
+            ids.add(cur)
+    return len(ids)
+
+
 def refs_opened(transcript, names):
     """Which of the skill's reference files (`names`, paths relative to references/) Codex's commands name:
     an upper bound on reading (a grep or a tail counts too). Two traps met on the first real log: the log
@@ -425,7 +450,8 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
     rq = receipts_quoted(out_text, root) if receipts else None
     if rq:
-        label += f"receipts {rq[0]}/{rq[1]} | partial-reads {partial_reads(out_text)} | "
+        label += (f"receipts {rq[0]}/{rq[1]} | partial-reads {partial_reads(out_text)} | "
+                  f"sweep-sites {sweep_sites(out_text)}/24 | ")
     if traces:
         label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
     header = (

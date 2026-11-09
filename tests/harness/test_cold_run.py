@@ -201,6 +201,20 @@ class PartialReadTests(unittest.TestCase):
             "theory.md read in full."), 2)
         self.assertEqual(cold_run.partial_reads("Reference receipts: sweeps/ \"the channel is the finding\""), 0)
 
+    def test_sweep_sites_counts_enumerated_lines_only(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        report = ("S3 swept, 1 finding, sites: app/a.py:4, app/b.py:9 (❌ F2)\n"
+                  "S21: ❌ F7\n"                                  # a finding ref in place of the list
+                  "| RUN-4 | S21 | `tests/t.py:9` |\n"             # a finding row is not a sweep line
+                  "- **S5:** posture per site:\n"
+                  "  - `config.py:12` read, no consumer.\n"       # an indented site belongs to S5
+                  "S9 swept, 0 findings, sites: none\n"           # no path: not evidenced
+                  "   - **2a. Sweeps:**\n"
+                  "     - S2 F1, F10.\n"                          # nested, refs only
+                  "     - S1 swept, 0 findings (`scheduler.py:78`).\n")  # nested, with a site
+        self.assertEqual(cold_run.sweep_sites(report), 3)
+
     def test_refs_opened_names_each_reference_once(self):
         sys.path.insert(0, str(SCRIPT.parent))
         import cold_run
