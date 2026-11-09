@@ -182,7 +182,11 @@ def commit_gate(rs: list[dict], name: str) -> int:
     # The miss rule asks whether the fixture's rows are findable at all, which any model's clean run
     # proves; it is not a score comparison, so it is neither pooled by model nor skipped for a model's
     # first commit. Either let a new model's first commits through with misses.
-    findable = [r for r in rs if r["fixture"] == last["fixture"] and r["token"] != last["token"]]
+    # Only a clean run recorded BEFORE the commit under test makes its misses a regression. A clean
+    # run on a later, reverted commit (build run 10, 2026-11-09) says the rows are findable, but
+    # holding the still-shipped earlier commit to it blocks every push until a later commit lands.
+    first = next(i for i, r in enumerate(rs) if r["token"] == last["token"])
+    findable = [r for r in rs[:first] if r["fixture"] == last["fixture"]]
     if any(r["miss"] == 0 and r["false"] == 0 for r in findable):
         dirty = [r for r in group if r["miss"] or r["false"]]
         if dirty:

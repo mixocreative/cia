@@ -153,6 +153,14 @@ class ScoreTests(unittest.TestCase):
         lucky = [("aaaaaaa", [5, 5]), ("bbbbbbb", [10, 4]), ("ccccccc", [8, 5])]
         self.assertEqual(self.build_gate_on(lucky), 0)                                     # 6.5 >= floor 6
 
+    def test_a_later_clean_run_on_reverted_doctrine_does_not_block_the_shipped_commit(self):
+        build = [row("2026-11-10", 5, miss=3, commit="aaaaaaa"), row("2026-11-10", 5, miss=3, commit="aaaaaaa"),
+                 row("2026-11-11", 9, commit="bbbbbbb` (reverted in `ccccccc"),
+                 row("2026-11-11", 2, miss=6, commit="bbbbbbb` (reverted in `ccccccc")]
+        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 0)
+        build += [row("2026-11-12", 9, commit="ddddddd"), row("2026-11-12", 8, miss=1, commit="ddddddd")]
+        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)  # after a clean run: a miss blocks
+
     def test_build_gate_skips_reverted_rows(self):
         build = [row("2026-11-10", 4), row("2026-11-11", 4), row("2026-11-12", 2, commit="aaaaaaa` (reverted in `bbbbbbb")]
         self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 0)
