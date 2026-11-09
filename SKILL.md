@@ -416,7 +416,7 @@ something is "production-ready". Say which mode you are in, as §0.15 requires f
    rule that reading never produces PASS applies hardest to an author reading their own work an
    hour later.
 
-**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. Write the build report as the form in `build-standard.md` §3a, every block filled or `n/a` with a reason; a report missing a block names it and never says done.
+**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. **The report is checked by a tool, not remembered:** before the first line of code run `python tools/build_report.py form` (this skill's directory) and keep what it prints, the `build-standard.md` §3a form; fill it as you work. Before the final reply, write the filled report to a file outside the project and run `python tools/build_report.py check <file>` (or pipe it in: `check -`): each `MISSING` line names a block to fill (or `n/a` with a reason). Check again until it exits 0; the checked report is the final reply, never a summary of it.
 
 **The worked examples are executable.** The fixture's `claim_batch` (`tests/fixture-service/`) is the race-free property failing. `ecommerce-cia`'s `tools/reference/stock_reduction.php` and `prove_stock_reduction.php` prove all four properties in eight checks, including the fault injected after the write and before the commit, which separates an atomic implementation from a transaction-shaped one (`build-standard.md` §1 gives both shapes).
 
