@@ -253,6 +253,24 @@ class LeftoverTests(unittest.TestCase):
         self.assertEqual([p["pid"] for p in self.cr.owned_by_run(left, r"C:\Temp\cia-audit-abc")], [12])
         self.assertEqual(self.cr.owned_by_run(left, ""), [])                                # no copy, nothing owned
 
+    def test_a_process_seen_in_the_runs_tree_is_owned_only_with_the_same_command(self):
+        snap = [{"pid": 50, "ppid": 1, "cmd": "codex exec"},                      # the agent
+                {"pid": 51, "ppid": 50, "cmd": "bash npm test"},
+                {"pid": 52, "ppid": 51, "cmd": "graphify watch runner"},          # relative path, no copy name
+                {"pid": 60, "ppid": 1, "cmd": "graphify watch runner"}]           # a parallel run's twin
+        seen = self.cr.descendants(snap, {50})
+        self.assertEqual(seen, {51: "bash npm test", 52: "graphify watch runner"})
+        left = [{"pid": 52, "ppid": 51, "cmd": "graphify watch runner"},
+                {"pid": 60, "ppid": 999, "cmd": "graphify watch runner"},
+                {"pid": 51, "ppid": 999, "cmd": "notepad.exe"}]                   # PID 51 reused by something else
+        self.assertEqual([p["pid"] for p in self.cr.owned_by_run(left, r"C:\Temp\cia-audit-abc", seen)], [52])
+
+    def test_run_watched_returns_the_output_and_sees_a_child(self):
+        code = "import subprocess,sys,time; c=subprocess.Popen([sys.executable,'-c','import time; time.sleep(8)']); time.sleep(7); print(input())"
+        res, seen = self.cr.run_watched([sys.executable, "-c", code], None, "hello\n", 60)
+        self.assertEqual((res.returncode, res.stdout.strip()), (0, "hello"))
+        self.assertTrue(any("time.sleep(8)" in c for c in seen.values()))
+
     def test_orphans_and_copy_processes_are_reported_and_old_or_parented_ones_are_not(self):
         after = [
             {"pid": 1, "ppid": 0, "cmd": "explorer.exe"},                                # existed before

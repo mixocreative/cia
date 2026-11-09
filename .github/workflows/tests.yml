@@ -17,7 +17,7 @@ jobs:
         working-directory: tests/fixture-editor
         run: node --test
       - name: Lint (ruff over tools/ and the harness)
-        run: pip install ruff==0.11.9 && ruff check tools/ tests/harness/cold_run.py tests/harness/test_cold_run.py tests/tools/
+        run: pip install ruff==0.11.9 && ruff check tools/ tests/harness/cold_run.py tests/harness/procs.py tests/harness/test_cold_run.py tests/tools/
       - name: Doctrine is never shipped untested (newest SKILL/references commit has scored runs)
         run: python tools/untested.py
       - name: Skill frontmatter sanity

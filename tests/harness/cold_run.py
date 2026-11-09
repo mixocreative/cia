@@ -69,6 +69,9 @@ DEFAULT_RUNBOOK = REPO / "tests" / "RUNBOOK.md"
 OUT_DIR = REPO / "tests" / "harness" / "out"
 SKILL_DIR = r"S:\ai\skills\cia"
 TIMEOUT_S = 3600
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from procs import (descendants, leftovers, list_processes, owned_by_run,  # noqa: E402,F401  tests reach them here
+                   run_watched, stop)
 
 SKILL_LINE = (
     f"You may and should read the skill at {SKILL_DIR} (SKILL.md and references/) "
@@ -184,67 +187,11 @@ def sweep_sites(text):
     return len(ids)
 
 
-# Processes a run leaves behind. Added 2026-11-09: Codex runs C1-C7 each left a `graphify watch`
-# running after `codex exec` returned, seven found at once, parents gone. The harness REPORTS them and
-# never stops them: what to stop on the owner's machine is the owner's call. A failed snapshot is
-# `n/r`, never 0 - a count of zero from a listing that did not run is the blind instrument S20 audits.
-def list_processes():
-    """Every process as {pid, ppid, cmd}, or None when the listing cannot be taken."""
-    try:
-        if os.name == "nt":
-            # Trap: Windows PowerShell writes in the console code page (cp950 here), and one non-UTF-8
-            # command line crashed the reader on 2026-11-09. Force UTF-8 out, and replace what still is not.
-            ps = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "
-                  "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine"
-                  " | ConvertTo-Json -Compress")
-            out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True,
-                                 text=True, encoding="utf-8", errors="replace", timeout=60).stdout
-            return [{"pid": p["ProcessId"], "ppid": p["ParentProcessId"], "cmd": p.get("CommandLine") or ""}
-                    for p in json.loads(out)]
-        out = subprocess.run(["ps", "-eo", "pid=,ppid=,args="], capture_output=True, text=True,
-                             errors="replace", timeout=60).stdout
-        rows = (line.split(None, 2) for line in out.splitlines() if line.strip())
-        return [{"pid": int(r[0]), "ppid": int(r[1]), "cmd": r[2] if len(r) > 2 else ""} for r in rows]
-    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
-        return None
-
-
-def leftovers(before_pids, after, copy_dir):
-    """New processes that outlived the run: orphaned (parent gone) or naming the fixture copy.
-
-    Two traps: a parallel harness run's orphan is reported by every run that ends after it (the
-    report says so, it does not guess whose), and Windows reuses PIDs, so an orphan whose parent PID
-    was reused looks parented - a false negative, never a false alarm."""
-    alive = {p["pid"] for p in after}
-    return [p for p in after if p["pid"] not in before_pids
-            and (p["ppid"] not in alive or (copy_dir and copy_dir.lower() in p["cmd"].lower()))]
-
-
 def copy_fixture(src, dst):
     """The throwaway copy a run works on. A corpus clone's .git holds the maintainer's fix commit, which
     is the oracle, so .git is never copied: a run that ran `git log` would read the answer."""
     shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(".git"))
 
-
-def owned_by_run(left, copy_dir):
-    """The leftovers that are certainly this run's: their command line names its own throwaway copy.
-
-    Only these are stopped (the owner approved this on 2026-11-10). Codex obeys a user's global
-    AGENTS.md, and one that says "keep a graphify watch running per project" started a watcher in every
-    copy and left it running. An orphan that does not name the copy may be a parallel run's or the
-    user's own, so it stays a report: stopping what cannot be attributed would be the fail-open this
-    skill audits for."""
-    return [p for p in left if copy_dir and copy_dir.lower() in p["cmd"].lower()]
-
-
-def stop(pids):
-    """Stop each process and its children; returns the PIDs the OS reported as stopped."""
-    done = []
-    for pid in pids:
-        cmd = ["taskkill", "/PID", str(pid), "/T", "/F"] if os.name == "nt" else ["kill", "-TERM", str(pid)]
-        if subprocess.run(cmd, capture_output=True).returncode == 0:
-            done.append(pid)
-    return done
 
 
 def refs_opened(transcript, names):
@@ -536,8 +483,7 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         argv = [exe] + [a for a in cmd[1:] if a != prompt] + ["-o", last_msg, "-"]
     before = list_processes()
     t0 = time.monotonic()
-    res = subprocess.run(argv, cwd=cwd, input=prompt, capture_output=True, text=True,
-                         encoding="utf-8", timeout=TIMEOUT_S)
+    res, seen = run_watched(argv, cwd, prompt, TIMEOUT_S)
     label += f"seconds {round(time.monotonic() - t0)} | "  # the cost side of an arm comparison
     after = list_processes()
     left = None if before is None or after is None else leftovers({p["pid"] for p in before}, after, str(cwd))
@@ -578,11 +524,11 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     body += collected
     path.write_text(header + body, encoding="utf-8")
     if left:
-        stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd))]))
+        stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd), seen)]))
         listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t"
                             f"{'stopped' if p['pid'] in stopped else 'left running'}\t{p['cmd']}" for p in left)
         path.with_suffix(".leftovers.log").write_text(listing + "\n", encoding="utf-8")
-        print(f"warning: {len(left)} process(es) outlived the run; stopped {len(stopped)} that named its copy, "
+        print(f"warning: {len(left)} process(es) outlived the run; stopped {len(stopped)} of its own, "
               f"left the rest; see {path.with_suffix('.leftovers.log')}", file=sys.stderr)
     print(path)
     return 0 if res.returncode == 0 else 1
