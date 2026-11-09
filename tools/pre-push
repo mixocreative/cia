@@ -19,6 +19,11 @@ fi
 # because a blanket 代碼 -> 程式碼 sweep once broke 超商代碼 in eight places.
 python tools/zh_check.py --gate || exit 1
 
+# Not a gate, a report: the comparison arms and EGM reviews that are due (RUNBOOK step 7). This is
+# where the AI that pushes meets the trigger. It is not in SKILL.md, because every audit run reads
+# SKILL.md and a sentence there is doctrine under test: the first try failed the gate (ARMS.md).
+python tools/due.py || true
+
 # Not a gate, a report: where the two skills' shared doctrine has drifted, and which shared file
 # is currently a byte-identical duplicate (edit one, and the other is silently behind).
 python tools/sweep-diff.py --files || true
