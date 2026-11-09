@@ -45,7 +45,7 @@ python tests/harness/cold_run.py --mode audit --fixture fixture-editor --model s
 Same prompt, same HARD RULES, same scoring categories; rows go in `RUNS.md` with
 **fixture-editor** in the tier cell, and `tools/score.py` gates them against their own history
 (`fixture_of`), never against fixture-service's. A change to `SKILL.md` or `references/` that
-touches what an audit does is run on **both** fixtures before the push: two runs each.
+touches what an audit does is run on **both** fixtures before the push: two runs each. `tools/score.py --gate` enforces it: the commit under test is judged on every fixture with history, and a fixture it has no run on blocks the push.
 
 ## The live probe (`fixture-service`, no second fixture needed)
 

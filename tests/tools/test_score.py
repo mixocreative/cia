@@ -105,6 +105,17 @@ class ScoreTests(unittest.TestCase):
         reverted = ("ccccccc` (reverted in `ddddddd", [(10, 0, 0), (12, 0, 0)])
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(11, 1, 0), (11, 1, 0)]), reverted]), 0)  # judged: bbbbbbb
 
+    def test_a_commit_is_gated_on_every_fixture_with_history(self):
+        svc, ed = "Screen on **fixture-service**", "Screen on **fixture-editor**"
+        base = [row("2026-11-01", 12, commit="aaaaaaa", tier=svc), row("2026-11-01", 12, commit="aaaaaaa", tier=svc),
+                row("2026-11-01", 11, commit="aaaaaaa", tier=ed), row("2026-11-01", 11, commit="aaaaaaa", tier=ed)]
+        only_one = base + [row("2026-11-02", 11, commit="bbbbbbb", tier=ed), row("2026-11-02", 11, commit="bbbbbbb", tier=ed)]
+        self.assertEqual(self.run_score(runs_text(only_one, []), "--gate")[0], 1)   # never run on fixture-service
+        both = only_one + [row("2026-11-02", 12, commit="bbbbbbb", tier=svc), row("2026-11-02", 11, commit="bbbbbbb", tier=svc)]
+        self.assertEqual(self.run_score(runs_text(both, []), "--gate")[0], 0)
+        weak = both[:-1] + [row("2026-11-02", 9, near=1, commit="bbbbbbb", tier=svc)]
+        self.assertEqual(self.run_score(runs_text(weak, []), "--gate")[0], 1)       # 10.75 < 11 on one fixture
+
     def test_floor_follows_recent_median_and_cannot_drift_more_than_a_row(self):
         lucky = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(11, 1, 0), (11, 1, 0)]) for c in "bcde"]
         self.assertEqual(self.gate_on(lucky + [("fffffff", [(11, 1, 0), (11, 0, 0)])]), 0)  # 11.25 >= median 11.5 - 0.5

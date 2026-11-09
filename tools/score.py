@@ -160,48 +160,67 @@ DRIFT = 1.0
 
 
 def audit_gate(rs: list[dict]) -> int:
-    return commit_gate(rs, "gate")
+    return commit_gate(rs, "gate", every_fixture=True)
 
 
-def commit_gate(rs: list[dict], name: str) -> int:
+def commit_gate(rs: list[dict], name: str, every_fixture: bool = False) -> int:
     """Per-commit gate, for audit rows and build rows alike. Misses and false positives are doctrine:
     zero tolerance. Half-rows are noise: the mean of at least two runs on the commit under test must
     stay within NOISE of the median of the last RECENT live per-commit means, and never more than
-    DRIFT under the best ever."""
+    DRIFT under the best ever.
+
+    every_fixture (the audit gate, since fixture-editor joined on 2026-11-09): the commit is judged on
+    every fixture that has history before it, and a fixture it was never run on blocks it. Judging only
+    the newest row's fixture let a doctrine change pass on one project while untested on the other."""
     live = [r for r in rs if not r.get("reverted")]
     if not live:
         print(f"{name}: every scored run is on a reverted commit - nothing under test.")
         return 0
-    last = live[-1]
+    token = live[-1]["token"]
+    # A commit is judged only against what was measured before it. After a revert the shipped commit is
+    # the newest live one, and later reverted experiments must not raise its floor or its miss bar.
+    first = next(i for i, r in enumerate(rs) if r["token"] == token)
+    fixtures = {r["fixture"] for r in rs if r["token"] == token}
+    if every_fixture:
+        fixtures |= {r["fixture"] for r in rs[:first] if r["fixture"] != "default"}
+    code = 0
+    for fixture in sorted(fixtures):
+        code |= _gate_one(rs, name, token, fixture, first)
+    return code
+
+
+def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -> int:
+    group_any = [r for r in rs if r["token"] == token and r["fixture"] == fixture]
+    if not group_any:
+        print(f"{name.upper()}: {token} has no scored run on {fixture}, which has history. A doctrine change "
+              f"is run on every fixture before the push (RUNBOOK, 'The second fixture').", file=sys.stderr)
+        return 1
+    model = group_any[-1]["model"]
     # Debt, known: this pools launcher (cold_run.py) rows with cold-subagent rows. ecommerce-cia split them
     # on 2026-11-09 (instrument_of), where the launcher measured half a row under a subagent on one doctrine.
     # Here both instruments have scored 12 on fixture-service, so the split is not taken; take it if they diverge.
-    pool = [r for r in rs if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
-    group = [r for r in pool if r["token"] == last["token"]]
-    # A commit is judged only against what was measured before it. After a revert the shipped commit is
-    # the newest live one, and later reverted experiments must not raise its floor or its miss bar.
-    first = next(i for i, r in enumerate(rs) if r["token"] == last["token"])
+    pool = [r for r in rs if r["fixture"] == fixture and r["model"] == model]
+    group = [r for r in pool if r["token"] == token]
     earlier = [r for r in rs[:first] if r in pool]
     # The miss rule asks whether the fixture's rows are findable at all, which any model's clean run
     # proves; it is not a score comparison, so it is neither pooled by model nor skipped for a model's
-    # first commit. Either let a new model's first commits through with misses.
-    # Only a clean run recorded BEFORE the commit under test makes its misses a regression. A clean
-    # run on a later, reverted commit (build run 10, 2026-11-09) says the rows are findable, but
-    # holding the still-shipped earlier commit to it blocks every push until a later commit lands.
-    findable = [r for r in rs[:first] if r["fixture"] == last["fixture"]]
+    # first commit. Only a clean run recorded BEFORE the commit under test makes its misses a regression:
+    # a clean run on a later, reverted commit (build run 10, 2026-11-09) held the still-shipped commit to
+    # a bar it was never measured against and blocked every push.
+    findable = [r for r in rs[:first] if r["fixture"] == fixture]
     if any(r["miss"] == 0 and r["false"] == 0 for r in findable):
-        dirty = [r for r in group if r["miss"] or r["false"]]
+        dirty = [r for r in group_any if r["miss"] or r["false"]]
         if dirty:
             r = dirty[-1]
-            print(f"{name.upper()}: a run on {last['token']} has {r['miss']} miss / {r['false']} false positive, on a fixture "
+            print(f"{name.upper()}: a run on {token} has {r['miss']} miss / {r['false']} false positive on {fixture}, "
                   f"where an earlier run had none. A miss is doctrine, never noise (RUNBOOK step 6).", file=sys.stderr)
             return 1
     if not earlier:
-        print(f"{name}: {last['token']} is the first scored commit on {last['fixture']} with {last['model']} - "
+        print(f"{name}: {token} is the first scored commit on {fixture} with {model} - "
               f"a baseline, nothing to compare it against. Recorded, not blocked.")
         return 0
     if len(group) < 2:
-        print(f"{name.upper()}: {last['token']} has one scored run on {last['fixture']} with {last['model']}. One run is a "
+        print(f"{name.upper()}: {token} has one scored run on {fixture} with {model}. One run is a "
               f"sample - run again, then gate on the mean (RUNBOOK step 6).", file=sys.stderr)
         return 1
     best, baseline = floor_parts(earlier)
@@ -209,10 +228,10 @@ def commit_gate(rs: list[dict], name: str) -> int:
     mean = sum(r["score"] for r in group) / len(group)
     why = f"median of the last {RECENT} live per-commit means {baseline:g}, best ever {best:g}"
     if mean < floor:
-        print(f"{name.upper()}: {last['token']} scores a mean of {mean:g} over {len(group)} runs, below the floor "
-              f"{floor:g} ({why}). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)
+        print(f"{name.upper()}: {token} scores a mean of {mean:g} over {len(group)} runs on {fixture}, below the "
+              f"floor {floor:g} ({why}). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)
         return 1
-    print(f"{name}: {last['token']} mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
+    print(f"{name}: {token} on {fixture}: mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
           f"no miss, no false positive.")
     return 0
 
