@@ -117,6 +117,8 @@ python tests/corpus/run.py prepare <entry>     # clone at the pre-fix commit; pr
 python tests/corpus/run.py oracle <entry>      # SCORER ONLY - never shown to a run
 ```
 
+Since 2026-11-10 the launcher runs it: `python tests/harness/cold_run.py --mode audit --model sonnet --target <prepared path> --scope "<the entry's scope>"`. The copy never carries `.git` (the clone's history holds the fix commit, which is the oracle), and the report is the collected `cia-audit-report.md`.
+
 Audit the prepared path cold, at the tier the entry names, then score one question: **did the run
 report the thing the next commit had to fix, for the reason the commit gives?** Record HIT, MISS
 or OUT-OF-SCOPE in `RUNS.md`'s corpus table.

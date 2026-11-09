@@ -236,6 +236,16 @@ class LeftoverTests(unittest.TestCase):
         import cold_run
         self.cr = cold_run
 
+    def test_the_copy_never_carries_git_history(self):
+        with tempfile.TemporaryDirectory() as d:
+            src, dst = Path(d) / "src", Path(d) / "dst"
+            (src / ".git").mkdir(parents=True)
+            (src / ".git" / "HEAD").write_text("fix commit", encoding="utf-8")
+            (src / "a.py").write_text("x = 1\n", encoding="utf-8")
+            self.cr.copy_fixture(src, dst)
+            self.assertTrue((dst / "a.py").exists())
+            self.assertFalse((dst / ".git").exists())
+
     def test_only_processes_naming_the_runs_copy_are_stopped(self):
         left = [{"pid": 11, "ppid": 999, "cmd": "graphify watch runner"},                   # orphan, unattributable
                 {"pid": 12, "ppid": 999, "cmd": r"graphify watch C:\Temp\cia-audit-abc"},   # names this run's copy

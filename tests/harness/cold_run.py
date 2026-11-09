@@ -220,6 +220,12 @@ def leftovers(before_pids, after, copy_dir):
             and (p["ppid"] not in alive or (copy_dir and copy_dir.lower() in p["cmd"].lower()))]
 
 
+def copy_fixture(src, dst):
+    """The throwaway copy a run works on. A corpus clone's .git holds the maintainer's fix commit, which
+    is the oracle, so .git is never copied: a run that ran `git log` would read the answer."""
+    shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(".git"))
+
+
 def owned_by_run(left, copy_dir):
     """The leftovers that are certainly this run's: their command line names its own throwaway copy.
 
@@ -403,6 +409,9 @@ def main(argv=None, runbook=None):
                     help="audit with the skill swapped out (comparison arm; rows go to tests/ARMS.md)")
     ap.add_argument("--doc", help="egm: the document to review, relative to the skill root")
     ap.add_argument("--reviewer", default="comprehension", choices=EGM_REVIEWERS, help="egm: which Goldfish")
+    ap.add_argument("--target", help="audit: any directory instead of a fixture (the corpus: a repo prepared by "
+                                     "tests/corpus/run.py prepare); copied without .git")
+    ap.add_argument("--scope", help="audit with --target: the entry's scope, appended to the prompt")
     args = ap.parse_args(argv)  # argparse exits 2 on a malformed --mode
 
     skill_root = Path(args.skill_root).resolve() if args.skill_root else REPO
@@ -412,7 +421,10 @@ def main(argv=None, runbook=None):
     if args.arm != "cia" and (args.mode != "audit" or args.runtime != "claude" or skill_root != REPO):
         print("error: --arm runs only with --mode audit, --runtime claude and this repo's fixture", file=sys.stderr)
         return 2
-    fixture = skill_root / "tests" / args.fixture
+    if args.target and args.mode != "audit":
+        print("error: --target is for --mode audit (the corpus)", file=sys.stderr)
+        return 2
+    fixture = Path(args.target).resolve() if args.target else skill_root / "tests" / args.fixture
     if not fixture.is_dir():
         print(f"error: no fixture at {fixture}", file=sys.stderr)
         return 2
@@ -426,6 +438,8 @@ def main(argv=None, runbook=None):
     except (RunbookError, OSError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
+    if args.scope:
+        prompt += f"\nScope for this audit: {args.scope}\n"
 
     cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm)
 
@@ -436,7 +450,7 @@ def main(argv=None, runbook=None):
         cwd = os.path.join(tempfile.gettempdir(), f"cia-{args.mode}-<new-copy>")
     else:
         cwd = tempfile.mkdtemp(prefix=f"cia-{args.mode}-")
-        shutil.copytree(fixture, cwd, dirs_exist_ok=True)
+        copy_fixture(fixture, cwd)
         print(f"{args.mode} copy of {fixture}: {cwd}", file=sys.stderr)
 
     if args.dry_run:
@@ -446,6 +460,8 @@ def main(argv=None, runbook=None):
         return 0
 
     tag = "" if skill_root == REPO else f"{skill_root.name}-{args.fixture}-"
+    if args.target:
+        tag = f"corpus-{fixture.name}-"
     if args.arm != "cia":
         tag += f"arm-{args.arm}-"
     label = "" if args.arm == "cia" else f"arm {args.arm} | "
