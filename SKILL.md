@@ -416,7 +416,7 @@ something is "production-ready". Say which mode you are in, as §0.15 requires f
    rule that reading never produces PASS applies hardest to an author reading their own work an
    hour later.
 
-**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. Write the build report as the form in `build-standard.md` §3a, every block filled or `n/a` with a reason; a report missing a block names it and never says done.
+**Read both files before the first line of code.** Read `references/build-standard.md` and `references/build-orchestration.md` in full; the receipts line quotes both. The final reply *is* the `build-standard.md` §3a form, whatever the runtime's habit for a short closing summary after the code is written: the obligation row, the proof output, the evidence-ledger row, Step 6 line 14 and the CG1–CG13 counts, each filled or `n/a` with a reason. A summary in its place keeps the verdict and drops the evidence; a report missing a block names it and never says done.
 
 **The worked examples are executable.** The fixture's `claim_batch` (`tests/fixture-service/`) is the race-free property failing. `ecommerce-cia`'s `tools/reference/stock_reduction.php` and `prove_stock_reduction.php` prove all four properties in eight checks, including the fault injected after the write and before the commit, which separates an atomic implementation from a transaction-shaped one (`build-standard.md` §1 gives both shapes).
 
