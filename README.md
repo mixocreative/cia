@@ -175,9 +175,9 @@ Don't — trust the evidence. Reading code never produces PASS in this skill; on
 <details>
 <summary><strong>Which agents does it run on?｜支援哪些 Agent？</strong></summary>
 
-Tested on Claude Code (plugin or skill directory), where the harness scores every change. Tested on OpenAI Codex (codex-cli 0.157, Windows, full access on a throwaway copy): a bare `run tests` behaves as specified, and since Step 6 says the final reply is the report, Codex audits follow cia's report form (sweep per finding, numbered lines, reading receipts) and score 10 of 12 against Claude's 11.5, each run missing one planted defect (`tests/RUNS.md`, "Other runtimes"). The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+Tested on Claude Code (plugin or skill directory), where the harness scores every change. Tested on OpenAI Codex (codex-cli 0.157, Windows, full access on a throwaway copy): a bare `run tests` behaves as specified, and since Step 6 says the final reply is the report, Codex audits follow cia's report form (sweep per finding, numbered lines, reading receipts) and score 9.5-10 of 12 against Claude's 11-12, each run missing one planted defect, a different one each time; a rule forcing a full site list per sweep did not change that and was reverted (`tests/RUNS.md`, "Other runtimes"). The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
 
-已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。也已在 OpenAI Codex（codex-cli 0.157，Windows，在拋棄式副本上給予完整權限）上測試：單獨說 `run tests` 的行為符合規格；自從 Step 6 規定「最後的回覆就是報告」之後，Codex 的稽核也遵守 cia 的報告格式（每項發現標明掃描項目、編號清單、閱讀收據），得分 10／12，Claude 為 11.5，每次各漏掉一個預埋缺陷（見 `tests/RUNS.md` 的「Other runtimes」）。
+已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。也已在 OpenAI Codex（codex-cli 0.157，Windows，在拋棄式副本上給予完整權限）上測試：單獨說 `run tests` 的行為符合規格；自從 Step 6 規定「最後的回覆就是報告」之後，Codex 的稽核也遵守 cia 的報告格式（每項發現標明掃描項目、編號清單、閱讀收據），得分 9.5–10／12，Claude 為 11–12；每次各漏掉一個預埋缺陷，而且每次漏掉的都不一樣。曾試過要求每個掃描項目列出完整位置清單，結果沒有改善，已撤回（見 `tests/RUNS.md` 的「Other runtimes」）。
 </details>
 
 ---
