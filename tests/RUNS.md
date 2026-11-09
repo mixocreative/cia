@@ -246,6 +246,8 @@ should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `119040b` | Claude **Sonnet** (harness, audit run AM; resolved claude-sonnet-5-5, $1.49, 42 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 4.5 | **12/0/0/0. Receipts 9/19, partial-reads 0.** Rows 9 and 10 share one S21 finding, each at its own line (`:25-28`, `:55`), so both score. SCR-002 (cancel then claim) is the known true extra. Mean of AL and AM 12: the best per-commit mean on claude-sonnet-5-5. |
 | 2026-11-09 | `5bc51b2` (re-applies `b058b61`, the EGM step-order fix) | Claude **Sonnet** (harness, audit run AN; resolved claude-sonnet-5-5, $1.31, 42 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 3.7 | **11. Receipts 9/19, partial-reads 0.** Unanchored: row 1 (`alerts_enabled` bundled into the heartbeat finding F6 with no `config.yaml:3`, the bundle reporting §9 forbids). Near: row 12 (S3 MEDIUM). D5: 'Its CLI premise is broken by F3, but the cap itself is not a finding'. |
 | 2026-11-09 | `5bc51b2` | Claude **Sonnet** (harness, audit run AO; resolved claude-sonnet-5-5, $1.69, 46 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 5.9 | **12/0/0/0. Receipts 9/19, partial-reads 0.** One invariant per finding throughout (I1-I15 named per row). D5 window respected, 'its relief valve is the broken part'. Mean of AN and AO 11.5, at the floor: EGM major 1 ships. |
+| 2026-11-09 | `a30edff` | Claude **Sonnet** (harness, audit run AP; resolved claude-sonnet-5-5, $1.28, 42 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 3.7 | **11.5. Receipts 9/19, partial-reads 0.** Near: row 11 (the `:memory:` CLI under S4/S16, not S13.1). D5 kept as deliberate. |
+| 2026-11-09 | `a30edff` | Claude **Sonnet** (harness, audit run AQ; resolved claude-sonnet-5-5, $1.89, 46 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 8.3 | **11.5. Receipts 9/19, partial-reads 0.** Near: row 10 (S21.2 LOW). RUN-022 'D5's false premise' (old failed jobs vanish because the CLI reads `:memory:`; 'I did not re-litigate no paging') is row 11's consequence, as in run AI: a true extra. Mean of AP and AQ 11.5, at the floor. |
 
 **The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
 12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
@@ -340,10 +342,17 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-09 | `920a1d4` | **Codex** (as above, audit run C1) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 0 | 11 | 1 | 0 | 10.1 | **4.5 by the RUNBOOK; 9.5 sweep-free** (10 hit, 1 near: row 12 MEDIUM, 1 miss). Miss: row 8, `with_backoff` only as 'the handler/retry promise still unwired', no site, no grade. No sweep per finding (one S1-S24 disposition paragraph), no Step 6 lines, receipts 0/19. Row 5 found (heartbeat file 'never reads it', `scheduler.py:99`). All controls kept. Ran probes, graphify and an Ollama probe on its own. |
 | 2026-11-09 | `9d30f64` (launched while HEAD was `920a1d4`; the commit landed mid-run) | **Codex** (as above, audit run C2) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 0 | 10 | 2 | 0 | 5.8 | **3 by the RUNBOOK; 8 sweep-free** (10 hit, 2 miss). Misses: row 5 (no heartbeat-file or outermost-check finding), row 8 (absent). Same format gap, receipts 0/19. D5 window and D4 kept as controls. |
 
-**What the two Codex audits say.** Codex finds the defects a careful reviewer finds (10 of 12 rows
-anchored at their grade, every control kept, no false positive) and misses the two cia teaches and
-the rival arms also miss: S20's dead watchdog and S13's orphan capability. It does not follow the
-report contract at all - no sweep per finding, no receipts, no Step 6 lines - so the reading rule
-that fixed Claude's runs has not reached it. Sweep-free it scores 8.75, between ponytail (6.5) and
-cia on Claude (11.25); by cia's own rules it scores 3.75. The next Codex question is whether it
-loads the references at all, which its reports never say.
+| 2026-11-09 | `5bc51b2` | **Codex** (as above, audit run C3; first run with the event log kept) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 7.0 | **10.** A sweep table maps every finding to its sweep, so the strict count equals the sweep-free one. Miss: row 10 (the env leak, absent). Receipts 0/19, yet the log shows it **opened 14 of 26 references** (every core file but `doctrine.md` and `sweeps/07`) and printed the receipt lines with a command of its own, then wrote its final message in its own short style. Header's first `refs-opened 19` was an artefact (fixed in `6231f07`). |
+| 2026-11-09 | `a30edff` (Step 6: 'the final reply *is* this report') | **Codex** (as above, audit run C4) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 8.4 | **10. Receipts 9/19**, refs opened 15/26, a sweep and layer on every finding, a protocol record with the numbered lines. Miss: row 12 (the identity fallback, absent). D5 'not a finding'. |
+| 2026-11-09 | `a30edff` | **Codex** (as above, audit run C5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 9.7 | **10. Receipts 9/19**, refs opened 20/26, an invariant named on every finding. Miss: row 10 (absent). D4, D5 respected. |
+
+**What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
+finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
+dead watchdog (row 5) too. What it did not do until `a30edff` was write the report cia defines: its
+final message followed its own short-answer habit, so the sweeps, the numbered lines and the
+receipts were dropped, though it had read them. Step 6 now says the final reply *is* the report,
+and both runs after it carry every part: 3.75 by the RUNBOOK before, 10 after, against Claude's
+11.5 on the same commit. What remains is discovery, one row per run and a different row each time
+(12 in C4, 10 in C5, 10 in C3). **Codex's gate rule:** it joins `tools/score.py` once two Codex
+runs on one commit have no miss; until then its rows stay here, and a change to Step 6 or to the
+report form is run on Codex too.
