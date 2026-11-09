@@ -303,6 +303,8 @@ before and after the move.
 | 2026-11-10 | `d21fbe6` (reverted in `a0464ef`) | Claude **Sonnet** (harness, audit run BM; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7 | **12 on the collected file (6/6).** Row 7 at `monitor.py:17-38` (F6a). |
 | 2026-11-10 | `fc7903a` | Claude **Sonnet** (harness, audit run BN; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 9 | **11 on the collected file (6/6).** Near: row 7 (RUN-016 at ARCHITECTURE D2), row 10 (RUN-028 LOW). |
 | 2026-11-10 | `fc7903a` | Claude **Sonnet** (harness, audit run BO; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7 | **12 on the collected file (6/6).** **Mean 11.5 with BN.** |
+| 2026-11-10 | `798ee54` | Claude **Sonnet** (harness, audit run BP; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 5 | **12 on the collected file (6/6).** Row 12 as RUN-012 HIGH, 'S3 fail-open at DEBUG on a startup identity read', CONFIRMED by probe. |
+| 2026-11-10 | `798ee54` | Claude **Sonnet** (harness, audit run BQ; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7 | **12 on the collected file (6/6).** Row 12 as RUN-006 HIGH. **Mean 12 with BP: the S3 floor costs Claude nothing.** |
 | 2026-11-09 | `2a65c5e` | Claude **Sonnet** (harness, audit run EK; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 10 | 0 | 1 | 0 | 7 | **9 on the collected file (6/6).** missed: E8 (named only in an S23 table cell, `autosave.js:35` 'no re-entrancy guard', with no grade or finding). E12 found (ED-005). |
 | 2026-11-09 | `2a65c5e` | Claude **Sonnet** (harness, audit run EL; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 10 | 1 | 0 | 0 | 6 | **10.5 on the collected file (6/6).** Near: E8 (ED-019, `autosave.js:34-36` re-entrancy, LOW; key MEDIUM). E12 found (ED-002). E8 found here, so EK's miss is variance. |
 | 2026-11-10 | `2a65c5e` (second stage; HEAD was `16704db`, a gate-only commit, doctrine unchanged since `2a65c5e`) | Claude **Sonnet** (harness, audit run EM; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 11 | 0 | 0 | 0 | 7 | **11 on the collected file (6/6).** E8 as ED-016 (`autosave.js:34-36`, overlapping saves, MEDIUM); E12 found (ED-004, probe P3). |
@@ -313,6 +315,8 @@ before and after the move.
 | 2026-11-10 | `d21fbe6` (reverted in `a0464ef`) | Claude **Sonnet** (harness, audit run ER; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 9 | 0 | 2 | 0 | 5 | **7, and the run said its check failed:** 'audit_report.py check still exits 1 ... I read only part of that doctrine, so I didn't quote receipts I hadn't earned' (seven references unread). missed: E8, E11. Both found by EQ (variance), but the mean is 8.75 against a floor of 10: more than a row, no second stage. The checker caught the reading collapse; it did not stop the run replying. |
 | 2026-11-10 | `fc7903a` | Claude **Sonnet** (harness, audit run ES; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 10 | 0 | 1 | 0 | 6 | **9 on the collected file (6/6).** missed: E8, named under 'Unfiled observations' (`autosave.js:35` 'no re-entrancy guard', LOW, not filed). |
 | 2026-11-10 | `fc7903a` | Claude **Sonnet** (harness, audit run ET; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 11 | 0 | 0 | 0 | 5 | **11 on the collected file (6/6).** E8 inside F21 (`autosave.js:35`, 'saveAll has no re-entrancy guard', MEDIUM); E12 as F9 (probe Z1). **Mean 10 with ES, floor 10; E8 found by the pair.** |
+| 2026-11-10 | `798ee54` | Claude **Sonnet** (harness, audit run EU; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 11 | 0 | 0 | 0 | 5 | **11 on the collected file (6/6).** E8 as F8 MEDIUM; E12 found (F6 HIGH). |
+| 2026-11-10 | `798ee54` | Claude **Sonnet** (harness, audit run EV; resolved claude-sonnet-5-5) | Screen - `pre-launch audit, Screen tier` on **fixture-editor** | 11 | 0 | 0 | 0 | 5 | **11 on the collected file (6/6).** E8 as CIA-019 MEDIUM; E12 found (CIA-005 CRITICAL). **Mean 11 with EU.** |
 
 **The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
 12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
@@ -439,6 +443,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-10 | `2a65c5e` (HEAD `16704db`, doctrine unchanged) | **Codex** (as above, audit run C13) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 7.1 | **9.5 on its checked file (6/6).** missed: row 11 (the CLI's `:memory:` default, absent). Near: row 12 (MEDIUM). **With the file contract Codex's report form is solved (both 6/6, receipts verified); what remains is discovery: rows it sites in a table and does not file.** |
 | 2026-11-10 | `d21fbe6` (reverted in `a0464ef`) | **Codex** (as above, audit run C14) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 7.3 | **10 on its checked file (6/6), receipts 9/19, sweep-sites 23/24.** missed: row 12. The second pass written for Codex (a nested read-only `codex exec`) was never run: the transcript holds no such command. |
 | 2026-11-10 | `d21fbe6` (reverted in `a0464ef`) | **Codex** (as above, audit run C15) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 0 | 2 | 0 | 10.3 | **8 on its checked file (6/6), sweep-sites 24/24.** missed: row 9, row 12, both named in its own sweep table (S21 'empty monitor test', S6 'worker identity fallback') and never filed. No second pass run. **Five mechanisms aimed at Codex's misses have now been measured (site list per sweep, lead scan, inventory, checked report file, nested second pass): the file contract fixed its report form; none changed discovery, and the two added steps were skipped every time. Codex stays outside the gate; README tells a Codex user to run the audit twice.** |
+| 2026-11-10 | `798ee54` (S3: a debug-logged fallback on a config read is HIGH) | **Codex** (as above, audit run C16) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 5.0 | **11.5 on its reply: no report file written (`report-file none`), no sweep lines (0/24), receipts 0/19 - the file contract skipped this time.** Row 12 filed F05 HIGH, the row S3 was changed for. Near: row 5 (F10 cites `scheduler.py:99` as 'no in-tree caller', not the unread file or the outermost check). |
+| 2026-11-10 | `798ee54` (as C16) | **Codex** (as above, audit run C17) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 6.9 | **11.5 on its file (5/6, titled 'protocol incomplete': it says the reference set was not fully read).** Row 12 filed CIA-004 HIGH. Near: row 5 (CIA-011 files the missing outer check on the monitor; CIA-012 at `:99-105` is a row/file disagreement, not the unread file). **First Codex pair with no miss: row 12 HIGH in both, against missed or MEDIUM in 6 of the 15 runs before. The reading and the report form are what still vary.** |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
@@ -473,6 +479,16 @@ than signal, so it was reverted uncommitted. **What this closes:** Codex's misse
 filing-form gap that a shape check can see; they are rows its single pass did not judge, which
 only a second, independent run catches.
 
+**Two Codex runs, read together: the measurement behind "run it twice" (2026-11-10).** Each pair
+of Codex audits on one commit, with the rows each run missed: C4/C5 12 | 10; C6/C7 8 | 10; C8/C9
+11 | 5, 9; C10/C11 9 | 5, 12; C12/C13 5, 9 | 11; C14/C15 12 | 9, 12. One run misses 1.3 rows on
+average (16 in 12 runs); a pair read together misses 1 row in 6 pairs, and in 5 of the 6 pairs
+nothing. The one shared miss is row 12, which is also the one row that is not random: missed or
+graded MEDIUM (key HIGH) in six of the fifteen Codex runs, filed under "fallback" in a sweep line
+and never graded. That pointed at S3: its level rule said "graded as though there were no log
+line" without the grade at hand, and its HIGH floor named only "a configuration or flag read".
+`798ee54` states the floor where the level rule is and says what counts as a configuration read.
+
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
 never met the second instance of a class it had filed once. `8faa2c9` made the site list mandatory;
@@ -487,3 +503,8 @@ RUNBOOK's *vacuous line*; they were not marked down for it.
 returned (seven found on 2026-11-09, parents gone). **Closed:** from `cold_run.py` after `d4099b0` the
 header carries `leftover-procs N` (orphaned or naming the fixture copy; `n/r` when the listing failed)
 and lists them in `<report>.leftovers.log`. It reports, never stops: what to stop is the owner's call.
+**Since 2026-11-10 (the owner approved stopping the run's own):** `tests/harness/procs.py` stops a
+leftover when its command line names the run's copy, or when it was seen descending from the run's
+agent with the same command line (the tree is polled every 5 s while the agent runs). The copy rule
+alone left C16/C17's `graphify watch runner` running: a relative path names no copy. Anything neither
+rule claims is still reported and left alone.
