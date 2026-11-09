@@ -3,8 +3,23 @@
 Usage:
     python tests/harness/cold_run.py --mode audit|build|run-tests
         [--runtime claude|codex] [--dry-run] [--model NAME]
+    python tests/harness/cold_run.py --mode audit --arm none|ponytail [--model NAME]
+    python tests/harness/cold_run.py --mode egm --doc references/X.md [--reviewer comprehension]
 
 Exit codes: 0 ok, 2 bad input or a missing RUNBOOK section/prompt.
+
+Comparison arms (--arm, audit only, claude only)
+    The same audit task, HARD RULES and permission shape, with the skill swapped out: `none` gives
+    no skill, `ponytail` gives ponytail-audit's instructions (pinned copy in tests/harness/arms/).
+    They answer whether cia earns its tokens against a bare model and a popular rival. An arm run
+    may not read the cia skill: Read is scoped to the working copy, skills are disabled, and the
+    header records any cia vocabulary the report still carries (`cia-traces`). Arm rows go to
+    tests/ARMS.md, never RUNS.md: they measure the baseline, not the doctrine under test.
+
+EGM reviews (--mode egm)
+    One Goldfish reviewer of the egm plugin (`claude -p --agent egm:egm-<reviewer>`) cold-reads one
+    of this skill's documents, read-only (Read/Grep/Glob only), from the skill root. Rows go to
+    tests/EGM.md. tools/due.py says which documents and arms are due; the AI runs what it lists.
 
 Where things come from
     Prompts are READ from tests/RUNBOOK.md at run time, never hard-coded here: the
@@ -40,6 +55,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -64,6 +80,45 @@ SHELL_LINE = (
     "prefix, no pipes into other programs. Set environment variables inside your own script "
     "(process.env / os.environ), and start a server with the Bash tool's run_in_background option."
 )
+
+
+ARM_DIR = REPO / "tests" / "harness" / "arms"
+PONYTAIL_COMMIT = "96608e0"  # DietrichGebert/ponytail, skills/ponytail-audit/SKILL.md; see arms/README.md
+NO_SKILL_LINE = ("No skill is provided for this run. Audit the project with your own judgement; "
+                 "do not look for skill files.")
+
+
+def arm_line(arm):
+    """What replaces the cia skill line for a comparison arm. The task text stays identical."""
+    if arm == "none":
+        return NO_SKILL_LINE
+    if arm == "ponytail":
+        text = (ARM_DIR / "ponytail-audit" / "SKILL.md").read_text(encoding="utf-8")
+        body = text.split("---", 2)[2].strip()  # drop the frontmatter: the Skill tool would not show it either
+        return (f"No skill is installed for this run. Follow these audit instructions "
+                f"(ponytail-audit at {PONYTAIL_COMMIT}):\n\n{body}")
+    raise ValueError(f"unknown arm {arm!r}")
+
+
+# Vocabulary only the cia skill teaches. An arm report that carries it read cia somehow (a python
+# one-liner, the user CLAUDE.md naming the path), and its score says nothing about the baseline.
+CIA_TRACES = ("S:\\ai\\skills\\cia", "references/", "SKILL.md", "§", "ROUTE block", "Verified Controls")
+
+
+def cia_traces(text):
+    return [t for t in CIA_TRACES if t in text]
+
+
+EGM_REVIEWERS = ("comprehension", "structural", "style", "design", "codebase-details",
+                 "implementation-readiness", "zoom-out")
+
+
+def egm_prompt(doc):
+    # The last line is fixed so a row in tests/EGM.md is copied, not counted by hand.
+    return (f"Mode: REVIEW\nDocument: {doc}\n"
+            "The working directory is the repository the document belongs to; read any file you need.\n"
+            "Review the document in your role, read-only. Give every finding its path:line, group them as "
+            "Blocker, Major and Nit, and end with exactly one line: `Findings: <blockers>/<majors>/<nits>`.")
 
 
 class RunbookError(Exception):
@@ -145,15 +200,23 @@ ALLOWED_TOOLS = {
     "audit": READ_TOOLS,
     "run-tests": READ_TOOLS,
     "build": READ_TOOLS + ["Write", "Edit"],
+    "egm": ["Read", "Grep", "Glob"],  # a Goldfish only reads; the list enforces it
 }
+# A comparison arm must not reach the cia skill: Read is scoped to the working copy (checked
+# 2026-11-09: `Read(./**)` denies S:\ai\skills\cia\SKILL.md headless) and the Skill tool is gone.
+ARM_TOOLS = ["Read(./**)"] + [t for t in READ_TOOLS if t not in ("Read", "Skill")]
 
 
-def build_command(runtime, prompt, model, mode=None):
+def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None):
     if runtime == "claude":
         cmd = ["claude", "-p", prompt, "--output-format", "text"]
         if model:
             cmd += ["--model", model]
-        if mode in ALLOWED_TOOLS:
+        if mode == "egm":
+            cmd += ["--agent", f"egm:egm-{reviewer}"]
+        if arm != "cia":
+            cmd += ["--disable-slash-commands", "--allowedTools", *ARM_TOOLS]
+        elif mode in ALLOWED_TOOLS:
             cmd += ["--allowedTools", *ALLOWED_TOOLS[mode]]
     else:
         # codex: flags checked against `codex exec --help` (codex-cli 0.157). Codex sandboxes the whole
@@ -176,22 +239,34 @@ def skill_commit(root=REPO):
 
 def main(argv=None, runbook=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--mode", required=True, choices=["audit", "build", "run-tests"])
+    ap.add_argument("--mode", required=True, choices=["audit", "build", "run-tests", "egm"])
     ap.add_argument("--runtime", default="claude", choices=["claude", "codex"])
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--model")
     # One launcher for sibling skills (ecommerce-cia): their RUNBOOK, fixture and skill path, not a copy of this script.
     ap.add_argument("--skill-root", help="skill repo whose tests/RUNBOOK.md and fixture to use (default: this repo)")
     ap.add_argument("--fixture", default="fixture-service", help="folder under <skill-root>/tests/")
+    ap.add_argument("--arm", default="cia", choices=["cia", "none", "ponytail"],
+                    help="audit with the skill swapped out (comparison arm; rows go to tests/ARMS.md)")
+    ap.add_argument("--doc", help="egm: the document to review, relative to the skill root")
+    ap.add_argument("--reviewer", default="comprehension", choices=EGM_REVIEWERS, help="egm: which Goldfish")
     args = ap.parse_args(argv)  # argparse exits 2 on a malformed --mode
 
     skill_root = Path(args.skill_root).resolve() if args.skill_root else REPO
+    if args.mode == "egm":
+        return run_egm(args, skill_root)
+    # The arms are scored against this repo's key, and only the claude CLI can scope Read to the copy.
+    if args.arm != "cia" and (args.mode != "audit" or args.runtime != "claude" or skill_root != REPO):
+        print("error: --arm runs only with --mode audit, --runtime claude and this repo's fixture", file=sys.stderr)
+        return 2
     fixture = skill_root / "tests" / args.fixture
     if not fixture.is_dir():
         print(f"error: no fixture at {fixture}", file=sys.stderr)
         return 2
     skill_line = SKILL_LINE if skill_root == REPO else (
         f"You may and should read the skill at {skill_root} (SKILL.md and references/), per its own reference index.")
+    if args.arm != "cia":
+        skill_line = arm_line(args.arm)
     rb_path = Path(runbook or os.environ.get("CIA_RUNBOOK") or (skill_root / "tests" / "RUNBOOK.md"))
     try:
         prompt = build_prompt(args.mode, rb_path.read_text(encoding="utf-8"), skill_line)
@@ -199,7 +274,7 @@ def main(argv=None, runbook=None):
         print(f"error: {e}", file=sys.stderr)
         return 2
 
-    cmd = build_command(args.runtime, prompt, args.model, args.mode)
+    cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm)
 
     # Every run works on a throwaway copy of the fixture: build edits it, codex sandboxes the whole run,
     # and an audit's runtime walk (node server.js --reset, a probe) writes the fixture's own state. The
@@ -217,6 +292,36 @@ def main(argv=None, runbook=None):
         print(f"cwd: {cwd}")
         return 0
 
+    tag = "" if skill_root == REPO else f"{skill_root.name}-{args.fixture}-"
+    if args.arm != "cia":
+        tag += f"arm-{args.arm}-"
+    label = "" if args.arm == "cia" else f"arm {args.arm} | "
+    return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
+                   traces=args.arm != "cia")
+
+
+def run_egm(args, skill_root):
+    """One EGM Goldfish on one document of the skill, read-only, from the skill root."""
+    if args.runtime != "claude" or not args.doc:
+        print("error: --mode egm needs --doc and the claude runtime", file=sys.stderr)
+        return 2
+    doc = (skill_root / args.doc).resolve()
+    if not doc.is_file() or skill_root not in doc.parents:
+        print(f"error: no document {args.doc} inside {skill_root}", file=sys.stderr)
+        return 2
+    rel = doc.relative_to(skill_root).as_posix()
+    prompt = egm_prompt(rel)
+    cmd = build_command("claude", prompt, args.model, "egm", reviewer=args.reviewer)
+    if args.dry_run:
+        print(json.dumps(cmd))
+        print(f"cwd: {skill_root}")
+        return 0
+    return execute(cmd, prompt, str(skill_root), "claude", args.model, f"egm-{doc.stem}-{args.reviewer}",
+                   f"egm {rel} | reviewer {args.reviewer} | ", skill_root)
+
+
+def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False):
+    """Run the CLI with the prompt on stdin, save stdout under tests/harness/out/, print the path."""
     # Trap 1: on Windows the CLIs are npm .CMD shims, which subprocess cannot start by bare name.
     exe = shutil.which(cmd[0])
     if exe is None:
@@ -224,29 +329,31 @@ def main(argv=None, runbook=None):
         return 2
     # Trap 2: a .CMD shim runs through cmd.exe, which cuts an argument at its first line break, and the
     # prompt carries the multi-line HARD RULES block. claude -p reads the prompt from stdin instead.
-    if args.runtime == "claude":
+    last_msg = None
+    if runtime == "claude":
         argv = [exe] + [a for a in cmd[1:] if a != prompt]
-        stdin = prompt
     else:  # codex reads the prompt from stdin when it is "-"; -o keeps only its final message
         last_msg = os.path.join(tempfile.mkdtemp(prefix="cia-codex-out-"), "last.md")
         argv = [exe] + [a for a in cmd[1:] if a != prompt] + ["-o", last_msg, "-"]
-        stdin = prompt
-    res = subprocess.run(argv, cwd=cwd, input=stdin, capture_output=True, text=True,
+    t0 = time.monotonic()
+    res = subprocess.run(argv, cwd=cwd, input=prompt, capture_output=True, text=True,
                          encoding="utf-8", timeout=TIMEOUT_S)
+    label += f"seconds {round(time.monotonic() - t0)} | "  # the cost side of an arm comparison
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     day = datetime.date.today().isoformat()
     stamp = datetime.datetime.now().strftime("%H%M%S")  # two same-day runs of one mode must not overwrite each other
-    tag = "" if skill_root == REPO else f"{skill_root.name}-{args.fixture}-"
-    path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{tag}{args.mode}-{args.runtime}.md"
-    header = (
-        f"<!-- skill commit {skill_commit(skill_root)} | runtime {args.runtime} | "
-        f"model {args.model or 'default'} | exit {res.returncode} -->\n"
-    )
+    path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{name}-{runtime}.md"
     # Trap 3: a failed run must not be saved as an empty report and exit 0 - that is the fail-open
     # this skill audits for. Keep stderr in the artefact and return non-zero.
     out_text = res.stdout
-    if args.runtime == "codex" and os.path.exists(last_msg):
+    if last_msg and os.path.exists(last_msg):
         out_text = Path(last_msg).read_text(encoding="utf-8")
+    if traces:
+        label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
+    header = (
+        f"<!-- skill commit {skill_commit(root)} | runtime {runtime} | "
+        f"model {model or 'default'} | {label}exit {res.returncode} -->\n"
+    )
     body = out_text if res.returncode == 0 else f"{out_text}\n\n<!-- stderr -->\n{res.stderr}"
     path.write_text(header + body, encoding="utf-8")
     print(path)

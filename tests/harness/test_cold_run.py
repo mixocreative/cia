@@ -125,5 +125,60 @@ class SiblingSkillTests(unittest.TestCase):
         res = run("audit", RUNBOOK_BASE, ["--dry-run", "--fixture", "no-such-fixture"])
         self.assertEqual(res.returncode, 2)
 
+
+def cmd_of(res):
+    return json.loads(res.stdout.split("\n")[0])
+
+
+class ArmTests(unittest.TestCase):
+    """A comparison arm is the same task with the skill swapped out, and it must not reach cia."""
+
+    def test_no_skill_arm_cannot_read_the_skill(self):
+        res = run("audit", RUNBOOK_BASE, ["--dry-run", "--arm", "none"])
+        self.assertEqual(res.returncode, 0, res.stderr)
+        p, cmd = prompt_of(res), cmd_of(res)
+        self.assertTrue(p.startswith("pre-launch audit, Screen tier"))  # the task text is identical
+        self.assertIn(HARD, p)
+        self.assertNotIn("S:\\ai\\skills\\cia", p)
+        self.assertIn("No skill is provided", p)
+        tools = cmd[cmd.index("--allowedTools") + 1:]
+        self.assertIn("--disable-slash-commands", cmd)
+        self.assertIn("Read(./**)", tools)
+        self.assertNotIn("Read", tools)   # an unscoped Read would reach S:\ai\skills\cia
+        self.assertNotIn("Skill", tools)
+        self.assertIn("Bash(node:*)", tools)  # the same runtime walk as a cia run
+
+    def test_ponytail_arm_carries_the_pinned_instructions(self):
+        p = prompt_of(run("audit", RUNBOOK_BASE, ["--dry-run", "--arm", "ponytail"]))
+        self.assertIn("ponytail-audit at 96608e0", p)
+        self.assertIn("## 1. Map first", p)
+        self.assertNotIn("name: ponytail-audit", p)  # frontmatter dropped
+        self.assertNotIn("S:\\ai\\skills\\cia", p)
+
+    def test_arms_are_audits_only(self):
+        self.assertEqual(run("build", RUNBOOK_BASE + BUILD_SECTION, ["--dry-run", "--arm", "none"]).returncode, 2)
+        self.assertEqual(run("audit", RUNBOOK_BASE, ["--dry-run", "--arm", "none", "--runtime", "codex"]).returncode, 2)
+
+    def test_cia_traces_names_skill_vocabulary(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        self.assertEqual(cold_run.cia_traces("Must fix: the claim races."), [])
+        self.assertEqual(cold_run.cia_traces("per references/sweeps.md §3"), ["references/", "§"])
+
+
+class EgmTests(unittest.TestCase):
+    def test_egm_runs_one_read_only_goldfish(self):
+        res = run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "references/journey-map.md", "--reviewer", "structural"])
+        self.assertEqual(res.returncode, 0, res.stderr)
+        cmd = cmd_of(res)
+        self.assertEqual(cmd[cmd.index("--agent") + 1], "egm:egm-structural")
+        self.assertEqual(cmd[cmd.index("--allowedTools") + 1:], ["Read", "Grep", "Glob"])
+        self.assertIn("Document: references/journey-map.md", cmd[2])
+        self.assertIn("Findings: <blockers>/<majors>/<nits>", cmd[2])
+
+    def test_egm_refuses_a_document_outside_the_skill(self):
+        self.assertEqual(run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "../README.md"]).returncode, 2)
+        self.assertEqual(run("egm", RUNBOOK_BASE, ["--dry-run"]).returncode, 2)
+
 if __name__ == "__main__":
     unittest.main()
