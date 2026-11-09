@@ -79,4 +79,4 @@ Every file this key cites, with the sha256 it had when a person last read the ra
 - `src/store.js` c6f1d650f52a30bea295b7d5009794c97fe8a5a12040cf7b2bae23d69145f38b
 - `src/thumbs.js` e89cc2b510c98a25b374bf44fa4a7e6b3358f0e7b546f4ead05f5bfb0e11b4c0
 - `src/titles.js` 222325077ee20bbedfac31a107fd35544daec5f9c76da90c57a7e3d6166b9a02
-- `tests/editor.test.js` eed4a28314949fb4718d477a89b77c4969a7d3f596741c39591f8ebe39046250
+- `tests/editor.test.js` 0ad3e9eb8523939addd0ebe973c9bd36500c66afcf2196027c1f1e74de794cd0

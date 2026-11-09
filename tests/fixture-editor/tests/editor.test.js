@@ -41,7 +41,7 @@ test('listing an empty data directory returns no documents', async () => {
 
 test('listing returns saved documents, newest first', async () => {
   await saveDoc({ id: 'old', title: 'Old', body: '' }, 0);
-  await saveDoc({ id: 'new', title: 'New', body: '' }, 0);
+  await new Promise((r) => setTimeout(r, 5)); await saveDoc({ id: 'new', title: 'New', body: '' }, 0); // distinct savedAt
   const ids = (await listDocs()).map((d) => d.id);
   assert.deepEqual(ids, ['new', 'old']);
 });
