@@ -175,9 +175,9 @@ Don't — trust the evidence. Reading code never produces PASS in this skill; on
 <details>
 <summary><strong>Which agents does it run on?｜支援哪些 Agent？</strong></summary>
 
-Tested on Claude Code (plugin or skill directory), where the harness scores every change. On OpenAI Codex (codex-cli 0.157, Windows) the trigger behaviour is verified: a bare `run tests` runs no audit, reports the result honestly and offers the audit in one line. The test run itself was blocked, because Codex's Windows sandbox could not start a user-installed Python, so Codex audit scores are not measured yet. The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+Tested on Claude Code (plugin or skill directory), where the harness scores every change. Tested on OpenAI Codex (codex-cli 0.157, Windows, full access on a throwaway copy): a bare `run tests` behaves as specified, and two audits found 10 of the 12 planted defects each with no false positive, but Codex does not yet follow cia's report contract (no sweep per finding, no reading receipts) and misses the dead-watchdog and orphan-capability classes (`tests/RUNS.md`, "Other runtimes"). The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
 
-已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。在 OpenAI Codex（codex-cli 0.157，Windows）上已驗證觸發行為：單獨說 `run tests` 不會啟動稽核，會如實回報結果，並用一行提議稽核。但測試本身沒能執行，因為 Codex 的 Windows 沙箱無法啟動使用者安裝的 Python，所以 Codex 的稽核分數尚未量測。
+已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。也已在 OpenAI Codex（codex-cli 0.157，Windows，在拋棄式副本上給予完整權限）上測試：單獨說 `run tests` 的行為符合規格；兩次稽核各找到 12 個預埋缺陷中的 10 個，沒有誤報。但 Codex 目前還不遵守 cia 的報告格式（每項發現未標明掃描項目，也沒有閱讀收據），而且漏掉「失效看門狗」與「孤立功能」這兩類缺陷（見 `tests/RUNS.md` 的「Other runtimes」）。
 </details>
 
 ---
