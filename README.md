@@ -445,7 +445,7 @@ A skill that grades other people's evidence should be able to show its own｜一
 
 | Measurement 量測 | What it is 這是什麼 | Result 結果 |
 |---|---|---|
-| **Corpus 真實專案樣本** | 在維護者修好該 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | 2026-11-10 以目前準則重跑：**可取得的 8 個案例中 7 中 / 1 未中**（另 1 個專案已從 GitHub 刪除，保留 9 月的「部分中」）；9 月唯一未中的案例（`.env` 載入失敗只記 debug）這次抓到了，Go webhook 案例則被判為「單調所以冪等」而漏掉。橫跨 6 種缺陷類型、7 種語言 |
+| **Corpus 真實專案樣本** | 在維護者修好該 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | 2026-11-10 以目前準則重跑：**可取得的 8 個案例全部抓到**（另 1 個專案已從 GitHub 刪除，保留 9 月的「部分中」）。9 月唯一未中的案例（`.env` 載入失敗只記 debug）這次抓到了；Go webhook 案例第一次被判為「單調所以冪等」而漏掉，準則 S23 補上「單調是要證明的主張」後重跑即抓到。橫跨 6 種缺陷類型、7 種語言 |
 | **Planted-defect fixtures 預埋缺陷專案** | 兩個語言與主要狀態都不同、刻意埋入缺陷的專案：Python 工作佇列（12 個缺陷、8 個對照組）與 Node 筆記編輯器（11 個缺陷、7 個對照組）。每次修改 Skill 都要在兩者各跑兩次並通過閘門，否則無法推送 | 工作佇列 **11–12 分**、編輯器 **9–11 分**（滿分 12 / 11），對照組 **0 個誤報** |
 | **Build mode 建置模式** | 冷啟動執行「讓工作認領無競態且可承受當機」，依 12 項產出物評分（義務列、先失敗的四項驗證、帳本列、結案閘門…） | 報告改為檔案後的十次中，九次 **10–11.5 分**、**0 遺漏**；第 19 次把回收邏輯塞進認領而遺漏一項，該邊界已寫進準則，之後六次都守住。修正前最佳僅 4 分 |
 | **Blind-forward 盲測前瞻** | 取專案歷史中段的快照，**完全沒有標準答案**；稽核完成後，才用專案自己後續的 commit 回放比對 | 8 個稽核發現，**0 個判斷錯誤**，4 個經獨立驗證為真，但尚未有維護者事後修正 |
@@ -460,9 +460,9 @@ The most useful row in the table is a **miss**. In September a `.env` loader cau
 fixture both learned that "logged at debug" is silence, and the 2026-11-10 re-run filed it. The new miss
 is a Go payment webhook: the run looked at a replayed webhook, called the update idempotent because the
 status only moves forward, and so never asked whether the order was already in a final state, which is
-exactly what the maintainer fixed.
+exactly what the maintainer fixed. S23 now says "monotone" is a claim the out-of-order cell must prove, and the re-run on that doctrine filed it.
 
-> 整張表裡最有價值的一列，是那個**沒中**的案例。9 月時，一個 `.env` 載入器把自己的失敗 catch 起來、只寫一行 `log.debug` 就用預設值開機，冷啟動稽核因為「有寫 log」而放過它。之後準則與測試專案都學到「只記 debug 就等於沒說」，2026-11-10 重跑時就抓到了。新的未中案例是一個 Go 的金流 webhook：稽核看了重送的 webhook，因為狀態只會往前走就判定更新是冪等的，於是沒有追問訂單是否已在最終狀態，而這正是維護者修掉的地方。
+> 整張表裡最有價值的一列，是那個**沒中**的案例。9 月時，一個 `.env` 載入器把自己的失敗 catch 起來、只寫一行 `log.debug` 就用預設值開機，冷啟動稽核因為「有寫 log」而放過它。之後準則與測試專案都學到「只記 debug 就等於沒說」，2026-11-10 重跑時就抓到了。新的未中案例是一個 Go 的金流 webhook：稽核看了重送的 webhook，因為狀態只會往前走就判定更新是冪等的，於是沒有追問訂單是否已在最終狀態，而這正是維護者修掉的地方。準則 S23 現在寫明「單調」是亂序那一格必須證明的主張，以此重跑後就抓到了。
 
 ---
 
