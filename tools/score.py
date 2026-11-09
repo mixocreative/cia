@@ -81,6 +81,11 @@ def model_of(runtime: str) -> str:
         return m.group(1)
     if "paired" in low:
         return "paired"
+    # A Codex row run at a reasoning effort other than the owner's default (`medium`, C1-C21) is its own
+    # series: high effort read more and missed less (C22/C23), and pooling the two hides both trends.
+    e = re.search(r"effort (\w+)", low)
+    if "codex" in low and e:
+        return f"codex-{e.group(1)}"
     for name in ("opus", "sonnet", "haiku", "fable", "codex", "gpt"):
         if name in low:
             return name
@@ -372,12 +377,15 @@ def codex_rows() -> list[dict]:
     if OTHER_HEADING not in text:
         return []
     section = text.split(OTHER_HEADING, 1)[1].split(chr(10) + "## ", 1)[0]
-    return [r for r in _parse(section.splitlines()) if r["model"] == "codex" and r["fixture"] != "default"]
+    return [r for r in _parse(section.splitlines()) if r["model"].startswith("codex") and r["fixture"] != "default"]
 
 
 def codex_gate(cs: list[dict]) -> int:
     """The audit rule (commit_gate) over Codex rows: the newest live Codex commit, its own floor."""
-    return commit_gate(cs, "codex gate") if cs else 0
+    code = 0
+    for m in sorted({r["model"] for r in cs}):   # one series per reasoning effort, never pooled
+        code |= commit_gate([r for r in cs if r["model"] == m], f"codex gate [{m}]")
+    return code
 
 
 def line(r: dict) -> str:

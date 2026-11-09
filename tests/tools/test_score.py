@@ -200,6 +200,15 @@ class ScoreTests(unittest.TestCase):
         clean = history + [cx(11, 1, c="bbbbbbb"), cx(11, 1, c="bbbbbbb")]
         both = clean + [cx(11, m=1, c="ccccccc", note="missed: row 12"), cx(11, m=1, c="ccccccc", note="missed: row 12")]
         self.assertEqual(self.run_score(base + other(both), "--gate")[0], 1)                 # a shared miss is doctrine
+        # A run at another reasoning effort is its own series: its first pair is a baseline, and it
+        # neither joins nor resets the default-effort series' floor.
+        hi = lambda h, m=0: row("2026-11-13", h, miss=m, runtime="**Codex** (`--effort high`)", tier=svc,  # noqa: E731
+                                commit="bbbbbbb", note="missed: row 5" if m else "n")
+        self.assertEqual(score.model_of("**Codex** (as above, `--effort high`, audit run C22)"), "codex-high")
+        code, out, _ = self.run_score(base + other(clean + [hi(12), hi(11, m=1)]), "--gate")
+        self.assertEqual(code, 0)
+        self.assertIn("codex gate [codex-high]", out)
+        self.assertIn("codex gate [codex]", out)
 
     def build_gate_on(self, groups):
         """groups: list of (commit, [scores...]) as clean build runs; returns the --gate exit code."""
