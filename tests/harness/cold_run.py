@@ -220,6 +220,27 @@ def leftovers(before_pids, after, copy_dir):
             and (p["ppid"] not in alive or (copy_dir and copy_dir.lower() in p["cmd"].lower()))]
 
 
+def owned_by_run(left, copy_dir):
+    """The leftovers that are certainly this run's: their command line names its own throwaway copy.
+
+    Only these are stopped (the owner approved this on 2026-11-10). Codex obeys a user's global
+    AGENTS.md, and one that says "keep a graphify watch running per project" started a watcher in every
+    copy and left it running. An orphan that does not name the copy may be a parallel run's or the
+    user's own, so it stays a report: stopping what cannot be attributed would be the fail-open this
+    skill audits for."""
+    return [p for p in left if copy_dir and copy_dir.lower() in p["cmd"].lower()]
+
+
+def stop(pids):
+    """Stop each process and its children; returns the PIDs the OS reported as stopped."""
+    done = []
+    for pid in pids:
+        cmd = ["taskkill", "/PID", str(pid), "/T", "/F"] if os.name == "nt" else ["kill", "-TERM", str(pid)]
+        if subprocess.run(cmd, capture_output=True).returncode == 0:
+            done.append(pid)
+    return done
+
+
 def refs_opened(transcript, names):
     """Which of the skill's reference files (`names`, paths relative to references/) Codex's commands name:
     an upper bound on reading (a grep or a tail counts too). Two traps met on the first real log: the log
@@ -541,10 +562,12 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     body += collected
     path.write_text(header + body, encoding="utf-8")
     if left:
-        listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t{p['cmd']}" for p in left)
+        stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd))]))
+        listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t"
+                            f"{'stopped' if p['pid'] in stopped else 'left running'}\t{p['cmd']}" for p in left)
         path.with_suffix(".leftovers.log").write_text(listing + "\n", encoding="utf-8")
-        print(f"warning: {len(left)} process(es) outlived the run, not stopped; see "
-              f"{path.with_suffix('.leftovers.log')}", file=sys.stderr)
+        print(f"warning: {len(left)} process(es) outlived the run; stopped {len(stopped)} that named its copy, "
+              f"left the rest; see {path.with_suffix('.leftovers.log')}", file=sys.stderr)
     print(path)
     return 0 if res.returncode == 0 else 1
 

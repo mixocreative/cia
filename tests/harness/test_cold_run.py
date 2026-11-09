@@ -236,6 +236,13 @@ class LeftoverTests(unittest.TestCase):
         import cold_run
         self.cr = cold_run
 
+    def test_only_processes_naming_the_runs_copy_are_stopped(self):
+        left = [{"pid": 11, "ppid": 999, "cmd": "graphify watch runner"},                   # orphan, unattributable
+                {"pid": 12, "ppid": 999, "cmd": r"graphify watch C:\Temp\cia-audit-abc"},   # names this run's copy
+                {"pid": 13, "ppid": 999, "cmd": r"graphify watch C:\Temp\cia-audit-xyz"}]   # another run's copy
+        self.assertEqual([p["pid"] for p in self.cr.owned_by_run(left, r"C:\Temp\cia-audit-abc")], [12])
+        self.assertEqual(self.cr.owned_by_run(left, ""), [])                                # no copy, nothing owned
+
     def test_orphans_and_copy_processes_are_reported_and_old_or_parented_ones_are_not(self):
         after = [
             {"pid": 1, "ppid": 0, "cmd": "explorer.exe"},                                # existed before
