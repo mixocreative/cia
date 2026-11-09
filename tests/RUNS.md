@@ -461,6 +461,18 @@ moved Codex's misses without reducing them, so the gap is how many rows one Code
 which ones. The scan stays (it is generic, and Claude's gate passed with it); Codex stays outside the
 gate under the rule above, and README tells a Codex user to run two audits and read both.
 
+**A sixth mechanism, measured offline and not shipped: "every named defect filed" (2026-11-10).**
+Codex runs `audit_report.py check` every time, so a checker rule is the one lever it obeys. The rule
+flagged any line that cites a site and names a defect phrase ("no reader", "fallback", "swallow",
+...) with no finding id, grade or disposition and no finding citing that site. Run on the saved
+reports before any live run: it flagged one site across C12-C15 (C13 `cli.py:65`), and none of the
+real misses. C12's heartbeat row was filed as CIA-08 and scored on cause, not filing. C15's rows 9 and
+12 passed it too (they sit in sweep-table lines that a site match did not separate from filed
+findings). On sound Claude reports it flagged about nine sites (BN alone five). That is more noise
+than signal, so it was reverted uncommitted. **What this closes:** Codex's misses are not a
+filing-form gap that a shape check can see; they are rows its single pass did not judge, which
+only a second, independent run catches.
+
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
 never met the second instance of a class it had filed once. `8faa2c9` made the site list mandatory;
