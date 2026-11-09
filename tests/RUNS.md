@@ -434,7 +434,7 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-09 | `a30edff` (Step 6: 'the final reply *is* this report') | **Codex** (as above, audit run C4) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 8.4 | **10. Receipts 9/19**, refs opened 15/26, a sweep and layer on every finding, a protocol record with the numbered lines. Miss: row 12 (the identity fallback, absent). D5 'not a finding'. |
 | 2026-11-09 | `a30edff` | **Codex** (as above, audit run C5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 9.7 | **10. Receipts 9/19**, refs opened 20/26, an invariant named on every finding. Miss: row 10 (absent). D4, D5 respected. |
 | 2026-11-09 | `8faa2c9` (sweep-line rule, reverted in `c809314`) | **Codex** (as above, audit run C6) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 7.3 | **9.5. Receipts 9/19, refs opened 20/26, sweep-sites 1/24:** no 2a lines at all, so the rule under test was not applied. Miss: row 8 (`legacy_retry.py:14` 'currently orphaned' in the map table only, no finding, no grade). Unanchored: row 1 (cites D2 and `scheduler.py:11`, not `config.yaml:3`). Rows 10 and 12 found this time. Left a `graphify watch runner` process running after it exited. |
-| 2026-11-09 | `8faa2c9` (as above) | **Codex** (as above, audit run C7) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 12.1 | **9.5. Receipts 12/19, refs opened 20/26, sweep-sites 20/24:** followed the rule, a site list on every sweep line. Miss: row 10. Its S21 line lists `tests/test_scheduler.py:25-28` and '8 tests, 11 assertion call sites' and never names the environment write at `:55`. Near: row 5 (heartbeat file with no reader and 'no outermost external check' on the S20 line, not filed or graded). |
+| 2026-11-09 | `8faa2c9` (sweep-line rule, reverted in `c809314`) | **Codex** (as above, audit run C7) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 12.1 | **9.5. Receipts 12/19, refs opened 20/26, sweep-sites 20/24:** followed the rule, a site list on every sweep line. Miss: row 10. Its S21 line lists `tests/test_scheduler.py:25-28` and '8 tests, 11 assertion call sites' and never names the environment write at `:55`. Near: row 5 (heartbeat file with no reader and 'no outermost external check' on the S20 line, not filed or graded). |
 | 2026-11-09 | `54b0097` (header says `37055bc`: a RUNS-only commit landed mid-run) | **Codex** (as above, audit run C8) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 5.7 | **10. Receipts 0/19, refs opened 21/26.** First Codex run with `tools/sweep_leads.py`: rows 8 (CIA-08) and 10 (CIA-13) both filed. Miss: row 11, `cli.py:46` 'opens a fresh in-memory database' written in the runtime-evidence section, never filed or graded (read, not filed - the class the leads cannot reach, since it is a config key, not a function). Started `graphify watch runner` and left it running. |
 | 2026-11-09 | `54b0097` (as C8) | **Codex** (as above, audit run C9) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 1 | 2 | 0 | 9.1 | **7.5. Receipts 5/19, refs opened 18/26, sweep-sites 0/24.** Rows 8 (F08) and 10 (F10) filed again. Miss: row 5 (no heartbeat-file finding) and row 9 (no vacuous-pass finding). Near: row 12 (identity fallback MEDIUM, key HIGH). Left a `graphify watch runner` running. |
 | 2026-11-09 | `73d3c70` (reverted in `8858dd2`) | **Codex** (as above, audit run C10) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 7.5 | **10.** Miss: row 9. Read `audit_report.py`'s source and never ran it; no INVENTORY block; the reply a 45-line summary beside an evidence file. Receipts 0/19. |
@@ -455,7 +455,11 @@ and both runs after it carry every part: 3.75 by the RUNBOOK before, 10 after, a
 11.5 on the same commit. What remains is discovery, one row per run and a different row each time
 (12 in C4, 10 in C5, 10 in C3). **Codex's gate rule:** it joins `tools/score.py` once two Codex
 runs on one commit have no miss; until then its rows stay here, and a change to Step 6 or to the
-report form is run on Codex too.
+report form is run on Codex too. **Joined 2026-11-10** (C16, C17 on `798ee54`, 11.5 each, no miss):
+`score.py --gate` now reads this section's Codex rows as their own series (`codex_rows`,
+`codex_gate`), never pooled with Claude's, under the same per-commit rule: no miss the pair did not
+make up for, no false positive, and the mean of two runs at or over Codex's own floor. The rows stay
+in this section; the gate judges the newest Codex commit whenever one is recorded.
 
 **The lead scan (C8-C9, AT-AU): the targeted rows became reliable, the total did not move.** Six of
 the eight rows Codex missed in C1-C7 were never cited at all, and rows 8 and 10 were four of those
@@ -507,4 +511,7 @@ and lists them in `<report>.leftovers.log`. It reports, never stops: what to sto
 leftover when its command line names the run's copy, or when it was seen descending from the run's
 agent with the same command line (the tree is polled every 5 s while the agent runs). The copy rule
 alone left C16/C17's `graphify watch runner` running: a relative path names no copy. Anything neither
-rule claims is still reported and left alone.
+rule claims is still reported and left alone. **Verified live the same night (C18, C19 on `2ba62b3`):**
+both stopped on Codex's usage limit after about 155 s, before any report, so neither is scored; C18
+had started a watcher in its copy, the harness stopped it with its two child processes, and no
+`graphify` process was alive afterwards. C19 left nothing.
