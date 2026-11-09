@@ -260,7 +260,7 @@ Name both in the Step 6 report under line 5.
 
 **Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
 
-**Anchor before printing.** Re-read every finding and every sweep-line site for a `path:line` a reader can open; a symbol, a file or a concept named without its line is not filed yet — add the line, or move it to the unknown register (`evidence.md` §E4). The harness scores an unanchored finding as half (RUNBOOK).
+**Anchor before printing.** Re-read every finding and every sweep-line site for a `path:line` a reader can open; a symbol, a file or a concept named without its line is not filed yet — add the line, or move it to the unknown register (`evidence.md` §E4). A finding about something that never happens is anchored where it should happen: the line that sees the condition and does not act on it, not the enum, schema or document that names the missing step. The harness scores an unanchored finding as half (RUNBOOK).
 
 ```
 1. Fast lint + scope tests: ✅ N tests / M assertions green  (or ❌ finding at path:line)
