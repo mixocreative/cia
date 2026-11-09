@@ -50,11 +50,6 @@ the worst news the function can carry. On a file store the same property is writ
 flush, then an atomic rename: an editor that writes the document in place loses the user's work
 the moment the process dies half-way through the write.
 
-A single statement that both selects and writes (`UPDATE … WHERE … RETURNING`) is atomic on its
-own, and it still goes inside the explicit `BEGIN` … `COMMIT`: the next edit adds a second statement,
-and an operation whose atomicity rested on being one statement loses it without a line changing
-near the write. The fault-injection proof below is what notices.
-
 **The proof is the part teams skip.** A happy-path test passes against an implementation with no
 transaction at all. The only check that separates atomic from transaction-shaped is a fault
 injected *after* the first write: drop the table the second write needs (or fail the rename), run
@@ -107,13 +102,6 @@ never the attempt. Three rules:
    payments, Adyen's `eventCode` + `pspReference` with a differing `eventDate`,
    `adyen-onboarding.md` §3 in `ecommerce-cia`); a handler keyed on one field treats a duplicate
    as new.
-4. **An operation with no obvious caller key still needs one.** A claim, a lease, a pull from a
-   queue, a token issue: the commit lands, the response is lost, the caller retries, and the state
-   predicate that makes the retry harmless also makes it empty, so the caller never learns what it
-   holds and the work sits owned by nobody who knows it. Give the operation a request key (a claim
-   token, a lease id) stored with what it took; a retry with the same key returns the first answer.
-   A predicate that makes a second call change nothing proves race-freedom, not idempotency: the
-   idempotent proof is that retry, and it fails until the key exists.
 
 ### 1.4 Loud
 
