@@ -12,6 +12,8 @@ that the auditor meets the code the way a maintainer did, without knowing what i
 from __future__ import annotations
 
 import os
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -57,6 +59,15 @@ def cmd_prepare(name: str) -> int:
     dest = Path(tempfile.gettempdir()) / "cia-corpus" / name
     dest.parent.mkdir(parents=True, exist_ok=True)
 
+    # A clone left in the temp folder can be gutted by a temp cleaner (HEAD and config gone, .git kept),
+    # and `git -C` then fails with "not a git repository". Such a copy is this tool's own artefact: re-clone.
+    if dest.exists() and subprocess.run(["git", "-C", str(dest), "rev-parse", "--git-dir"],
+                                        capture_output=True).returncode != 0:
+        print(f"stale clone at {dest} is not a repository any more; cloning again", file=sys.stderr)
+        # git's pack files are read-only on Windows; clear the bit and retry, and fail loudly if it stays.
+        shutil.rmtree(dest, onexc=lambda fn, p, _e: (os.chmod(p, stat.S_IWRITE), fn(p)))
+        if dest.exists():
+            sys.exit(f"could not remove the stale clone at {dest}")
     if not dest.exists():
         print(f"cloning {repo} ...", file=sys.stderr)
         subprocess.run(["git", "clone", "--quiet", repo, str(dest)], check=True)
