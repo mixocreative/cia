@@ -24,25 +24,33 @@ baseline, not the doctrine under test. `tools/due.py` says when a new pair is du
 | 2026-11-09 | `23d0128` | ponytail | sonnet | 7 | 1 | 2 | 2 | 0 | 6.5 | <120 | Ran nothing. Misses: 5 heartbeat file as a Nice-to-have lean cut, 9 named only as "the only stuck test expects an empty list" under Should, no line. |
 | 2026-11-09 | `23d0128` | ponytail | sonnet | 7 | 2 | 1 | 2 | 0 | 6.5 | <120 | Ran nothing. Misses: 5 (heartbeat as a crash-after-commit Nice), 9 absent. Finding 16 suggests deleting `cancel`'s first SELECT at control C4 and says the UPDATE guards: a lean note, not a misfiled control. |
 
-**cia at the same time:** `c8ac18a`, runs K and L, 12 / 0 / 0 / 0 each (mean 12), with the live probe fired; their duration was not recorded
-(`RUNS.md` Minutes cell: n/r).
+**cia at the same time.** The first draft of this file compared the arms with runs K and L
+(`c8ac18a`, 12 each, early on 2026-11-09). That was the wrong baseline: nine cia runs made within
+the same hour as the arms, on the same doctrine (`c8ac18a`, or `889c473` = it plus one reverted
+sentence), scored 9.5, 7, 8, 10.5, 10, 7, 3, 9, 8 (`RUNS.md`, runs O-W). Only three of the nine read
+the references; the other six worked from SKILL.md and one to three sweep files.
 
-## What the first comparison says (2026-11-09)
+## What the first comparison says (2026-11-09, same hour, same model)
 
-| | mean score (of 12) | misses per run | ran the code |
-|---|---|---|---|
-| no skill | 2.25 | 3.5 | no |
-| ponytail-audit | 6.5 | 2 | no |
-| **cia** | **12** | **0** | yes (`RUNS.md` runtime table) |
+| | runs | mean score (of 12) | misses per run | read the skill |
+|---|---|---|---|---|
+| no skill | 2 | 2.25 | 3.5 | n/a |
+| ponytail-audit | 2 | 6.5 | 2 | n/a |
+| cia, runs that skipped the references | 6 | 7.1 | 1.5 | no |
+| cia, runs that read them | 3 | 9.8 | 0.3 | yes |
+| cia, this morning (K, L) | 2 | 12 | 0 | yes |
 
+- **cia's lead is its references.** A cia run that skips them scores about what ponytail scores;
+  one that reads them leads by three rows. On this model, runs read them one time in three. That is
+  now the skill's most important open defect (`RUNS.md` note of 2026-11-09, "the reading collapse").
 - **Both rival arms miss the same two rows every time:** 5, the dead watchdog (a heartbeat nothing
   reads and no outermost check), and 9, the vacuous pass (a test asserting emptiness with no sibling
   proving non-emptiness). Those are S20 and S21: doctrine cia teaches and neither arm has. This is the measured
   reason to keep them.
 - **Ponytail finds the sites as well as cia does** on the defects it reports, and anchors them
   well; it loses on grading (row 12 and row 4 as *Should fix*) and on the two rows above.
-- **The cost side is not measured yet.** Each arm run finished within two minutes of its launch;
-  cia's runs never recorded a duration. Every report header carries `seconds` from now on, so the
-  next cia pair and the next arm pair settle what cia costs for its six points.
+- **The cost side.** Arm runs took under two minutes; today's cia runs took 89-221 seconds (the
+  header's `seconds`), the reading runs the longest. From `c4ac613` the header also carries the
+  model that answered, the cost in dollars and the turns, so the next pair compares cost directly.
 - **Not measured here:** a recurring false-positive rate (none of the four runs misfiled a control),
   and any other fixture. One fixture of twelve rows is a small sample; read the gap, not the decimal.

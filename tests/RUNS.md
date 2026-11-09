@@ -219,6 +219,26 @@ should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `c8ac18a` | Claude **Sonnet** (harness, audit run L) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | n/r | **12/0/0/0.** All twelve rows at their sites and floors (F-008 heartbeat file S20 `scheduler.py:105`, F-004 stuck S16 `monitor.py:33-35`, F-017 orphan S13). Read sweeps 01-06, reporting, wiring-walk, evidence E1-E3. Mean of K and L 12: the first commit to match the best-ever score on two runs. |
 | 2026-11-09 | `0aebd2b` (build form reverted in `3db4312`) | Claude **Sonnet** (harness, audit run M) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | n/r | **10 hit / 2 unanchored = 11.** Row 7 (stuck) cited only `db.py:10`; row 10 (env mutation) described without its line. No false positive. |
 | 2026-11-09 | `0aebd2b` (build form reverted in `3db4312`) | Claude **Sonnet** (harness, audit run N) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 3 | 0 | 0 | n/r | **9 hit / 3 near or unanchored = 10.5.** Row 1 cited only the default at `scheduler.py:11`; row 5 heartbeat under S13/S19; row 8 `with_backoff` under S12. Mean of M and N 10.75 < 11.5. |
+| 2026-11-09 | `889c473` (due.py sentence reverted in `9582317`) | Claude **Sonnet** (harness, audit run O) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 1.9 | **9.5. Read SKILL.md, sweeps/01, reporting §9-11 only.** Miss: row 10 (the env write named, never its restore). Near: row 11 under S5/S15. Race confirmed by replaying the UPDATE. |
+| 2026-11-09 | `889c473` (due.py sentence reverted in `9582317`) | Claude **Sonnet** (harness, audit run P) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 8 | 2 | 2 | 0 | 2.5 | **7. Read sweeps 01-03, part of 04.** Misses: row 9 (S21 MEDIUM, no line), row 10. Unanchored: 5 (S20 'no cron' at `monitor.py`), 7. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run Q) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 7 | 4 | 1 | 0 | 1.5 | **8. Read SKILL.md and 150 lines of reporting.md, no sweep file.** Miss: row 10. Near: 2 and 12 (S3 MEDIUM). Unanchored: 5, 8. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run R) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 3 | 0 | 0 | 3.7 | **10.5. Quoted nine receipts.** Rows 5 and 7 unanchored, 8 under S12. 2 processes x 10 trials, 3000 double claims. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run S, fixture copy inside the repo) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 8 | 4 | 0 | 0 | 3.1 | **10. Instrument variant A; quoted the receipts.** Near: 5 and 10 (S20/S21 a grade low), 12 (MEDIUM). Unanchored: 8. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run T, fixture copy inside the repo) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 5 | 6 | 1 | 0 | 1.7 | **7. Variant A again; read sweeps/01 only.** Miss: row 10. Near: 2, 4, 8, 9, 11; unanchored 7. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run U, no permission line in the prompt) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 3 | 6 | 3 | 0 | 2.1 | **3. Variant B; read sweeps/01 only.** Misses: 5, 9 (LOW), 10. Grades one level low throughout. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run V, `--add-dir` the skill) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 2 | 1 | 0 | 2.8 | **9. Variant C; read most references.** Miss: row 5 (heartbeat file under S19 LOW). Near: 2, 9. |
+| 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run W, `--add-dir` the skill) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 7 | 4 | 1 | 0 | 1.6 | **8. Variant C again; read sweeps 01 and 03.** Miss: row 10. Near: 6 (S16), 9 (ungraded), 11; unanchored 5. |
+
+**The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
+12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
+score follows the reading: 9.8 mean when they read, 7.1 when they did not, ponytail-audit's level
+(`ARMS.md`). Ruled out by experiment: the fixture copy's location (S, T), the permission line (U),
+and workspace access to the skill (V, W); the CLI was unchanged since 2026-11-03. Not ruled out: the
+model behind the `sonnet` alias, which no header recorded until `c4ac613`. Runs O and P carried one
+added SKILL.md sentence and were reverted under the pre-registered rule, though Q-W show the
+sentence was not the cause. The live doctrine now fails its own gate on this model, which is the
+point of the gate: the next doctrine change must make reading the references reliable before any
+other change ships, and is tested with two runs that quote the receipts.
 
 ## Build-mode runs (2026-11-09 onward)
 
