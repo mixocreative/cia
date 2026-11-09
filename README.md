@@ -175,7 +175,9 @@ Don't — trust the evidence. Reading code never produces PASS in this skill; on
 <details>
 <summary><strong>Which agents does it run on?｜支援哪些 Agent？</strong></summary>
 
-Tested on Claude Code (plugin or skill directory) and OpenAI Codex. The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+Tested on Claude Code (plugin or skill directory), where the harness scores every change. On OpenAI Codex (codex-cli 0.157, Windows) the trigger behaviour is verified: a bare `run tests` runs no audit, reports the result honestly and offers the audit in one line. The test run itself was blocked, because Codex's Windows sandbox could not start a user-installed Python, so Codex audit scores are not measured yet. The skill is plain Markdown plus small Python tools, so other agents that load `SKILL.md` folders may work; reports welcome.
+
+已在 Claude Code（外掛或 Skill 目錄）上測試，每次修改都由測試框架評分。在 OpenAI Codex（codex-cli 0.157，Windows）上已驗證觸發行為：單獨說 `run tests` 不會啟動稽核，會如實回報結果，並用一行提議稽核。但測試本身沒能執行，因為 Codex 的 Windows 沙箱無法啟動使用者安裝的 Python，所以 Codex 的稽核分數尚未量測。
 </details>
 
 ---

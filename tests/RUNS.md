@@ -277,6 +277,19 @@ re-pin, or reword the control so it rests on the digest and the ADR alone. Until
 reports the D5 contradiction without filing the cap is right twice, and one that files the cap is
 a false positive.
 
+**First Codex run that reached the model (2026-11-09 13:53, `66aea4f`, codex-cli 0.157, model
+default, 93 s; not a scored row).** A bare `run tests` through `cold_run.py --mode run-tests
+--runtime codex`. The trigger half passed: Codex ran no audit, reported "Test result: unknown"
+rather than a colour, wrote line 7 as `not run (harness fence)`, and offered the Screen audit in
+one line. The test half is UNPROVEN, an environment fault: the run "cannot launch `python` or
+`py`". Reproduced outside the model with `codex sandbox python --version`: Windows error 5,
+`CreateProcessAsUserW` access denied for `...\AppData\Local\Programs\Python\Python313\python.exe`,
+with or without `shell_environment_policy.inherit=all` or `disk-full-read-access`. `cmd` from
+System32 starts. So the Windows restricted-token sandbox cannot execute a per-user Python install.
+The fixes are `-s danger-full-access` or a different Codex Windows sandbox setup; each loosens a
+security boundary and is the owner's decision, so neither is taken. Until then the README claims
+Codex trigger behaviour only, and no Codex audit score exists.
+
 ## Build-mode runs (2026-11-09 onward)
 
 | Date | Skill commit | Runtime | Prompt | Hits | Near | Miss | False+ | Minutes | Note |
