@@ -258,7 +258,7 @@ request is a code review.
 - **S22.11:** one browser test per view reads the rendered `innerText` and fails on each retired name (old view, tab and mode names). A rename that leaves the old word on one screen fails the suite instead of confusing a user.
 Name both in the Step 6 report under line 5.
 
-**Step 6 — Numbered report + explicit deferral (5 min).** Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
+**Step 6 — Numbered report + explicit deferral (5 min).** The final reply *is* this report, whatever the runtime's habit for short final answers: every finding with its sweep, `path:line` and grade, the numbered lines below, and the receipts line. A summary in its place keeps the verdict and drops the evidence a reader needs to act on it or to check it. Open with the owner paragraph (§0.15.8): ≤ 5 plain lines — what is safe, what is not, what to do first. Then one line per step:
 
 **Anchor before printing.** Re-read every finding and every sweep-line site for a `path:line` a reader can open; a symbol, a file or a concept named without its line is not filed yet — add the line, or move it to the unknown register (`evidence.md` §E4). A finding about something that never happens is anchored where it should happen: the line that sees the condition and does not act on it, not the enum, schema or document that names the missing step. The harness scores an unanchored finding as half (RUNBOOK).
 
