@@ -178,14 +178,16 @@ def commit_gate(rs: list[dict], name: str) -> int:
     # Here both instruments have scored 12 on fixture-service, so the split is not taken; take it if they diverge.
     pool = [r for r in rs if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
     group = [r for r in pool if r["token"] == last["token"]]
-    earlier = [r for r in pool if r["token"] != last["token"]]
+    # A commit is judged only against what was measured before it. After a revert the shipped commit is
+    # the newest live one, and later reverted experiments must not raise its floor or its miss bar.
+    first = next(i for i, r in enumerate(rs) if r["token"] == last["token"])
+    earlier = [r for r in rs[:first] if r in pool]
     # The miss rule asks whether the fixture's rows are findable at all, which any model's clean run
     # proves; it is not a score comparison, so it is neither pooled by model nor skipped for a model's
     # first commit. Either let a new model's first commits through with misses.
     # Only a clean run recorded BEFORE the commit under test makes its misses a regression. A clean
     # run on a later, reverted commit (build run 10, 2026-11-09) says the rows are findable, but
     # holding the still-shipped earlier commit to it blocks every push until a later commit lands.
-    first = next(i for i, r in enumerate(rs) if r["token"] == last["token"])
     findable = [r for r in rs[:first] if r["fixture"] == last["fixture"]]
     if any(r["miss"] == 0 and r["false"] == 0 for r in findable):
         dirty = [r for r in group if r["miss"] or r["false"]]
