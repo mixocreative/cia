@@ -79,8 +79,11 @@ build mode: make the job claim in runner/scheduler.py race-free and crash-safe, 
    gate). Same columns as the audit table; the Prompt cell holds the prompt above; the Note names
    any collateral edit outside `claim_batch` and the reason the run gave for it.
 5. **The gate.** A miss here is **not a push blocker until a baseline row exists** — the first
-   scored build run is recorded, not blocked, and `score.py --gate` compares later build rows
-   against it on the same model. Until a row scores clean (no miss, no false positive),
+   scored build run is recorded, not blocked. After it, build rows are gated by the audit rule
+   of step 6: two runs on the commit, no miss or false positive once any earlier build run was
+   clean, and a mean within half a row of the recent median, never more than a row under the best
+   (`score.py`, `build_gate` -> `commit_gate`). Until 2026-11-09 the newest single row was held to
+   the best single row, which let one lucky run set the bar. Until a row scores clean (no miss, no false positive),
    `README.md` and `SKILL.md` must **not** claim build mode is cold-tested; they may say the audit
    is, because it is.
 

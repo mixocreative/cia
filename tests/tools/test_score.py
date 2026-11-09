@@ -60,10 +60,11 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(score.build_rows()[0]["score"], -8)
 
     def test_build_regression_fails_gate(self):
-        t = runs_text(self.AUDIT, [row("2026-11-10", 8), row("2026-11-11", 5, miss=3)])
-        code, _, err = self.run_score(t, "--gate")
+        build = [row("2026-11-10", 8, commit="aaaaaaa"), row("2026-11-10", 8, commit="aaaaaaa"),
+                 row("2026-11-11", 5, miss=3, commit="bbbbbbb"), row("2026-11-11", 5, miss=3, commit="bbbbbbb")]
+        code, _, err = self.run_score(runs_text(self.AUDIT, build), "--gate")
         self.assertEqual(code, 1)
-        self.assertIn("build run", err)
+        self.assertIn("BUILD GATE", err)
 
     def test_build_improvement_passes_gate(self):
         t = runs_text(self.AUDIT, [row("2026-11-10", 5), row("2026-11-11", 8)])
@@ -139,9 +140,18 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(len(score.build_rows()), 2)
         self.assertEqual(self.run_score(t, "--gate")[0], 0)
 
-    def test_build_gate_is_a_ratchet(self):
-        build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
-        self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)
+    def build_gate_on(self, groups):
+        """groups: list of (commit, [scores...]) as clean build runs; returns the --gate exit code."""
+        build = [row(f"2026-11-{i + 10:02d}", s, commit=c) for i, (c, ss) in enumerate(groups) for s in ss]
+        return self.run_score(runs_text(self.AUDIT, build), "--gate")[0]
+
+    def test_build_gate_is_the_per_commit_mean(self):
+        self.assertEqual(self.build_gate_on([("aaaaaaa", [8, 8]), ("bbbbbbb", [2, 5])]), 1)   # 3.5 < 7.5
+        self.assertEqual(self.build_gate_on([("aaaaaaa", [8, 8]), ("bbbbbbb", [8])]), 1)      # one run is a sample
+        self.assertEqual(self.build_gate_on([("aaaaaaa", [8, 8]), ("bbbbbbb", [8, 7])]), 0)   # 7.5, at the floor
+        # One lucky row no longer sets the bar: 10 sits in a commit whose mean is 7.
+        lucky = [("aaaaaaa", [5, 5]), ("bbbbbbb", [10, 4]), ("ccccccc", [8, 5])]
+        self.assertEqual(self.build_gate_on(lucky), 0)                                     # 6.5 >= floor 6
 
     def test_build_gate_skips_reverted_rows(self):
         build = [row("2026-11-10", 4), row("2026-11-11", 4), row("2026-11-12", 2, commit="aaaaaaa` (reverted in `bbbbbbb")]

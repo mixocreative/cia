@@ -160,12 +160,17 @@ DRIFT = 1.0
 
 
 def audit_gate(rs: list[dict]) -> int:
-    """Per-commit gate. Misses and false positives are doctrine: zero tolerance. Half-rows are noise:
-    the mean of at least two runs on the commit under test must stay within NOISE of the median of the
-    last RECENT live per-commit means, and never more than DRIFT under the best ever."""
+    return commit_gate(rs, "gate")
+
+
+def commit_gate(rs: list[dict], name: str) -> int:
+    """Per-commit gate, for audit rows and build rows alike. Misses and false positives are doctrine:
+    zero tolerance. Half-rows are noise: the mean of at least two runs on the commit under test must
+    stay within NOISE of the median of the last RECENT live per-commit means, and never more than
+    DRIFT under the best ever."""
     live = [r for r in rs if not r.get("reverted")]
     if not live:
-        print("gate: every scored run is on a reverted commit - nothing under test.")
+        print(f"{name}: every scored run is on a reverted commit - nothing under test.")
         return 0
     last = live[-1]
     # Debt, known: this pools launcher (cold_run.py) rows with cold-subagent rows. ecommerce-cia split them
@@ -182,15 +187,15 @@ def audit_gate(rs: list[dict]) -> int:
         dirty = [r for r in group if r["miss"] or r["false"]]
         if dirty:
             r = dirty[-1]
-            print(f"GATE: a run on {last['token']} has {r['miss']} miss / {r['false']} false positive, on a fixture "
+            print(f"{name.upper()}: a run on {last['token']} has {r['miss']} miss / {r['false']} false positive, on a fixture "
                   f"where an earlier run had none. A miss is doctrine, never noise (RUNBOOK step 6).", file=sys.stderr)
             return 1
     if not earlier:
-        print(f"gate: {last['token']} is the first scored commit on {last['fixture']} with {last['model']} - "
+        print(f"{name}: {last['token']} is the first scored commit on {last['fixture']} with {last['model']} - "
               f"a baseline, nothing to compare it against. Recorded, not blocked.")
         return 0
     if len(group) < 2:
-        print(f"GATE: {last['token']} has one scored run on {last['fixture']} with {last['model']}. One run is a "
+        print(f"{name.upper()}: {last['token']} has one scored run on {last['fixture']} with {last['model']}. One run is a "
               f"sample - run again, then gate on the mean (RUNBOOK step 6).", file=sys.stderr)
         return 1
     best, baseline = floor_parts(earlier)
@@ -198,10 +203,10 @@ def audit_gate(rs: list[dict]) -> int:
     mean = sum(r["score"] for r in group) / len(group)
     why = f"median of the last {RECENT} live per-commit means {baseline:g}, best ever {best:g}"
     if mean < floor:
-        print(f"GATE: {last['token']} scores a mean of {mean:g} over {len(group)} runs, below the floor "
+        print(f"{name.upper()}: {last['token']} scores a mean of {mean:g} over {len(group)} runs, below the floor "
               f"{floor:g} ({why}). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)
         return 1
-    print(f"gate: {last['token']} mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
+    print(f"{name}: {last['token']} mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
           f"no miss, no false positive.")
     return 0
 
@@ -278,26 +283,13 @@ def line(r: dict) -> str:
 
 
 def build_gate(bs: list[dict]) -> int:
-    """Newest build row against the best earlier build row on the same model. Same rule as audit."""
+    """Build rows under the audit rule (commit_gate): the mean of two runs on the commit, no miss once
+    any build run was clean. Until 2026-11-09 this compared the newest single row with the best single
+    row. Build run 10 then scored 9.5 against a best of 4, and that one row would have become the bar
+    every later single run must beat: the lucky-best ratchet audit_gate shed the same day."""
     if not bs:
         return 0   # main() has already printed "build: no scored build run yet"
-    # Same rule as audit_gate: a row on a reverted commit measured doctrine that no longer ships.
-    live = [r for r in bs if not r.get("reverted")]
-    if not live:
-        return 0
-    last = live[-1]
-    same = [r for r in bs if r is not last and r["model"] == last["model"] and bs.index(r) < bs.index(last)]
-    if not same:
-        print(f"build gate: {last['date']} is the first scored build run with {last['model']} - "
-              f"a baseline. Recorded, not blocked.")
-        return 0
-    prev = max(same, key=lambda r: (r["score"], -r["miss"]))  # ratchet: a recorded regression never becomes the baseline
-    if last["score"] < prev["score"] or last["miss"] > prev["miss"]:
-        print(f"GATE: the newest build run with {last['model']} ({last['score']:g}, {last['miss']} miss) "
-              f"scores below the best earlier build run with the same model ({prev['date']}: "
-              f"{prev['score']:g}, {prev['miss']} miss).", file=sys.stderr)
-        return 1
-    return 0
+    return commit_gate(bs, "build gate")
 
 
 def main(argv: list[str] | None = None) -> int:
