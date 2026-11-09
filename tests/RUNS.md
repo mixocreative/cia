@@ -228,6 +228,12 @@ should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run U, no permission line in the prompt) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 3 | 6 | 3 | 0 | 2.1 | **3. Variant B; read sweeps/01 only.** Misses: 5, 9 (LOW), 10. Grades one level low throughout. |
 | 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run V, `--add-dir` the skill) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 2 | 1 | 0 | 2.8 | **9. Variant C; read most references.** Miss: row 5 (heartbeat file under S19 LOW). Near: 2, 9. |
 | 2026-11-09 | `c8ac18a` (run at `9582317`, which changed no doctrine) | Claude **Sonnet** (harness, audit run W, `--add-dir` the skill) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 7 | 4 | 1 | 0 | 1.6 | **8. Variant C again; read sweeps 01 and 03.** Miss: row 10. Near: 6 (S16), 9 (ungraded), 11; unanchored 5. |
+| 2026-11-09 | `c8ac18a` (A/B baseline, run after AA from a worktree at `c8ac18a`, current RUNBOOK prompt) | Claude **Sonnet** (harness, audit run AB; resolved claude-sonnet-5-5, $0.41, 19 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 5 | 5 | 2 | 0 | 1.0 | **5.5. Receipts 0/19: 'I did not open the skill's references'.** Misses: 5 (heartbeat only as 'no callers'), 9 (absent). Near: 2, 12, 11 (S3 MEDIUM), 10 (LOW). Unanchored: 8. Listed above X because the gate tests the last commit in the table. |
+| 2026-11-09 | `c8ac18a` (A/B baseline, run after AA, as AB) | Claude **Sonnet** (harness, audit run AC; resolved claude-sonnet-5-5, $0.52, 24 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 5 | 5 | 2 | 0 | 1.6 | **5.5. Receipts 0/19: 'no reference receipts to quote'.** Misses: 9, 10 (env var 'nothing reads', never its restore). Near: 2, 12 (S3 MEDIUM). Unanchored: 5 (file unread, cited at `monitor.py`), 7, 8. |
+| 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run X; resolved claude-sonnet-5-5, $1.24, 41 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 2.6 | **11. Receipts 9/19, every core reference quoted.** Near: row 5 (heartbeat file unread, S20.3 MEDIUM). Unanchored: row 7 ('nothing writes stuck' cited at `status_page.py`, not `monitor.py:33-35`). 200 of 200 jobs double-claimed. |
+| 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run Y; resolved claude-sonnet-5-5, $1.48, 45 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 4.3 | **11.5. Receipts 9/19, every core reference quoted.** Near: row 5 (RUN-17 S20 MEDIUM). RUN-13 (enqueue's catch also swallows NOT NULL) is the known true extra, not the control. 30 of 30 trials double-claimed. |
+| 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run Z; resolved claude-sonnet-5-5, $1.29, 39 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 2.8 | **11. Receipts 9/19.** Row 5 a hit at last (CIA-009 S20.1 `scheduler.py:99-105`, 'read by nobody'). Near: 10 (S21 LOW), 12 (S3 MEDIUM). Row 8's severity cell says 'HIGH-CONF'; the report's own tally (4 MEDIUM) makes it MEDIUM, scored a hit. **Fence leak:** its line 7 ran `tools/score.py`, which reads RUNS.md and printed run Y's count line (counts only, no row text); judged harmless to discovery, and the harness gap is recorded in the note below. |
+| 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run AA; resolved claude-sonnet-5-5, $1.36, 45 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 7 | 5 | 0 | 0 | 4.4 | **9.5. Receipts 9/19.** Grades one low: 2 and 12 (one S3 finding at MEDIUM), 9 (S21 MEDIUM), 8 (`with_backoff` as LOW / an unswept MEDIUM doc note). Unanchored: 5 (no outermost check at `monitor.py`, the file never named). F11 (D5's 'CLI reaches any job by id' has no command) is a true extra about the doc; the 200-row cap itself is kept as deliberate. |
 
 **The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
 12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
@@ -239,6 +245,24 @@ added SKILL.md sentence and were reverted under the pre-registered rule, though 
 sentence was not the cause. The live doctrine now fails its own gate on this model, which is the
 point of the gate: the next doctrine change must make reading the references reliable before any
 other change ships, and is tested with two runs that quote the receipts.
+
+**The reading fix, and what the collapse really was (2026-11-09, runs X-AC).** The receipt rule
+used to let a run confess a skipped reference ("says so plainly"), and the skipping runs did exactly
+that. `db6fd0f` makes a missing receipt a step not yet done: no finding is written until every
+core receipt can be quoted, and a short run narrows the matrices, never the reading. Four runs
+(two, then two more decided before the first two were scored) all quoted nine receipts: 11, 11.5,
+11, 9.5 = 10.75, no miss, no false positive. That was still under the old floor of 11.5, so the
+same hour, same model (the header now names it: claude-sonnet-5-5), same prompt and harness ran
+the old doctrine from a worktree at `c8ac18a`: 5.5 and 5.5, zero receipts, two misses each. **On
+one model the fix is worth five rows; the 12s of runs K and L came from whatever the alias resolved
+to at dawn, and the score drop was a model change wearing a regression's clothes.** So
+`tools/score.py` now pools by the resolved model when a row records it (rows without it stay under
+the alias), and the miss rule, which asks whether the fixture is findable at all, looks at every
+model's history and no longer skips a model's first commit. What the fix costs: $1.24-$1.48 and
+39-45 turns a run, against $0.41-$0.52 and 19-24 turns for the old doctrine skipping its reading.
+What remains is grading, not discovery: rows 2, 12 (S3) and 5 (S20) are the ones still filed a
+grade low. **Fence leak, closed:** run Z obeyed report line 7 and ran `tools/score.py`, which reads
+this file, and printed run Y's count line; the RUNBOOK's HARD RULES now forbid it on the fixture.
 
 ## Build-mode runs (2026-11-09 onward)
 
