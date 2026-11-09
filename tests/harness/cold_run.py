@@ -191,13 +191,17 @@ def list_processes():
     """Every process as {pid, ppid, cmd}, or None when the listing cannot be taken."""
     try:
         if os.name == "nt":
-            ps = ("Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine"
+            # Trap: Windows PowerShell writes in the console code page (cp950 here), and one non-UTF-8
+            # command line crashed the reader on 2026-11-09. Force UTF-8 out, and replace what still is not.
+            ps = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "
+                  "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine"
                   " | ConvertTo-Json -Compress")
             out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True,
-                                 text=True, encoding="utf-8", timeout=60).stdout
+                                 text=True, encoding="utf-8", errors="replace", timeout=60).stdout
             return [{"pid": p["ProcessId"], "ppid": p["ParentProcessId"], "cmd": p.get("CommandLine") or ""}
                     for p in json.loads(out)]
-        out = subprocess.run(["ps", "-eo", "pid=,ppid=,args="], capture_output=True, text=True, timeout=60).stdout
+        out = subprocess.run(["ps", "-eo", "pid=,ppid=,args="], capture_output=True, text=True,
+                             errors="replace", timeout=60).stdout
         rows = (line.split(None, 2) for line in out.splitlines() if line.strip())
         return [{"pid": int(r[0]), "ppid": int(r[1]), "cmd": r[2] if len(r) > 2 else ""} for r in rows]
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
