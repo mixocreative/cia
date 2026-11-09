@@ -381,5 +381,6 @@ moves it. It stays here, outside the gate, until two Codex runs on one commit ha
 **Scored leniently, recorded not rescored:** C3-C5 had 2a lines with finding refs and no paths, the
 RUNBOOK's *vacuous line*; they were not marked down for it.
 **Harness debt:** Codex runs C1-C7 each left a `graphify watch` process running after `codex exec`
-returned (seven found on 2026-11-09, parents gone). cold_run.py does not yet list or stop processes a
-run leaves behind; until it does, check for them after a Codex batch.
+returned (seven found on 2026-11-09, parents gone). **Closed:** from `cold_run.py` after `d4099b0` the
+header carries `leftover-procs N` (orphaned or naming the fixture copy; `n/r` when the listing failed)
+and lists them in `<report>.leftovers.log`. It reports, never stops: what to stop is the owner's call.

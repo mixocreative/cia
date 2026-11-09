@@ -228,6 +228,30 @@ class PartialReadTests(unittest.TestCase):
                          ["evidence.md", "reporting.md", "sweeps/04-enumeration-environment-liveness.md"])
 
 
+class LeftoverTests(unittest.TestCase):
+    """A run that leaves a process behind is reported; a listing that failed is n/r, never 0."""
+
+    def setUp(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        self.cr = cold_run
+
+    def test_orphans_and_copy_processes_are_reported_and_old_or_parented_ones_are_not(self):
+        after = [
+            {"pid": 1, "ppid": 0, "cmd": "explorer.exe"},                                # existed before
+            {"pid": 10, "ppid": 1, "cmd": "notepad.exe"},                                # new, parent alive
+            {"pid": 11, "ppid": 999, "cmd": "graphify watch runner"},                    # new, orphaned
+            {"pid": 12, "ppid": 1, "cmd": r"node C:\Temp\cia-audit-abc\server.js"},      # new, names the copy
+        ]
+        got = self.cr.leftovers({0, 1}, after, r"C:\TEMP\cia-audit-abc")
+        self.assertEqual([p["pid"] for p in got], [11, 12])
+
+    def test_live_listing_includes_this_process(self):
+        procs = self.cr.list_processes()
+        self.assertIsNotNone(procs)
+        self.assertIn(os.getpid(), {p["pid"] for p in procs})
+
+
 class EgmTests(unittest.TestCase):
     def test_egm_runs_one_read_only_goldfish(self):
         res = run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "references/journey-map.md", "--reviewer", "structural"])

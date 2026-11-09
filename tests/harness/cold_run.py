@@ -183,6 +183,38 @@ def sweep_sites(text):
     return len(ids)
 
 
+# Processes a run leaves behind. Added 2026-11-09: Codex runs C1-C7 each left a `graphify watch`
+# running after `codex exec` returned, seven found at once, parents gone. The harness REPORTS them and
+# never stops them: what to stop on the owner's machine is the owner's call. A failed snapshot is
+# `n/r`, never 0 - a count of zero from a listing that did not run is the blind instrument S20 audits.
+def list_processes():
+    """Every process as {pid, ppid, cmd}, or None when the listing cannot be taken."""
+    try:
+        if os.name == "nt":
+            ps = ("Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine"
+                  " | ConvertTo-Json -Compress")
+            out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True,
+                                 text=True, encoding="utf-8", timeout=60).stdout
+            return [{"pid": p["ProcessId"], "ppid": p["ParentProcessId"], "cmd": p.get("CommandLine") or ""}
+                    for p in json.loads(out)]
+        out = subprocess.run(["ps", "-eo", "pid=,ppid=,args="], capture_output=True, text=True, timeout=60).stdout
+        rows = (line.split(None, 2) for line in out.splitlines() if line.strip())
+        return [{"pid": int(r[0]), "ppid": int(r[1]), "cmd": r[2] if len(r) > 2 else ""} for r in rows]
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        return None
+
+
+def leftovers(before_pids, after, copy_dir):
+    """New processes that outlived the run: orphaned (parent gone) or naming the fixture copy.
+
+    Two traps: a parallel harness run's orphan is reported by every run that ends after it (the
+    report says so, it does not guess whose), and Windows reuses PIDs, so an orphan whose parent PID
+    was reused looks parented - a false negative, never a false alarm."""
+    alive = {p["pid"] for p in after}
+    return [p for p in after if p["pid"] not in before_pids
+            and (p["ppid"] not in alive or (copy_dir and copy_dir.lower() in p["cmd"].lower()))]
+
+
 def refs_opened(transcript, names):
     """Which of the skill's reference files (`names`, paths relative to references/) Codex's commands name:
     an upper bound on reading (a grep or a tail counts too). Two traps met on the first real log: the log
@@ -428,10 +460,14 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     else:  # codex reads the prompt from stdin when it is "-"; -o keeps only its final message
         last_msg = os.path.join(tempfile.mkdtemp(prefix="cia-codex-out-"), "last.md")
         argv = [exe] + [a for a in cmd[1:] if a != prompt] + ["-o", last_msg, "-"]
+    before = list_processes()
     t0 = time.monotonic()
     res = subprocess.run(argv, cwd=cwd, input=prompt, capture_output=True, text=True,
                          encoding="utf-8", timeout=TIMEOUT_S)
     label += f"seconds {round(time.monotonic() - t0)} | "  # the cost side of an arm comparison
+    after = list_processes()
+    left = None if before is None or after is None else leftovers({p["pid"] for p in before}, after, str(cwd))
+    label += f"leftover-procs {'n/r' if left is None else len(left)} | "
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     day = datetime.date.today().isoformat()
     stamp = datetime.datetime.now().strftime("%H%M%S")  # two same-day runs of one mode must not overwrite each other
@@ -460,6 +496,11 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     )
     body = out_text if res.returncode == 0 else f"{out_text}\n\n<!-- stderr -->\n{res.stderr}"
     path.write_text(header + body, encoding="utf-8")
+    if left:
+        listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t{p['cmd']}" for p in left)
+        path.with_suffix(".leftovers.log").write_text(listing + "\n", encoding="utf-8")
+        print(f"warning: {len(left)} process(es) outlived the run, not stopped; see "
+              f"{path.with_suffix('.leftovers.log')}", file=sys.stderr)
     print(path)
     return 0 if res.returncode == 0 else 1
 
