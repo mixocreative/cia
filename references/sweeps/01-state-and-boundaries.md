@@ -85,7 +85,11 @@ This sweep's first corpus miss was exactly this site: a cold run audited that fi
 different fail-open in it, and walked past this one because it logged.
 
 So for every `catch` on a primary path, write the level next to the posture: **`debug`/`trace` is
-fail-open-and-silent, and it is graded as though there were no log line at all.** `info` is
+fail-open-and-silent, and it is graded as though there were no log line at all**: the grade the
+Grading paragraph above gives the silent case, so a fallback on a configuration read is HIGH, never
+MEDIUM. Any file or setting the process reads at startup to decide how it behaves or what it calls
+itself is a configuration read, whatever the file is named. A fallback listed in a sweep line and
+not filed is the miss this paragraph exists to stop. `info` is
 fail-open-and-buried unless something reads it (S20 — a line in a stream nobody watches is the
 detector problem one storey down). `warn`/`error` reporting to a channel a person reads is the
 minimum for "reported", and a screen is the minimum for "handled" (S22). The comment beside the
