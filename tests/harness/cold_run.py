@@ -426,7 +426,8 @@ def main(argv=None, runbook=None):
         tag += f"arm-{args.arm}-"
     label = "" if args.arm == "cia" else f"arm {args.arm} | "
     return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
-                   traces=args.arm != "cia", receipts=args.arm == "cia")
+                   traces=args.arm != "cia", receipts=args.arm == "cia",
+                   report_file=BUILD_REPORT if args.mode == "build" else None)
 
 
 def run_egm(args, skill_root):
@@ -449,8 +450,33 @@ def run_egm(args, skill_root):
                    f"egm {rel} | reviewer {args.reviewer} | ", skill_root, receipts=False)
 
 
-def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, receipts=True):
+BUILD_REPORT = "cia-build-report.md"
+
+
+def collect_report(path, root, label):
+    """The build report is a file the run writes in the project (SKILL §0.10a), not its reply: two of
+    eight replies were a rewrite of the checked report that dropped blocks. Collect the file, and put
+    the checker's own count in the header, so the scorer and the run read the same instrument."""
+    if not path.is_file():
+        return label + "report-file none | ", ""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    tools = str(Path(root) / "tools")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    try:
+        import build_report  # the checker of the skill under test, not a copy
+        results = build_report.checks(text)
+        label += f"report-file {sum(ok for _, ok, _ in results)}/{len(results)} | "
+    except ImportError:
+        label += "report-file present, checker n/r | "
+    return label, f"\n\n<!-- {path.name}, collected from the copy -->\n{text}"
+
+
+def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, receipts=True, report_file=None):
     """Run the CLI with the prompt on stdin, save stdout under tests/harness/out/, print the path."""
+    # Read the commit BEFORE the run: read after, a commit that landed mid-run was stamped on a run that
+    # never saw it (four rows on 2026-11-09 needed a "header says X" note for exactly this).
+    commit = skill_commit(root)
     # Trap 1: on Windows the CLIs are npm .CMD shims, which subprocess cannot start by bare name.
     exe = shutil.which(cmd[0])
     if exe is None:
@@ -494,11 +520,15 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
                   f"sweep-sites {sweep_sites(out_text)}/24 | ")
     if traces:
         label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
+    collected = ""
+    if report_file:
+        label, collected = collect_report(Path(cwd) / report_file, root, label)
     header = (
-        f"<!-- skill commit {skill_commit(root)} | runtime {runtime} | "
+        f"<!-- skill commit {commit} | runtime {runtime} | "
         f"model {model or 'default'} | {label}exit {res.returncode} -->\n"
     )
     body = out_text if res.returncode == 0 else f"{out_text}\n\n<!-- stderr -->\n{res.stderr}"
+    body += collected
     path.write_text(header + body, encoding="utf-8")
     if left:
         listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t{p['cmd']}" for p in left)

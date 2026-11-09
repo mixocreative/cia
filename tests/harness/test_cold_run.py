@@ -266,5 +266,31 @@ class EgmTests(unittest.TestCase):
         self.assertEqual(run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "../README.md"]).returncode, 2)
         self.assertEqual(run("egm", RUNBOOK_BASE, ["--dry-run"]).returncode, 2)
 
+
+class BuildReportCollectionTests(unittest.TestCase):
+    """The build report is a file in the project; the harness collects it and counts its blocks."""
+
+    def setUp(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        self.cr = cold_run
+        self.root = SCRIPT.parents[2]   # the skill under test, whose tools/build_report.py does the count
+
+    def test_missing_file_is_said_not_assumed(self):
+        with tempfile.TemporaryDirectory() as d:
+            label, body = self.cr.collect_report(Path(d) / self.cr.BUILD_REPORT, self.root, "")
+        self.assertEqual(label, "report-file none | ")
+        self.assertEqual(body, "")
+
+    def test_file_is_appended_and_counted_by_the_skill_checker(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / self.cr.BUILD_REPORT
+            p.write_text("Mode: build mode - save, a.py\n", encoding="utf-8")
+            label, body = self.cr.collect_report(p, self.root, "")
+        self.assertRegex(label, r"^report-file 1/\d+ \| $")
+        self.assertIn("collected from the copy", body)
+        self.assertIn("Mode: build mode", body)
+
+
 if __name__ == "__main__":
     unittest.main()
