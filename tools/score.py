@@ -97,6 +97,18 @@ def is_cheap(model: str) -> bool:
     return any(name in model for name in CHEAP)
 
 
+def corpus_current(rows: list[dict]) -> list[dict]:
+    """The newest verdict per entry, leaving out entries not run (N/A: a deleted repository). Summing
+    every row mixed two measurement dates into one rate (13/17 on 2026-11-10 for 7 of 8 that day)."""
+    newest: dict[str, dict] = {}
+    for r in rows:
+        if r["verdict"].startswith("N/A"):
+            continue
+        if r["entry"] not in newest or r["date"] >= newest[r["entry"]]["date"]:
+            newest[r["entry"]] = r
+    return list(newest.values())
+
+
 def corpus_rows() -> list[dict]:
     """Rows of the corpus table: real repositories, audited at the commit before a real fix.
 
@@ -401,14 +413,16 @@ def main(argv: list[str] | None = None) -> int:
             print("corpus: no entries scored yet - the ground truth nobody planted is still empty,"
                   " and an empty corpus proves nothing (tests/corpus/README.md)", file=sys.stderr)
             return 1
-        hits = sum(1 for r in cr if r["verdict"].startswith("HIT"))
-        print(f"corpus: {hits} hit / {len(cr) - hits} other, of {len(cr)} scored entries")
+        cur = corpus_current(cr)
+        hits = sum(1 for r in cur if r["verdict"].startswith("HIT"))
+        print(f"corpus (newest verdict per entry): {hits} hit / {len(cur) - hits} other, of {len(cur)} entries run")
         for r in cr:
             print(f"  {r['date']}  {r['verdict']:12} {r['entry']}")
         return 0
     if cr:
-        hits = sum(1 for r in cr if r["verdict"].startswith("HIT"))
-        print(f"corpus: {hits}/{len(cr)} real fix commits found before the fix")
+        cur = corpus_current(cr)
+        hits = sum(1 for r in cur if r["verdict"].startswith("HIT"))
+        print(f"corpus: {hits}/{len(cur)} real fix commits found before the fix (newest run of each entry)")
     if rt:
         r = rt[-1]
         print(f"runtime: {r['date']} {r['fixture']}: ladders {r['ladders']} / probes {r['probes']} / "

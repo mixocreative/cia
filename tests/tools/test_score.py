@@ -214,6 +214,13 @@ class ScoreTests(unittest.TestCase):
         build[-1] = row("2026-11-12", 2, commit="aaaaaaa")
         self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)
 
+    def test_corpus_rate_is_the_newest_verdict_per_entry(self):
+        rows = [{"date": "2026-09-24", "entry": "a", "verdict": "MISS"}, {"date": "2026-11-10", "entry": "a", "verdict": "HIT"},
+                {"date": "2026-09-24", "entry": "b", "verdict": "PARTIAL"}, {"date": "2026-11-10", "entry": "b", "verdict": "N/A"},
+                {"date": "2026-11-10", "entry": "c", "verdict": "MISS"}]
+        cur = {r["entry"]: r["verdict"] for r in score.corpus_current(rows)}
+        self.assertEqual(cur, {"a": "HIT", "b": "PARTIAL", "c": "MISS"})   # N/A keeps the last real measurement
+
     def test_default_output_has_build_line(self):
         code, out, _ = self.run_score(runs_text(self.AUDIT, [row("2026-11-10", 9)]))
         self.assertEqual(code, 0)

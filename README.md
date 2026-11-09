@@ -445,7 +445,7 @@ A skill that grades other people's evidence should be able to show its own｜一
 
 | Measurement 量測 | What it is 這是什麼 | Result 結果 |
 |---|---|---|
-| **Corpus 真實專案樣本** | 在維護者修好該 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | **8 個案例中 6 中 / 1 部分中 / 1 未中**，橫跨 6 種缺陷類型、7 種語言（2026-09-24 以當時的準則執行；重跑需擁有者同意，因為會下載並執行第三方程式碼） |
+| **Corpus 真實專案樣本** | 在維護者修好該 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | 2026-11-10 以目前準則重跑：**可取得的 8 個案例中 7 中 / 1 未中**（另 1 個專案已從 GitHub 刪除，保留 9 月的「部分中」）；9 月唯一未中的案例（`.env` 載入失敗只記 debug）這次抓到了，Go webhook 案例則被判為「單調所以冪等」而漏掉。橫跨 6 種缺陷類型、7 種語言 |
 | **Planted-defect fixtures 預埋缺陷專案** | 兩個語言與主要狀態都不同、刻意埋入缺陷的專案：Python 工作佇列（12 個缺陷、8 個對照組）與 Node 筆記編輯器（11 個缺陷、7 個對照組）。每次修改 Skill 都要在兩者各跑兩次並通過閘門，否則無法推送 | 工作佇列 **11–12 分**、編輯器 **9–11 分**（滿分 12 / 11），對照組 **0 個誤報** |
 | **Build mode 建置模式** | 冷啟動執行「讓工作認領無競態且可承受當機」，依 12 項產出物評分（義務列、先失敗的四項驗證、帳本列、結案閘門…） | 報告改為檔案後的十次中，九次 **10–11.5 分**、**0 遺漏**；第 19 次把回收邏輯塞進認領而遺漏一項，該邊界已寫進準則，之後六次都守住。修正前最佳僅 4 分 |
 | **Blind-forward 盲測前瞻** | 取專案歷史中段的快照，**完全沒有標準答案**；稽核完成後，才用專案自己後續的 commit 回放比對 | 8 個稽核發現，**0 個判斷錯誤**，4 個經獨立驗證為真，但尚未有維護者事後修正 |
@@ -455,12 +455,14 @@ A skill that grades other people's evidence should be able to show its own｜一
 
 Every corpus and blind-forward run above was made by the **cheap** model｜上表所有真實專案與盲測前瞻的執行，用的都是**便宜的模型**。
 
-The most useful row in the table is a **miss**. A `.env` loader caught its own failure, wrote
-`log.debug`, and booted on defaults. A cold run audited that exact file, filed a *different*
-fail-open in it, and walked past this one — because this one logs. Nobody runs production at
-debug.
+The most useful row in the table is a **miss**. In September a `.env` loader caught its own failure, wrote
+`log.debug`, and booted on defaults, and a cold run walked past it because it logs. The doctrine and the
+fixture both learned that "logged at debug" is silence, and the 2026-11-10 re-run filed it. The new miss
+is a Go payment webhook: the run looked at a replayed webhook, called the update idempotent because the
+status only moves forward, and so never asked whether the order was already in a final state, which is
+exactly what the maintainer fixed.
 
-> 整張表裡最有價值的一列，是那個**沒中**的案例。一個 `.env` 載入器把自己的失敗 catch 起來，寫了一行 `log.debug`，然後用預設值繼續開機。冷啟動的稽核跑過那個檔案、在裡面抓到**另一個** fail-open，卻放過了這一個——因為這一個「有寫 log」。但**沒有人的正式環境會開在 debug 等級**。兩個 Skill 現在都會把 log 等級納入判斷，測試樣本裡也補上了對應的缺陷，讓這個教訓不會隨時間腐爛。
+> 整張表裡最有價值的一列，是那個**沒中**的案例。9 月時，一個 `.env` 載入器把自己的失敗 catch 起來、只寫一行 `log.debug` 就用預設值開機，冷啟動稽核因為「有寫 log」而放過它。之後準則與測試專案都學到「只記 debug 就等於沒說」，2026-11-10 重跑時就抓到了。新的未中案例是一個 Go 的金流 webhook：稽核看了重送的 webhook，因為狀態只會往前走就判定更新是冪等的，於是沒有追問訂單是否已在最終狀態，而這正是維護者修掉的地方。
 
 ---
 
