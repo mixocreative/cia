@@ -25,6 +25,10 @@ baseline, not the doctrine under test. `tools/due.py` says when a new pair is du
 | 2026-11-09 | `23d0128` | ponytail | sonnet | 7 | 2 | 1 | 2 | 0 | 6.5 | <120 | Ran nothing. Misses: 5 (heartbeat as a crash-after-commit Nice), 9 absent. Finding 16 suggests deleting `cancel`'s first SELECT at control C4 and says the UPDATE guards: a lean note, not a misfiled control. |
 | 2026-11-09 | `db6fd0f` | none | claude-sonnet-5-5 | 2 | 3 | 4 | 3 | 0 | 2.5 | 40 | $0.32, 13 turns. Ran nothing. Misses: 5 (heartbeat named as a Low write cost), 9 (Low, no line), 10 (env var "nothing reads", the leak not named). Rows 1, 6, 7 folded into one D2 finding with no line; 8 no line. |
 | 2026-11-09 | `db6fd0f` | ponytail | claude-sonnet-5-5 | 7 | 2 | 1 | 2 | 0 | 6.5 | 52 | $0.20, 13 turns. Ran nothing. Misses: 5 (heartbeat as a Nice ordering note), 9 (Should, file only). Near: 2, 12 (Should). Unanchored: 10. |
+| 2026-11-09 | `7bf914f` (fixture gains `cli show`) | none | claude-sonnet-5-5 | 3 | 3 | 3 | 3 | 0 | 3.0 | 46 | $0.33. Misses: 5 (heartbeat as a crash risk), 9 (absent), 10 (Minor, no line). Rows 1, 7, 8 unanchored inside one D2 blocker; 2, 4, 12 a tier low. |
+| 2026-11-09 | `7bf914f` | none | claude-sonnet-5-5 | 2 | 3 | 4 | 3 | 0 | 2.5 | 46 | $0.19. Misses: 5, 9 (Minor, no line), 10. Rows 1, 7, 8, 11 unanchored. |
+| 2026-11-09 | `7bf914f` | ponytail | claude-sonnet-5-5 | 6 | 3 | 1 | 2 | 0 | 6.0 | 53 | $0.20. Misses: 5 ('heartbeat never exercised'), 9 (Should, file only). Near: 2, 4, 12 (Should). Unanchored: 10. |
+| 2026-11-09 | `7bf914f` | ponytail | claude-sonnet-5-5 | 6 | 4 | 0 | 2 | 0 | 6.0 | 61 | $0.21. Misses: 9 (Should, file only), 10 (env var 'noise', its restore not named). Near: 4, 5 (unread heartbeat file as Should), 8 (Nice), 12. |
 
 **cia at the same time.** The first draft of this file compared the arms with runs K and L
 (`c8ac18a`, 12 each, early on 2026-11-09). That was the wrong baseline: nine cia runs made within
@@ -50,6 +54,18 @@ the references; the other six worked from SKILL.md and one to three sweep files.
 | ponytail-audit | 1 | 6.5 | 2 | n/a | $0.20 |
 | cia `c8ac18a` (before the reading fix) | 2 | 5.5 | 2 | no (0 receipts) | $0.47 |
 | cia `db6fd0f` (the reading fix) | 4 | 10.75 | 0 | yes (9 receipts) | $1.35 |
+
+**Third comparison (2026-11-09, ~15:35, the fixture with `cli show`, cia after the round-8 doctrine fixes).**
+
+| | runs | mean score (of 12) | misses per run | cost per run |
+|---|---|---|---|---|
+| no skill | 2 | 2.75 | 3 | $0.26 |
+| ponytail-audit | 2 | 6.0 | 2 | $0.21 |
+| cia `119040b`-`a30edff` (six runs, AL-AQ) | 6 | 11.75 | 0 | $1.55 |
+| cia on Codex (`a30edff`, C4-C5) | 2 | 10 | 1 | n/r |
+
+- Read cia now leads ponytail by about six rows on this model. The rows the rivals miss every run are
+  still S20 and S21 (5, 9, 10); the labelling fixes of round 8 moved cia, not the rivals.
 
 - **On this model, unread cia is worse than ponytail** (5.5 against 6.5): a runbook index without its
   method is a longer prompt, not a better one. Read cia leads ponytail by four rows for about seven
