@@ -189,6 +189,19 @@ class HeaderFactTests(unittest.TestCase):
         self.assertGreater(total, 10)
 
 
+class PartialReadTests(unittest.TestCase):
+    """A receipt can be quoted after jumping to a file's last line; the admission is what we can count."""
+
+    def test_admissions_are_counted_and_plain_reads_are_not(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        self.assertEqual(cold_run.partial_reads(
+            "For these five I read only the closing receipt line, not the whole file.\n"
+            "browser-walks.md (read §12–14 only; §1–11 by heading only)\n"
+            "theory.md read in full."), 2)
+        self.assertEqual(cold_run.partial_reads("Reference receipts: sweeps/ \"the channel is the finding\""), 0)
+
+
 class EgmTests(unittest.TestCase):
     def test_egm_runs_one_read_only_goldfish(self):
         res = run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "references/journey-map.md", "--reviewer", "structural"])

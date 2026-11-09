@@ -144,6 +144,20 @@ def receipts_quoted(text, root):
     return sum(1 for phrase in found.values() if phrase in text), len(found)
 
 
+# Phrases a report uses when it admits reading a reference in part. Added 2026-11-09: runs AF and AJ quoted
+# all nine receipts and said, further down, that five were read 'only' at their closing line. The receipt
+# count cannot see that; this count can, and it is a line count of admissions, not a proof of reading.
+PARTIAL_READ = re.compile(
+    r"only (?:the |their )?(?:closing )?receipt lines?|read only (?:the|their)|by heading only|"
+    r"not read in full|read (?:§[\w.–-]+|sections?)[^.\n]{0,30} only|skimmed|read in part",
+    re.IGNORECASE)
+
+
+def partial_reads(text):
+    """How many lines of the report admit a reference read in part."""
+    return sum(1 for line in text.splitlines() if PARTIAL_READ.search(line))
+
+
 EGM_REVIEWERS = ("comprehension", "structural", "style", "design", "codebase-details",
                  "implementation-readiness", "zoom-out")
 
@@ -389,7 +403,7 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
     rq = receipts_quoted(out_text, root) if receipts else None
     if rq:
-        label += f"receipts {rq[0]}/{rq[1]} | "
+        label += f"receipts {rq[0]}/{rq[1]} | partial-reads {partial_reads(out_text)} | "
     if traces:
         label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
     header = (

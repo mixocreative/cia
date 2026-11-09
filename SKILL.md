@@ -502,7 +502,7 @@ Step 2 order, restated: theory → sweeps step 0 map → wiring walk (state map,
 audit is in `references/`. Before the first finding is written, the run has read every Step 2 file
 §0.13 lists for this system — theory, sweeps/, wiring-walk, doctrine, reporting, evidence, and
 surface-map then journey-map when the ROUTE block shows a page, CLI or API — and can quote each
-receipt. A file it cannot quote yet is read now. A run that works from this file's sweep index
+receipt. A file it cannot quote yet is read now. A receipt is earned by reading the file, not by finding its last line: the receipt of a file read only in part, or only at its receipt line, is a false receipt, the skipped step with a quote attached, so the run reads that file instead. A run that works from this file's sweep index
 writes plausible sweep lines with no method behind them: on 2026-11-09 (RUNS, audits O–W, the same
 doctrine) the runs that skipped the references and *declared* it scored 7.1, the runs that read
 them 9.8. Declaring the skip made it diagnosable; it did not make it an audit. The only receipt a
