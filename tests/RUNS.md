@@ -445,6 +445,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-10 | `d21fbe6` (reverted in `a0464ef`) | **Codex** (as above, audit run C15) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 0 | 2 | 0 | 10.3 | **8 on its checked file (6/6), sweep-sites 24/24.** missed: row 9, row 12, both named in its own sweep table (S21 'empty monitor test', S6 'worker identity fallback') and never filed. No second pass run. **Five mechanisms aimed at Codex's misses have now been measured (site list per sweep, lead scan, inventory, checked report file, nested second pass): the file contract fixed its report form; none changed discovery, and the two added steps were skipped every time. Codex stays outside the gate; README tells a Codex user to run the audit twice.** |
 | 2026-11-10 | `798ee54` (S3: a debug-logged fallback on a config read is HIGH) | **Codex** (as above, audit run C16) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 5.0 | **11.5 on its reply: no report file written (`report-file none`), no sweep lines (0/24), receipts 0/19 - the file contract skipped this time.** Row 12 filed F05 HIGH, the row S3 was changed for. Near: row 5 (F10 cites `scheduler.py:99` as 'no in-tree caller', not the unread file or the outermost check). |
 | 2026-11-10 | `798ee54` (as C16) | **Codex** (as above, audit run C17) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 6.9 | **11.5 on its file (5/6, titled 'protocol incomplete': it says the reference set was not fully read).** Row 12 filed CIA-004 HIGH. Near: row 5 (CIA-011 files the missing outer check on the monitor; CIA-012 at `:99-105` is a row/file disagreement, not the unread file). **First Codex pair with no miss: row 12 HIGH in both, against missed or MEDIUM in 6 of the 15 runs before. The reading and the report form are what still vary.** |
+| 2026-11-10 | `798ee54` (HEAD `f98055a`, doctrine unchanged) | **Codex** (as above, audit run C20) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 14.8 | **9.5 on its file (6/6), receipts 9/19, refs opened 16/26, sweep-sites 23/24.** missed: row 9 - its S21 line names `test_no_jobs_are_stuck_on_a_fresh_db` at `:25-28` as 'only a negative, no stale-job positive' and its P2 says to add one, never filed or graded (S21 grades a vacuous pass on a safety net HIGH). Near: row 5 (F6 files the monitor's missing schedule, not the unread heartbeat file). Row 12 F10 HIGH. |
+| 2026-11-10 | `798ee54` (as C20) | **Codex** (as above, audit run C21) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 9.2 | **9.5 on its file (6/6), receipts 9/19, refs opened 16/26, sweep-sites 23/24.** missed: row 9 (its S21 line checks the cancel test's sibling and never reaches `:25-28`). Near: row 5 (F4 'no outer liveness check', the table's heartbeat row at `:99` not the file). Row 12 F11 HIGH. F2 (a late `finish` turns `done` back into `queued`; no owner or state predicate) is a true extra, not the bounded-retry control, which is about the loop ending. **Report form held in both: 6/6, every part present. Over four runs on `798ee54` the file was written 3 of 4 times (C16 none) and row 9 was found 2 of 4.** |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
@@ -492,6 +494,13 @@ graded MEDIUM (key HIGH) in six of the fifteen Codex runs, filed under "fallback
 and never graded. That pointed at S3: its level rule said "graded as though there were no log
 line" without the grade at hand, and its HIGH floor named only "a configuration or flag read".
 `798ee54` states the floor where the level rule is and says what counts as a configuration read.
+**Two more pairs on `798ee54`:** C16/C17 none | none; C20/C21 9 | 9. Row 12 was filed HIGH in all
+four, so S3 holds. Over eight pairs a single run misses 1.1 rows (18 in 16 runs) and a pair read
+together misses one row in 2 of 8 (row 12 before S3, row 9 after). Row 9 is not a doctrine gap
+of S3's kind: S21's grading already says a vacuous pass on a safety net is HIGH, and C20 quoted the
+site and then did not file it, the "named, not filed" pattern the sweep-line rule (C7) and the
+filing check (the sixth mechanism) were measured against and did not move. So the advice stays
+"run twice and read both", stated as what it buys: fewer misses, not none.
 
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
@@ -514,4 +523,10 @@ alone left C16/C17's `graphify watch runner` running: a relative path names no c
 rule claims is still reported and left alone. **Verified live the same night (C18, C19 on `2ba62b3`):**
 both stopped on Codex's usage limit after about 155 s, before any report, so neither is scored; C18
 had started a watcher in its copy, the harness stopped it with its two child processes, and no
-`graphify` process was alive afterwards. C19 left nothing.
+`graphify` process was alive afterwards. C19 left nothing. **A third rule after C21 (2026-11-10):**
+C21 started `graphify watch .` through `pwsh -> python -c Popen(...)`; the python parent exited
+inside one 5 s poll, so the tree never saw the link, the command line names no copy, and the watcher
+was reported "left running" (stopped by hand the same hour). The agent now runs with
+`CIA_HARNESS_RUN=<copy>` in its environment, which every child inherits, and `procs.marked` reads it
+back (psutil, the harness's one optional dependency; without it the rule is off and the other two
+stand). Test: `test_a_detached_grandchild_whose_parent_exited_is_still_marked_as_the_runs`.
