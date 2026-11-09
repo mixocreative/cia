@@ -50,8 +50,9 @@ Runtimes
     under a restricted token that cannot start a per-user Python (error 5), so no run could test.
 """
 import argparse
-import importlib.util
 import datetime
+import importlib
+import importlib.util
 import json
 import os
 import re
@@ -324,7 +325,9 @@ def build_prompt(mode, runbook_text, skill_line=SKILL_LINE):
 READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)",
               "Bash(ruff:*)", "Bash(pytest:*)", "Bash(node:*)", "Bash(curl:*)"]
 ALLOWED_TOOLS = {
-    "audit": READ_TOOLS,
+    # An audit writes exactly one file, its report (SKILL Step 6); `Edit(./path)` is the rule Claude Code
+    # honours for a single file (checked 2026-11-09: `Write(path)` patterns did not grant it headless).
+    "audit": READ_TOOLS + ["Edit(./cia-audit-report.md)"],
     "run-tests": READ_TOOLS,
     "build": READ_TOOLS + ["Write", "Edit"],
     "egm": ["Read", "Grep", "Glob"],  # a Goldfish only reads; the list enforces it
@@ -427,7 +430,7 @@ def main(argv=None, runbook=None):
     label = "" if args.arm == "cia" else f"arm {args.arm} | "
     return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
                    traces=args.arm != "cia", receipts=args.arm == "cia",
-                   report_file=BUILD_REPORT if args.mode == "build" else None)
+                   report_file={"build": BUILD_REPORT, "audit": AUDIT_REPORT}.get(args.mode))
 
 
 def run_egm(args, skill_root):
@@ -451,12 +454,16 @@ def run_egm(args, skill_root):
 
 
 BUILD_REPORT = "cia-build-report.md"
+AUDIT_REPORT = "cia-audit-report.md"
+# Which checker counts which report: the skill's own tools, imported from the skill under test.
+CHECKERS = {BUILD_REPORT: "build_report", AUDIT_REPORT: "audit_report"}
 
 
 def collect_report(path, root, label):
-    """The build report is a file the run writes in the project (SKILL §0.10a), not its reply: two of
-    eight replies were a rewrite of the checked report that dropped blocks. Collect the file, and put
-    the checker's own count in the header, so the scorer and the run read the same instrument."""
+    """The report is a file the run writes in the project (SKILL Step 6, §0.10a), not its reply: build
+    replies (2 of 8) and audit replies (BC, BE) were summaries of a checked report that dropped parts.
+    Collect the file, and put the checker's own count in the header, so the scorer and the run read
+    the same instrument."""
     if not path.is_file():
         return label + "report-file none | ", ""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -464,8 +471,8 @@ def collect_report(path, root, label):
     if tools not in sys.path:
         sys.path.insert(0, tools)
     try:
-        import build_report  # the checker of the skill under test, not a copy
-        results = build_report.checks(text)
+        checker = importlib.import_module(CHECKERS.get(path.name, "build_report"))
+        results = checker.checks(text)
         label += f"report-file {sum(ok for _, ok, _ in results)}/{len(results)} | "
     except ImportError:
         label += "report-file present, checker n/r | "

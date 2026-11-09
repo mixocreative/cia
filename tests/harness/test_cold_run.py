@@ -292,5 +292,18 @@ class BuildReportCollectionTests(unittest.TestCase):
         self.assertIn("Mode: build mode", body)
 
 
+    def test_an_audit_report_is_counted_by_the_audit_checker(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / self.cr.AUDIT_REPORT
+            p.write_text("ROUTE tools/route.py\n", encoding="utf-8")
+            label, _ = self.cr.collect_report(p, self.root, "")
+        self.assertRegex(label, r"^report-file \d+/6 \| $")   # audit_report has six parts, build_report 13
+
+    def test_an_audit_may_write_its_report_and_nothing_else(self):
+        tools = self.cr.ALLOWED_TOOLS["audit"]
+        self.assertIn("Edit(./cia-audit-report.md)", tools)
+        self.assertFalse({"Write", "Edit"} & set(tools))
+
+
 if __name__ == "__main__":
     unittest.main()
