@@ -133,7 +133,7 @@ def fixture_of(tier: str) -> str:
     low = tier.lower()
     # Longest first: "fixture-shop-node" contains "fixture-shop", and matching the shorter one
     # compared the node fixture against the read fixture's history on the day it was added.
-    for name in ("fixture-shop-live", "fixture-shop-node", "fixture-service", "fixture-shop"):
+    for name in ("fixture-shop-live", "fixture-shop-node", "fixture-service", "fixture-editor", "fixture-shop"):
         if name in low:
             return name
     return "default"

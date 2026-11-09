@@ -1,0 +1,7 @@
+{
+  "dataDir": "data",
+  "autosaveSeconds": 30,
+  "backupCount": 3,
+  "maxTitleBytes": 40,
+  "recentLimit": 20
+}

@@ -44,6 +44,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KEYS = {
     "tests/EXPECTED-fixture-service.md": "tests/fixture-service",
     "tests/EXPECTED-build-fixture.md": "tests/fixture-service",
+    "tests/EXPECTED-fixture-editor.md": "tests/fixture-editor",
 }
 PIN_MARKER = "<!-- site-pins (tools/check_key_lines.py) -->"
 

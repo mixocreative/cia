@@ -10,6 +10,13 @@ jobs:
       - name: Fixture service tests (must be green - the defects sit under a green suite)
         working-directory: tests/fixture-service
         run: python -m unittest discover -s tests -t .
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Second fixture tests (fixture-editor, must be green - the defects sit under a green suite)
+        working-directory: tests/fixture-editor
+        run: node --test
+      - name: Lint (ruff over tools/ and the harness)
+        run: pip install ruff==0.11.9 && ruff check tools/ tests/harness/cold_run.py tests/harness/test_cold_run.py tests/tools/
       - name: Skill frontmatter sanity
         run: |
           python - <<'PY'

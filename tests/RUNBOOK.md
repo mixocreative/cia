@@ -29,6 +29,24 @@ harness/cold_run.py        launches one cold run (audit | build | run-tests) on 
 6. **Gate for the change** (`python tools/score.py --gate`; installed as a pre-push hook by `tools/install-hooks.sh`). A change to the skill ships only if the run scores **no worse** — precisely: a change ships when every run on its commit has no miss and no false positive, and the mean of at least two runs is within half a row of the median of the last five shipped per-commit means on the same fixture and model, and never more than one row under the best ever, all counted from rows recorded before the commit (a later, reverted experiment never raises the bar for the commit that still ships) (the best alone ratcheted up on one lucky pair; `tools/score.py`, RECENT and DRIFT). "Model" is the id the run header records (`resolved claude-sonnet-5-5`, written into the Runtime cell) when there is one, and the alias otherwise: on 2026-11-09 one alias answered as two models in one day (RUNS, "the reading fix"). The miss rule is not pooled: a miss blocks whenever any earlier run on the fixture, on any model, was clean. Half a row is a reporting slip (near, unanchored) and is the instrument's noise; a miss is doctrine and is never noise. A new miss is a regression in the doctrine or in the packaging (the agent did not read the reference file) — find which before committing.
 7. **What else is due** (`python tools/due.py`, after every edit to `SKILL.md` or `references/`, before the push). It lists, with the command for each: a **comparison arm** pair when none exists, when the doctrine has grown 10% since the newest row in `ARMS.md`, or when this key or the fixture changed (two runs each of `--arm none` and `--arm ponytail`, scored by `ARMS.md`'s rules, recorded there, never in `RUNS.md`); and an **EGM review** of each doctrine document that changed by 20 lines or more since its newest row in `EGM.md` (`--mode egm --doc <path>`; triage each finding into fix or no-change-with-reason, then record the row). The AI runs what it lists without being asked; that is the trigger, not a hook, because every one of these costs model minutes.
 
+## The second fixture — `fixture-editor` (2026-11-09)
+
+Every row before 2026-11-09 was scored on one project, so a doctrine change could fit
+`fixture-service`'s shapes and still pass. `tests/fixture-editor/` is the check on that: a Node
+notes editor (no dependencies, `node --test`, 8 tests green) whose primary quantity is a saved file,
+not a queue row, with eleven planted defects and seven look-alike controls in
+`EXPECTED-fixture-editor.md`. Two of its classes are invisible to the step-0 scans, so a run
+cannot score by dispositioning `sweep_leads.py`.
+
+```
+python tests/harness/cold_run.py --mode audit --fixture fixture-editor --model sonnet
+```
+
+Same prompt, same HARD RULES, same scoring categories; rows go in `RUNS.md` with
+**fixture-editor** in the tier cell, and `tools/score.py` gates them against their own history
+(`fixture_of`), never against fixture-service's. A change to `SKILL.md` or `references/` that
+touches what an audit does is run on **both** fixtures before the push: two runs each.
+
 ## The live probe (`fixture-service`, no second fixture needed)
 
 `cia`'s fixture is already runnable — it is a Python job runner with a sqlite database — and its
