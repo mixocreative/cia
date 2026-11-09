@@ -15,6 +15,8 @@ PROJECT = {
     "config.yaml": "handlers:\n  save: on_save\n",
     "docs/DESIGN.md": "Every edit calls `resync_all` so the index stays fresh.\n",
     "web/util.js": "export function slugify(s) { return s }\nfunction unusedHelper() {}\nslugify('a')\n",
+    "lib/notes.js": ("function used(x) { return x }\nfunction neverCalled() {}\n"
+                     "used(1)\nmodule.exports = { used, neverCalled };\n"),
     "tests/test_export.py": (
         "import os\nimport unittest\n\n\nclass T(unittest.TestCase):\n"
         "    def test_leaks(self):\n        os.environ['MODE'] = 'x'\n        self.assertTrue(True)\n\n"
@@ -37,6 +39,7 @@ class SweepLeadsTests(unittest.TestCase):
     def test_orphans_include_a_documented_but_uncalled_function(self):
         self.assertIn("app/sync.py:1 `resync_all`", self.out)      # a doc mention is not a caller
         self.assertIn("web/util.js:2 `unusedHelper`", self.out)
+        self.assertIn("lib/notes.js:2 `neverCalled`", self.out)        # an export line is not a caller
 
     def test_called_or_config_named_functions_are_not_orphans(self):
         for name in ("render_pdf", "export`", "on_save", "slugify", "`main`"):

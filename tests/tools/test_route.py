@@ -54,6 +54,10 @@ class SurfaceTests(unittest.TestCase):
         self.assertIn("cli=1", Tree(self, {"a.py": 'import sys\nif __name__ == "__main__":\n    print(sys.argv)\n'}).run())
         self.assertIn("cli=1", Tree(self, {"a.py": "import argparse\n"}).run())
         self.assertIn("cli=0", Tree(self, {"a.py": "import sys\nx = 1\n"}).run())
+        # A plain Node script: the entry guard plus argv, no CLI framework (fixture-editor, 2026-11-09).
+        js = "if (require.main === module) {\n  run(process.argv.slice(2));\n}\n"
+        self.assertIn("cli=1 (a.js:2 `process.argv`)", Tree(self, {"a.js": js}).run())
+        self.assertIn("cli=0", Tree(self, {"a.js": "const x = process.argv;\n"}).run())  # argv alone is no entry
 
     def test_form_target_resolved_only_when_a_route_exists(self):
         form = "H = \"<form formaction='/x'>\"\n"

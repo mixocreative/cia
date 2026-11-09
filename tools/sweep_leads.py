@@ -36,6 +36,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 DOC_EXTS = frozenset({".md", ".txt", ".rst"})
+EXPORT_LINE = re.compile(r"\s*(?:module\.exports\b|exports\.\w+\s*=|export\s*\{|__all__\s*=)")
 JS_EXTS = (".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx")
 JS_DEF = re.compile(r"^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)|"
                     r"^\s*(?:export\s+)?(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(")
@@ -81,8 +82,11 @@ def orphans(recs) -> list[tuple[str, int, str]]:
     # Prose is not a caller: a design doc that names a function is exactly the "designed,
     # documented, unbuilt" S13 case, so docs must not count as the second occurrence. Config
     # files (yaml, json, toml) do count: dispatch by name lives there.
+    # An export line names a function without calling it: every JS function is also listed on
+    # `module.exports = { ... }`, which made every JS orphan look used (fixture-editor, 2026-11-09).
     for r in (r for r in readable if r.ext not in DOC_EXTS):
-        for tok in re.findall(r"[A-Za-z_$][\w$]*", "\n".join(r.lines)):
+        text = "\n".join(ln for ln in r.lines if not EXPORT_LINE.match(ln))
+        for tok in re.findall(r"[A-Za-z_$][\w$]*", text):
             counts[tok] = counts.get(tok, 0) + 1
     out = []
     for r in readable:

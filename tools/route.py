@@ -68,6 +68,9 @@ CLI_RS = re.compile(r"^\s*(?:use\s+clap\b|clap\s*=)")
 CLI_SCRIPTS = re.compile(r'console_scripts|^\s*\[project\.scripts\]|^\s*"bin"\s*:')
 MAIN_RE = re.compile(r"""__name__\s*==\s*['"]__main__['"]""")
 ARGV_RE = re.compile(r"sys\.argv")
+# A plain Node script is a CLI too: the entry guard plus argv, no framework (fixture-editor, 2026-11-09).
+MAIN_JS = re.compile(r"require\.main\s*===?\s*module|import\.meta\.main")
+ARGV_JS = re.compile(r"process\.argv")
 
 _P = r"""(?P<p>[^'"`]*)"""
 ROUTE_RES = [  # (regex, only-in-file-names, path-must-start-with-slash)
@@ -131,6 +134,11 @@ def scan_surface(recs):
             for i, line in enumerate(r.lines, 1):
                 if ARGV_RE.search(line):
                     hit = ev(r.rel, i, "sys.argv")
+                    break
+        if not hit and r.ext in (".js", ".mjs", ".cjs", ".ts") and any(MAIN_JS.search(x) for x in r.lines):
+            for i, line in enumerate(r.lines, 1):
+                if ARGV_JS.search(line):
+                    hit = ev(r.rel, i, "process.argv")
                     break
         if hit:
             clis.append(hit)
