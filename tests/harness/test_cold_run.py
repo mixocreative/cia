@@ -103,7 +103,7 @@ class CodexTests(unittest.TestCase):
         cmd = json.loads(res.stdout.split(chr(10))[0])
         self.assertEqual(cmd[:2], ["codex", "exec"])
         self.assertIn("--skip-git-repo-check", cmd)
-        self.assertEqual(cmd[cmd.index("-s") + 1], "workspace-write")
+        self.assertEqual(cmd[cmd.index("-s") + 1], "danger-full-access")  # owner decision; safe only on a copy
         self.assertTrue(cmd[-1].startswith("pre-launch audit, Screen tier"))
         self.assertIn("cia-audit-<new-copy>", res.stdout)  # never the repo fixture
 

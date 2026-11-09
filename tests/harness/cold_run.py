@@ -44,8 +44,10 @@ Output
 Runtimes
     claude: `claude -p --output-format json [--model NAME]`, prompt on stdin; the report is the JSON `result`,
     and the header adds the model that answered, cost, turns and the receipts the report quotes.
-    codex:  `codex exec --skip-git-repo-check -s workspace-write [-m MODEL] -o FILE -` with the prompt on
-    stdin, always on a temporary copy of the fixture (flags checked against codex-cli 0.157).
+    codex:  `codex exec --skip-git-repo-check -s danger-full-access [-m MODEL] -o FILE -` with the prompt
+    on stdin, always on a temporary copy of the fixture (flags checked against codex-cli 0.157). Full
+    access is the owner's decision of 2026-11-09: the Windows workspace-write sandbox runs commands
+    under a restricted token that cannot start a per-user Python (error 5), so no run could test.
 """
 import argparse
 import importlib.util
@@ -253,9 +255,11 @@ def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None):
             cmd += ["--allowedTools", *ALLOWED_TOOLS[mode]]
     else:
         # codex: flags checked against `codex exec --help` (codex-cli 0.157). Codex sandboxes the whole
-        # run rather than single tools, so every codex run works on a throwaway copy of the fixture
-        # (see main) with a writable sandbox there; the planted defects cannot change by construction.
-        cmd = ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write"]
+        # run rather than single tools. On Windows its workspace-write sandbox denies CreateProcessAsUserW
+        # on a per-user python.exe (error 5, `codex sandbox python --version`), so the owner granted full
+        # access (2026-11-09). The trap: full access is safe here ONLY because every codex run works on a
+        # throwaway copy of the fixture (see main) - never point a codex run at the repo itself.
+        cmd = ["codex", "exec", "--skip-git-repo-check", "-s", "danger-full-access"]
         if model:
             cmd += ["-m", model]
         cmd += [prompt]
