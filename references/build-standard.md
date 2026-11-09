@@ -174,7 +174,7 @@ difference is not the author. It is whether the proof exists, and whether anyone
 
 ## §3a — The build report: fill every block, in this order
 
-A build report that leaves a block out has not finished; a block that does not apply says `n/a` and why. This is the shape `SKILL.md` §0.10a requires, as a form to fill rather than a list to remember.
+A build report that leaves a block out has not finished; a block that does not apply says `n/a` and why. This is the shape `SKILL.md` §0.10a requires, as a form to fill rather than a list to remember. `tools/build_report.py form` prints the block below; `tools/build_report.py check <file>` names every block a report left out (shape only: the scorer still judges the content).
 
 ```text
 Mode: build mode — <operation>, <file>
