@@ -3,8 +3,8 @@
 
     python tools/audit_report.py check <file|->
 
-Run it from the skill directory before the final reply, with the report on stdin (an audit has no
-Write tool, so a here-document is the way in):  python tools/audit_report.py check - <<'EOF' ... EOF
+Run it from the skill directory on the run's `cia-audit-report.md` (SKILL Step 6) before the reply;
+`check -` reads the report from stdin instead.
 
 Why this is a tool and not more wording: on byte-identical doctrine, some runs read the references
 and some stop at SKILL.md, and the ones that stop lose a planted row (RUNS, "the reading collapse";
