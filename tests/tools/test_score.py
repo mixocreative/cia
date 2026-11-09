@@ -104,6 +104,25 @@ class ScoreTests(unittest.TestCase):
         reverted = ("ccccccc` (reverted in `ddddddd", [(10, 0, 0), (12, 0, 0)])
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(11, 1, 0), (11, 1, 0)]), reverted]), 0)  # judged: bbbbbbb
 
+    def test_resolved_model_pools_apart_from_its_alias(self):
+        # An alias row cannot be compared with a row that names what answered; a resolved id can.
+        self.assertEqual(score.model_of("Claude Sonnet (harness; resolved claude-sonnet-5-5, $1)"), "claude-sonnet-5-5")
+        self.assertEqual(score.model_of("Claude Sonnet (harness)"), "sonnet")
+        self.assertTrue(score.is_cheap("claude-sonnet-5-5"))   # as cheap as its alias
+        self.assertFalse(score.is_cheap("opus"))
+        res = "Claude Sonnet (harness; resolved claude-sonnet-5-5)"
+        audit = [row("2026-11-01", 12, commit="aaaaaaa", runtime="Claude Sonnet"),
+                 row("2026-11-01", 12, commit="aaaaaaa", runtime="Claude Sonnet"),
+                 row("2026-11-02", 7, near=1, miss=1, commit="bbbbbbb", runtime=res),
+                 row("2026-11-02", 7, near=1, miss=1, commit="bbbbbbb", runtime=res),
+                 row("2026-11-03", 10, near=2, commit="ccccccc", runtime=res),
+                 row("2026-11-03", 10, near=1, commit="ccccccc", runtime=res)]
+        self.assertEqual(self.run_score(runs_text(audit, []), "--gate")[0], 0)   # 10.75 vs 7.5 on one model
+        audit[-1] = row("2026-11-03", 10, near=1, miss=1, commit="ccccccc", runtime=res)
+        self.assertEqual(self.run_score(runs_text(audit, []), "--gate")[0], 1)   # a miss still blocks
+        first = audit[:2] + [row("2026-11-02", 11, miss=1, commit="bbbbbbb", runtime=res)]
+        self.assertEqual(self.run_score(runs_text(first, []), "--gate")[0], 1)   # even on a model's first commit
+
     def test_build_gate_is_a_ratchet(self):
         build = [row("2026-11-10", 8), row("2026-11-11", 2), row("2026-11-12", 5)]
         self.assertEqual(self.run_score(runs_text(self.AUDIT, build), "--gate")[0], 1)

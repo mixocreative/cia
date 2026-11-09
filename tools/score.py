@@ -71,6 +71,14 @@ def model_of(runtime: str) -> str:
     Opus rows on the same fixture - a model comparison wearing a regression's clothes.
     """
     low = runtime.lower()
+    # The model that actually answered, when the row records it (cold_run.py's header, from c4ac613).
+    # Added 2026-11-09: one doctrine scored 12, 12 at dawn and 3-10.5 by late morning under the same
+    # `sonnet` alias, CLI unchanged, every harness variable ruled out by experiment. An alias is not a
+    # model; pooling rows across what it resolved to is the Opus-vs-Sonnet trap above, unrecorded.
+    # Rows without the id stay under the alias, since nobody can say what answered them.
+    m = re.search(r"resolved (claude-[a-z0-9-]+)", low)
+    if m:
+        return m.group(1)
     if "paired" in low:
         return "paired"
     for name in ("opus", "sonnet", "haiku", "fable", "codex", "gpt"):
@@ -82,6 +90,11 @@ def model_of(runtime: str) -> str:
 
 
 CHEAP = ("sonnet", "haiku")
+
+
+def is_cheap(model: str) -> bool:
+    """A resolved id (claude-sonnet-5-5) is as cheap as its alias; matching the tuple exactly called it dear."""
+    return any(name in model for name in CHEAP)
 
 
 def corpus_rows() -> list[dict]:
@@ -153,17 +166,21 @@ def audit_gate(rs: list[dict]) -> int:
     pool = [r for r in rs if r["fixture"] == last["fixture"] and r["model"] == last["model"]]
     group = [r for r in pool if r["token"] == last["token"]]
     earlier = [r for r in pool if r["token"] != last["token"]]
-    if not earlier:
-        print(f"gate: {last['token']} is the first scored commit on {last['fixture']} with {last['model']} - "
-              f"a baseline, nothing to compare it against. Recorded, not blocked.")
-        return 0
-    if any(r["miss"] == 0 and r["false"] == 0 for r in earlier):
+    # The miss rule asks whether the fixture's rows are findable at all, which any model's clean run
+    # proves; it is not a score comparison, so it is neither pooled by model nor skipped for a model's
+    # first commit. Either let a new model's first commits through with misses.
+    findable = [r for r in rs if r["fixture"] == last["fixture"] and r["token"] != last["token"]]
+    if any(r["miss"] == 0 and r["false"] == 0 for r in findable):
         dirty = [r for r in group if r["miss"] or r["false"]]
         if dirty:
             r = dirty[-1]
             print(f"GATE: a run on {last['token']} has {r['miss']} miss / {r['false']} false positive, on a fixture "
                   f"where an earlier run had none. A miss is doctrine, never noise (RUNBOOK step 6).", file=sys.stderr)
             return 1
+    if not earlier:
+        print(f"gate: {last['token']} is the first scored commit on {last['fixture']} with {last['model']} - "
+              f"a baseline, nothing to compare it against. Recorded, not blocked.")
+        return 0
     if len(group) < 2:
         print(f"GATE: {last['token']} has one scored run on {last['fixture']} with {last['model']}. One run is a "
               f"sample - run again, then gate on the mean (RUNBOOK step 6).", file=sys.stderr)
@@ -284,10 +301,10 @@ def main(argv: list[str] | None = None) -> int:
 
     # A doctrine that scores well only on the expensive model works on one budget. Say the cheap
     # number next to the expensive one, every time, so the gap is never invisible.
-    cheap = [r for r in rs if r["model"] in CHEAP]
+    cheap = [r for r in rs if is_cheap(r["model"])]
     if cheap:
         c = cheap[-1]
-        dear = [r for r in rs if r["fixture"] == c["fixture"] and r["model"] not in CHEAP + ("unknown",)]
+        dear = [r for r in rs if r["fixture"] == c["fixture"] and not is_cheap(r["model"]) and r["model"] != "unknown"]
         gap = f", against {dear[-1]['score']:g} on {dear[-1]['model']}" if dear else ""
         print(f"cheap model: {c['date']} [{c['fixture']} / {c['model']}] scored {c['score']:g}{gap}")
 
