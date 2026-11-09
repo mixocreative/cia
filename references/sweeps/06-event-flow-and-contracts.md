@@ -26,6 +26,13 @@ and proves each arrival is safe in every order it can actually come.
    caller gave up, after a human already acted), **early** (before the state it presumes — the
    notify that lands before the local row is committed), **missing** (never comes; S12's ceiling),
    **malformed** (S11). Cite the file:line that handles each cell, or write `UNHANDLED`.
+   **"Monotone" is a claim the out-of-order cell must prove, never a reason to skip it.** A handler
+   that writes whatever status the message carries (`SET status = ?` from the payload) is safe on a
+   duplicate and still unsafe on a late arrival: an `expired` or `failed` that lands after `paid`
+   moves a final state backwards. Name the write's guard on the current state (`WHERE status NOT IN
+   (final states)`, or a read-and-return before it), or file the cell `UNHANDLED`. Learned from a real
+   payment webhook a cold run cleared as "idempotent because the target set is monotone"; the
+   maintainer's fix was exactly that guard (RUNS, corpus, webhook-idempotency-go, 2026-11-10).
 3. **Interleaving pairs.** For every two arrivals that can interleave — browser return vs server
    notify; callback vs admin cancel; reconciler vs callback; two workers on one row; a retry vs the
    original — name the lock, the compare-and-set predicate (S2) or the ordering rule that makes the
