@@ -509,7 +509,10 @@ and 10 (mean 11 against 10.5 at medium), filed row 9 in both, gave Codex its fir
 and read together missed nothing; it cost about the same time (10-11 min against 9-15). Two runs are
 a direction, not a result, so `score.py` gates each effort as its own series (`model_of` names a row
 `codex-high`; `codex_gate` runs per series) and README recommends high effort with the measured
-numbers beside it. The medium series stays gated as it was.
+numbers beside it. The medium series stays gated as it was. C24/C25, the second high pair (HEAD
+`0de4c03`), hit Codex's usage limit after 5 and 8 minutes, mid-report (`report-file none`, exit 1):
+unscored, re-run after the limit resets. Each still stopped only its own `graphify` watcher and left
+five unrelated processes (another session's `npm run walk`, `grep`, Edge) alone.
 
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
