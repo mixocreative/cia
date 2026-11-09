@@ -1,6 +1,6 @@
 # Testing `cia` — the fixture run
 
-The skill's own S8 applies to the skill: a doctrine edit nobody has run is a written test, not a run one. This directory is the harness. It is deliberately small — a run takes an agent 20–40 minutes at Screen tier — so it can be run after **every** change to `SKILL.md` or `references/`.
+The skill's own S8 applies to the skill: a doctrine edit nobody has run is a written test, not a run one. This directory is the harness. It is deliberately small — a harness cold run takes an agent about 2–12 minutes at Screen tier (`RUNS.md`, the Minutes column; the early subagent runs took 25–70) — so it can be run after **every** change to `SKILL.md` or `references/`.
 
 ## What is here
 

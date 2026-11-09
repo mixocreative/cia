@@ -9,7 +9,7 @@
 
 **測試全綠，系統照壞。`cia` 專抓藏在「兩個各自正確的函式之間」的 bug，而且每一條結論都附證據。**
 
-[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install) [![Fixture](https://img.shields.io/badge/planted_defects-0_missed-2ea44f)](#how-it-is-measured) [![False positives](https://img.shields.io/badge/false_positives-0_of_12_controls-2ea44f)](#how-it-is-measured) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
+[![tests](https://github.com/mixocreative/cia/actions/workflows/tests.yml/badge.svg)](https://github.com/mixocreative/cia/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757)](#install) [![Codex skill](https://img.shields.io/badge/OpenAI_Codex-skill-000000)](#install) [![Fixture](https://img.shields.io/badge/planted_defects-0_missed-2ea44f)](#how-it-is-measured) [![False positives](https://img.shields.io/badge/false_positives-0_of_8_controls-2ea44f)](#how-it-is-measured) [![GitHub stars](https://img.shields.io/github/stars/mixocreative/cia?style=social)](https://github.com/mixocreative/cia/stargazers)
 
 [Quick start](#quick-start) · [Wiring audit](#wiring-walk) · [What it catches](#what-it-catches) · [Where it fits](#where-it-fits) · [How it is measured](#how-it-is-measured) · [FAQ](#faq) · [Install](#install)
 
@@ -167,7 +167,7 @@ Yes. Say so, and the plain-language contract (§0.15) binds every message to pla
 <details>
 <summary><strong>Why should I trust an AI auditor?｜為什麼要相信 AI 稽核？</strong></summary>
 
-Don't — trust the evidence. Reading code never produces PASS in this skill; only an artefact from this run does. And the skill is scored the same way: a planted-defect fixture, a corpus of real bugs audited at the commit *before* the fix, and twelve look-alike-but-correct controls. Numbers are in [How it is measured](#how-it-is-measured), including the miss.
+Don't — trust the evidence. Reading code never produces PASS in this skill; only an artefact from this run does. And the skill is scored the same way: a planted-defect fixture, a corpus of real bugs audited at the commit *before* the fix, and eight look-alike-but-correct controls. Numbers are in [How it is measured](#how-it-is-measured), including the miss.
 
 > 不用相信 AI，相信證據就好。在這個 Skill 裡，「讀過程式碼」永遠不算通過，只有這次執行產生的證據才算。Skill 本身也用同樣的標準被評分，包含它漏掉的案例。
 </details>
@@ -190,7 +190,7 @@ Tested on Claude Code (plugin or skill directory), where the harness scores ever
 
 > **本版新增：從逆向工程借來的證據紀律。** 每一條結論都標記「實測 / 推論 / 未知」；老闆說過的每一個承諾都變成一條**義務（Obligation）**，在程式裡必須剛好有一個負責者、一個點名它的驗證；測試只能證明與自己同等強度的事（用假金流的測試，永遠證明不了真的 Callback）；「沒有程式在讀」必須說清楚找過哪裡；被截斷的輸出不算數；手冊、測試環境與程式碼互相矛盾時，記錄下來而不是挑方便的那邊相信；新增**反向追蹤模式**：從系統看得見的行為出發，一路追到程式碼裡。詳見 `references/evidence.md`。概念改編自 [REA](https://github.com/morluto/rea)。
 
-**Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push that scores below the run before (RUNBOOK step 6).
+**Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push whose two-run mean falls more than half a row below the best earlier commit's, or that misses a planted defect or files a control (RUNBOOK step 6).
 
 A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable system** in Stafford Beer's sense, and hunts the defect class that only such a view can see: **cross-boundary invariant violations**, also called **integration-level** or **emergent defects**.
 
@@ -262,7 +262,7 @@ tests for passes that prove nothing. **This skill does not replace review or tes
 
 **2. "This is prompting dressed up in academic words."**
 Prompting does not produce a numbered sweep list with an answer key. The fixture harness
-(`tests/`) plants ten defects under a green suite and scores each cold run: hits, near-misses,
+(`tests/`) plants twelve defects under a green suite and scores each cold run: hits, near-misses,
 misses, false positives. That number moves when the doctrine moves; a prompting habit cannot be
 scored. Where the objection is right is the vocabulary: `S5`, `System 3*`, `S22.8` are noise to a
 reader who has not seen the map, which is why §0.15 / §0.16 bind every user-facing message to plain
@@ -447,7 +447,7 @@ A skill that grades other people's evidence should be able to show its own｜一
 |---|---|---|
 | **Corpus 真實專案樣本** | 在維護者修好該 bug 的**前一個 commit** 稽核真實專案；該修復 commit 的 diff 就是標準答案，而稽核者永遠看不到它 | **8 個案例中 6 中 / 1 部分中 / 1 未中**，橫跨 6 種缺陷類型、7 種語言 |
 | **Blind-forward 盲測前瞻** | 取專案歷史中段的快照，**完全沒有標準答案**；稽核完成後，才用專案自己後續的 commit 回放比對 | 8 個稽核發現，**0 個判斷錯誤**，4 個經獨立驗證為真，但尚未有維護者事後修正 |
-| **Precision 精確率** | 刻意寫成「**看起來像缺陷、其實正確**」的對照組：有 ADR 具名授權的顯示路徑 fail-open、正確的 compare-and-swap 就放在錯誤版本旁邊 | 12 個對照組，**0 個誤報** |
+| **Precision 精確率** | 刻意寫成「**看起來像缺陷、其實正確**」的對照組：有 ADR 具名授權的顯示路徑 fail-open、正確的 compare-and-swap 就放在錯誤版本旁邊 | 8 個對照組，**0 個誤報** |
 | **Cheap model 低成本模型** | 同一套測試樣本改用較小的模型跑——只有貴的模型才成立的稽核準則，等於只有一種預算能用 | 差距從 **4 分縮小到 1 分** |
 | **Cost 成本** | 每次執行的 token 與時間，讓預算可以被規劃 | 121k–259k tokens，每個發現約 10k–29k |
 
@@ -476,11 +476,11 @@ When the request is in everyday words and the project carries no technical vocab
 
 ## Tested against a fixture, by fresh agents｜用有標準答案的專案冷測試
 
-`tests/fixture-service/` is runnable, and since 2026-09-24 `RUNS.md` scores a run in two halves — what it found by reading, and what it actually executed (ladders, the S2 concurrency probe fired rather than predicted, and an evidence ledger whose every PASS cites an artefact). It is a small Python job runner with ten planted defects under four green tests — a config key nothing reads, a SELECT-then-UPDATE that drops its predicate, a config loader that fails open, a monitor that prints "0 problems" while examining nothing, a heartbeat nothing reads, a state the status page cannot show, an orphaned retry helper, a vacuous test, a test that leaks into the runner's environment. `tests/EXPECTED-fixture-service.md` is the answer key; `tests/RUNBOOK.md` scores a run (hit, near, miss, false positive, control misfiled, vacuous line); `tests/RUNS.md` is the ledger. The fixture is deliberately not a shop, so it also proves the commerce gate stays closed and that "run tests" does not start a four-hour protocol. `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged.
+`tests/fixture-service/` is runnable, and since 2026-09-24 `RUNS.md` scores a run in two halves — what it found by reading, and what it actually executed (ladders, the S2 concurrency probe fired rather than predicted, and an evidence ledger whose every PASS cites an artefact). It is a small Python job runner with twelve planted defects under eight green tests — among them a config key nothing reads, a SELECT-then-UPDATE that drops its predicate, a config loader that fails open, a monitor that prints "0 problems" while examining nothing, a heartbeat nothing reads, a state the status page cannot show, an orphaned retry helper, a vacuous test, a test that leaks into the runner's environment. `tests/EXPECTED-fixture-service.md` is the answer key; `tests/RUNBOOK.md` scores a run (hit, near, miss, false positive, control misfiled, vacuous line); `tests/RUNS.md` is the ledger. The fixture is deliberately not a shop, so it also proves the commerce gate stays closed and that "run tests" does not start a four-hour protocol. `tools/sweep-diff.py` shows where this skill's sweep texts and `ecommerce-cia`'s have diverged.
 
 > `tests/fixture-service/` 為可執行的服務；自 2026-09-24 起，`RUNS.md` 對執行的評估分為兩部分——透過閱讀所發現的內容，以及實際執行的成果（狀態差量走查、S2 併發探針為實際觸發而非僅作預測，以及一份每項 PASS 皆引用了產出物證明的證據帳本）。
 >
-> `tests/fixture-service/` 是一個小型 Python 任務執行器（Job Runner），在 4 個綠燈測試下埋藏了 10 個缺陷 —— 包含無任何程式讀取的 Config Key、遺失條件的 SELECT-then-UPDATE 查詢、預設放行的 Config Loader、什麼都沒檢查卻印出 "0 problems" 的 Monitor、無人讀取的 Heartbeat、狀態頁面無法顯示的狀態、孤立的 Retry Helper、無效測試（Vacuous Test），以及會洩漏至 Runner 環境的測試。`tests/EXPECTED-fixture-service.md` 為標準答案；`tests/RUNBOOK.md` 用於為執行結果評分（Hit、Near、Miss、False Positive、Control Misfiled、Vacuous Line）；`tests/RUNS.md` 則是紀錄帳冊。該 Fixture 刻意不設計成電商系統，藉此證明金流關卡保持關閉，且執行 "run tests" 不會啟動長達四小時的完整協定。`tools/sweep-diff.py` 則可用來比對本 Skill 與 `ecommerce-cia` 的 Sweeps 內文是否產生偏差。
+> `tests/fixture-service/` 是一個小型 Python 任務執行器（Job Runner），在 8 個綠燈測試下埋藏了 12 個缺陷 —— 其中包含無任何程式讀取的 Config Key、遺失條件的 SELECT-then-UPDATE 查詢、預設放行的 Config Loader、什麼都沒檢查卻印出 "0 problems" 的 Monitor、無人讀取的 Heartbeat、狀態頁面無法顯示的狀態、孤立的 Retry Helper、無效測試（Vacuous Test），以及會洩漏至 Runner 環境的測試。`tests/EXPECTED-fixture-service.md` 為標準答案；`tests/RUNBOOK.md` 用於為執行結果評分（Hit、Near、Miss、False Positive、Control Misfiled、Vacuous Line）；`tests/RUNS.md` 則是紀錄帳冊。該 Fixture 刻意不設計成電商系統，藉此證明金流關卡保持關閉，且執行 "run tests" 不會啟動長達四小時的完整協定。`tools/sweep-diff.py` 則可用來比對本 Skill 與 `ecommerce-cia` 的 Sweeps 內文是否產生偏差。
 
 <a id="install"></a>
 
