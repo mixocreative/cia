@@ -157,6 +157,10 @@ NOISE = 0.5
 # Misses and false positives stay zero-tolerance either way; this rule only sizes the noise.
 RECENT = 5
 DRIFT = 1.0
+# Second stage: a two-run mean at most this far under the floor earns two more runs, once (RUNBOOK step 6).
+# fixture-editor's two-run means spread about 0.6 around 10.4 for unchanged audit doctrine (2026-11-09), so a
+# floor of 10 failed about one sound commit in four; four runs halve that spread. Never a third stage.
+SECOND_STAGE = 1.0
 
 
 def audit_gate(rs: list[dict]) -> int:
@@ -222,13 +226,21 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
         print(f"{name.upper()}: {token} has one scored run on {fixture} with {model}. One run is a "
               f"sample - run again, then gate on the mean (RUNBOOK step 6).", file=sys.stderr)
         return 1
+    if len(group) not in (2, 4):
+        # Two runs, or four when the second stage applies: a commit is never sampled until it passes.
+        print(f"{name.upper()}: {token} has {len(group)} scored runs on {fixture}. The gate reads two, or four "
+              f"after one second stage (RUNBOOK step 6); a third stage is optional stopping.", file=sys.stderr)
+        return 1
     best, baseline = floor_parts(earlier)
     floor = max(baseline - NOISE, best - DRIFT)
     mean = sum(r["score"] for r in group) / len(group)
     why = f"median of the last {RECENT} live per-commit means {baseline:g}, best ever {best:g}"
     if mean < floor:
+        second = len(group) == 2 and floor - mean <= SECOND_STAGE
         print(f"{name.upper()}: {token} scores a mean of {mean:g} over {len(group)} runs on {fixture}, below the "
-              f"floor {floor:g} ({why}). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)
+              f"floor {floor:g} ({why}). "
+              + ("Within one row: run it twice more, once, and gate on the four-run mean (RUNBOOK step 6)."
+                 if second else "Fix the doctrine or the fixture, run again, then push."), file=sys.stderr)
         return 1
     print(f"{name}: {token} on {fixture}: mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
           f"no miss, no false positive.")

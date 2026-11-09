@@ -131,6 +131,21 @@ class ScoreTests(unittest.TestCase):
         false = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 12, false=1, commit="bbbbbbb")]
         self.assertEqual(self.run_score(runs_text(false, []), "--gate")[0], 1)      # a false positive always blocks
 
+    def test_second_stage_is_two_more_runs_once(self):
+        base = [row("2026-11-01", 11, commit="aaaaaaa"), row("2026-11-01", 11, commit="aaaaaaa")]   # floor 10.5
+        two = base + [row("2026-11-02", 10, commit="bbbbbbb"), row("2026-11-02", 10, near=1, commit="bbbbbbb")]
+        code, _, err = self.run_score(runs_text(two, []), "--gate")
+        self.assertEqual(code, 1)
+        self.assertIn("Within one row", err)                                       # 10.25: earns a second stage
+        four = two + [row("2026-11-03", 11, commit="bbbbbbb"), row("2026-11-03", 11, commit="bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(four, []), "--gate")[0], 0)      # 10.625 >= 10.5 over four
+        three = two + [row("2026-11-03", 12, commit="bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(three, []), "--gate")[0], 1)     # three is neither stage
+        six = four + [row("2026-11-04", 12, commit="bbbbbbb"), row("2026-11-04", 12, commit="bbbbbbb")]
+        self.assertEqual(self.run_score(runs_text(six, []), "--gate")[0], 1)       # no third stage
+        far = base + [row("2026-11-02", 9, commit="bbbbbbb"), row("2026-11-02", 9, commit="bbbbbbb")]
+        self.assertNotIn("Within one row", self.run_score(runs_text(far, []), "--gate")[2])
+
     def test_floor_follows_recent_median_and_cannot_drift_more_than_a_row(self):
         lucky = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(11, 1, 0), (11, 1, 0)]) for c in "bcde"]
         self.assertEqual(self.gate_on(lucky + [("fffffff", [(11, 1, 0), (11, 0, 0)])]), 0)  # 11.25 >= median 11.5 - 0.5
