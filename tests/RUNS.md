@@ -366,6 +366,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-09 | `a30edff` | **Codex** (as above, audit run C5) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 9.7 | **10. Receipts 9/19**, refs opened 20/26, an invariant named on every finding. Miss: row 10 (absent). D4, D5 respected. |
 | 2026-11-09 | `8faa2c9` (sweep-line rule, reverted in `c809314`) | **Codex** (as above, audit run C6) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 7.3 | **9.5. Receipts 9/19, refs opened 20/26, sweep-sites 1/24:** no 2a lines at all, so the rule under test was not applied. Miss: row 8 (`legacy_retry.py:14` 'currently orphaned' in the map table only, no finding, no grade). Unanchored: row 1 (cites D2 and `scheduler.py:11`, not `config.yaml:3`). Rows 10 and 12 found this time. Left a `graphify watch runner` process running after it exited. |
 | 2026-11-09 | `8faa2c9` (as above) | **Codex** (as above, audit run C7) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 12.1 | **9.5. Receipts 12/19, refs opened 20/26, sweep-sites 20/24:** followed the rule, a site list on every sweep line. Miss: row 10. Its S21 line lists `tests/test_scheduler.py:25-28` and '8 tests, 11 assertion call sites' and never names the environment write at `:55`. Near: row 5 (heartbeat file with no reader and 'no outermost external check' on the S20 line, not filed or graded). |
+| 2026-11-09 | `54b0097` (header says `37055bc`: a RUNS-only commit landed mid-run) | **Codex** (as above, audit run C8) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 5.7 | **10. Receipts 0/19, refs opened 21/26.** First Codex run with `tools/sweep_leads.py`: rows 8 (CIA-08) and 10 (CIA-13) both filed. Miss: row 11, `cli.py:46` 'opens a fresh in-memory database' written in the runtime-evidence section, never filed or graded (read, not filed - the class the leads cannot reach, since it is a config key, not a function). Started `graphify watch runner` and left it running. |
+| 2026-11-09 | `54b0097` (as C8) | **Codex** (as above, audit run C9) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 9 | 1 | 2 | 0 | 9.1 | **7.5. Receipts 5/19, refs opened 18/26, sweep-sites 0/24.** Rows 8 (F08) and 10 (F10) filed again. Miss: row 5 (no heartbeat-file finding) and row 9 (no vacuous-pass finding). Near: row 12 (identity fallback MEDIUM, key HIGH). Left a `graphify watch runner` running. |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
@@ -377,6 +379,16 @@ and both runs after it carry every part: 3.75 by the RUNBOOK before, 10 after, a
 (12 in C4, 10 in C5, 10 in C3). **Codex's gate rule:** it joins `tools/score.py` once two Codex
 runs on one commit have no miss; until then its rows stay here, and a change to Step 6 or to the
 report form is run on Codex too.
+
+**The lead scan (C8-C9, AT-AU): the targeted rows became reliable, the total did not move.** Six of
+the eight rows Codex missed in C1-C7 were never cited at all, and rows 8 and 10 were four of those
+misses, so `54b0097` added `tools/sweep_leads.py` (S13 no-caller and S21 unrestored-global leads)
+at step 0. Claude ran it and kept its gate (AT 11, AU 12). Codex filed rows 8 and 10 in both runs
+(2 of 2, against 4 of 7 before), then missed rows 11, 5 and 9 instead: 10 and 7.5, mean 8.75 against
+9.5-10 before. Two mechanisms aimed at named rows (a site list per sweep, a scan per class) have now
+moved Codex's misses without reducing them, so the gap is how many rows one Codex pass holds, not
+which ones. The scan stays (it is generic, and Claude's gate passed with it); Codex stays outside the
+gate under the rule above, and README tells a Codex user to run two audits and read both.
 
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
