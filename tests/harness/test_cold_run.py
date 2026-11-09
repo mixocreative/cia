@@ -265,6 +265,13 @@ class LeftoverTests(unittest.TestCase):
                 {"pid": 51, "ppid": 999, "cmd": "notepad.exe"}]                   # PID 51 reused by something else
         self.assertEqual([p["pid"] for p in self.cr.owned_by_run(left, r"C:\Temp\cia-audit-abc", seen)], [52])
 
+    def test_children_of_a_stopped_leftover_count_as_stopped(self):
+        left = [{"pid": 82, "ppid": 64, "cmd": "graphify watch C:/Temp/cia-audit-abc/runner"},
+                {"pid": 74, "ppid": 82, "cmd": "python graphify.exe watch"},
+                {"pid": 26, "ppid": 74, "cmd": "python graphify.exe watch"},
+                {"pid": 99, "ppid": 1, "cmd": "notepad.exe"}]
+        self.assertEqual(set(self.cr.descendants(left, {82})), {74, 26})
+
     def test_run_watched_returns_the_output_and_sees_a_child(self):
         code = "import subprocess,sys,time; c=subprocess.Popen([sys.executable,'-c','import time; time.sleep(8)']); time.sleep(7); print(input())"
         res, seen = self.cr.run_watched([sys.executable, "-c", code], None, "hello\n", 60)

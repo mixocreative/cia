@@ -525,6 +525,9 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     path.write_text(header + body, encoding="utf-8")
     if left:
         stopped = set(stop([p["pid"] for p in owned_by_run(left, str(cwd), seen)]))
+        # stop() ends the whole tree (taskkill /T), so a child of a stopped leftover is stopped too; the
+        # first live run (C18) logged two such children as "left running" that were already gone.
+        stopped |= set(descendants(left, stopped))
         listing = "\n".join(f"{p['pid']}\tparent {p['ppid']}\t"
                             f"{'stopped' if p['pid'] in stopped else 'left running'}\t{p['cmd']}" for p in left)
         path.with_suffix(".leftovers.log").write_text(listing + "\n", encoding="utf-8")
