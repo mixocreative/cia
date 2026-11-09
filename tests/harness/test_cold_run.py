@@ -107,6 +107,13 @@ class CodexTests(unittest.TestCase):
         self.assertTrue(cmd[-1].startswith("pre-launch audit, Screen tier"))
         self.assertIn("cia-audit-<new-copy>", res.stdout)  # never the repo fixture
 
+    def test_effort_is_passed_to_codex_and_refused_for_claude(self):
+        res = run("audit", RUNBOOK_BASE, ["--dry-run", "--runtime", "codex", "--effort", "high"])
+        cmd = json.loads(res.stdout.split(chr(10))[0])
+        self.assertEqual(cmd[cmd.index("-c") + 1], "model_reasoning_effort=high")
+        self.assertTrue(cmd[-1].startswith("pre-launch audit, Screen tier"))  # the prompt stays last
+        self.assertEqual(run("audit", RUNBOOK_BASE, ["--dry-run", "--effort", "high"]).returncode, 2)
+
 
 class SiblingSkillTests(unittest.TestCase):
     def test_skill_root_points_at_its_own_fixture_and_skill(self):

@@ -311,7 +311,7 @@ ALLOWED_TOOLS = {
 ARM_TOOLS = ["Read(./**)"] + [t for t in READ_TOOLS if t not in ("Read", "Skill")]
 
 
-def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None):
+def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None, effort=None):
     if runtime == "claude":
         cmd = ["claude", "-p", prompt, "--output-format", "json"]
         if model:
@@ -331,6 +331,8 @@ def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None):
         cmd = ["codex", "exec", "--skip-git-repo-check", "-s", "danger-full-access"]
         if model:
             cmd += ["-m", model]
+        if effort:   # C1-C21 all ran at the owner's config.toml default, `medium`; the header records an override
+            cmd += ["-c", f"model_reasoning_effort={effort}"]
         cmd += [prompt]
     return cmd
 
@@ -349,6 +351,7 @@ def main(argv=None, runbook=None):
     ap.add_argument("--runtime", default="claude", choices=["claude", "codex"])
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--model")
+    ap.add_argument("--effort", help="codex: model_reasoning_effort for this run (default: the user's config.toml)")
     # One launcher for sibling skills (ecommerce-cia): their RUNBOOK, fixture and skill path, not a copy of this script.
     ap.add_argument("--skill-root", help="skill repo whose tests/RUNBOOK.md and fixture to use (default: this repo)")
     ap.add_argument("--fixture", default="fixture-service", help="folder under <skill-root>/tests/")
@@ -367,6 +370,9 @@ def main(argv=None, runbook=None):
     # The arms are scored against this repo's key, and only the claude CLI can scope Read to the copy.
     if args.arm != "cia" and (args.mode != "audit" or args.runtime != "claude" or skill_root != REPO):
         print("error: --arm runs only with --mode audit, --runtime claude and this repo's fixture", file=sys.stderr)
+        return 2
+    if args.effort and args.runtime != "codex":
+        print("error: --effort is a codex setting (claude takes --model)", file=sys.stderr)
         return 2
     if args.target and args.mode != "audit":
         print("error: --target is for --mode audit (the corpus)", file=sys.stderr)
@@ -388,7 +394,7 @@ def main(argv=None, runbook=None):
     if args.scope:
         prompt += f"\nScope for this audit: {args.scope}\n"
 
-    cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm)
+    cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm, effort=args.effort)
 
     # Every run works on a throwaway copy of the fixture: build edits it, codex sandboxes the whole run,
     # and an audit's runtime walk (node server.js --reset, a probe) writes the fixture's own state. The
@@ -412,6 +418,8 @@ def main(argv=None, runbook=None):
     if args.arm != "cia":
         tag += f"arm-{args.arm}-"
     label = "" if args.arm == "cia" else f"arm {args.arm} | "
+    if args.effort:
+        label += f"effort {args.effort} | "
     return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
                    traces=args.arm != "cia", receipts=args.arm == "cia",
                    report_file={"build": BUILD_REPORT, "audit": AUDIT_REPORT}.get(args.mode))

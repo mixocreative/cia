@@ -42,6 +42,10 @@ cannot score by dispositioning `sweep_leads.py`.
 python tests/harness/cold_run.py --mode audit --fixture fixture-editor --model sonnet
 ```
 
+A Codex run is `--runtime codex`; `--effort <level>` sets its `model_reasoning_effort` for that run
+and the header records it (`effort high`). Without it Codex uses the owner's `config.toml`, which was
+`medium` for C1-C21. A Codex row's runtime cell names any effort other than that default.
+
 Same prompt, same HARD RULES, same scoring categories; rows go in `RUNS.md` with
 **fixture-editor** in the tier cell, and `tools/score.py` gates them against their own history
 (`fixture_of`), never against fixture-service's. A change to `SKILL.md` or `references/` that
