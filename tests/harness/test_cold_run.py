@@ -166,6 +166,29 @@ class ArmTests(unittest.TestCase):
         self.assertEqual(cold_run.cia_traces("per references/sweeps.md §3"), ["references/", "§"])
 
 
+class HeaderFactTests(unittest.TestCase):
+    """The header names the model that answered and how much of the skill the report quotes."""
+
+    def setUp(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        self.cr = cold_run
+
+    def test_json_result_yields_report_model_cost_turns(self):
+        text, facts = self.cr.claude_result(json.dumps(
+            {"result": "report", "modelUsage": {"claude-sonnet-5-5": {}}, "total_cost_usd": 0.4, "num_turns": 9}))
+        self.assertEqual(text, "report")
+        self.assertEqual(facts, {"resolved": "claude-sonnet-5-5", "cost": 0.4, "turns": 9})
+
+    def test_non_json_output_is_kept_whole(self):
+        self.assertEqual(self.cr.claude_result("plain report"), ("plain report", {}))
+
+    def test_receipts_are_counted_against_the_skill(self):
+        quoted, total = self.cr.receipts_quoted("the channel is the finding", self.cr.REPO)
+        self.assertEqual(quoted, 1)
+        self.assertGreater(total, 10)
+
+
 class EgmTests(unittest.TestCase):
     def test_egm_runs_one_read_only_goldfish(self):
         res = run("egm", RUNBOOK_BASE, ["--dry-run", "--doc", "references/journey-map.md", "--reviewer", "structural"])

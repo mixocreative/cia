@@ -42,11 +42,13 @@ Output
     script deliberately creates no .gitignore of its own.
 
 Runtimes
-    claude: `claude -p <prompt> --output-format text [--model NAME]`.
+    claude: `claude -p --output-format json [--model NAME]`, prompt on stdin; the report is the JSON `result`,
+    and the header adds the model that answered, cost, turns and the receipts the report quotes.
     codex:  `codex exec --skip-git-repo-check -s workspace-write [-m MODEL] -o FILE -` with the prompt on
     stdin, always on a temporary copy of the fixture (flags checked against codex-cli 0.157).
 """
 import argparse
+import importlib.util
 import datetime
 import json
 import os
@@ -107,6 +109,37 @@ CIA_TRACES = ("S:\\ai\\skills\\cia", "references/", "SKILL.md", "§", "ROUTE blo
 
 def cia_traces(text):
     return [t for t in CIA_TRACES if t in text]
+
+
+def claude_result(stdout):
+    """(report text, facts) from `claude -p --output-format json`; raw stdout if it is not that JSON.
+
+    Why JSON: the `sonnet` alias resolves to whatever model is current, and on 2026-11-09 the same
+    doctrine went from four of four runs reading the references to two of eight within hours, with
+    no record of which model had answered. The header now names it, with cost and turns."""
+    try:
+        d = json.loads(stdout)
+    except ValueError:
+        return stdout, {}
+    if not isinstance(d, dict):
+        return stdout, {}
+    return d.get("result") or "", {"resolved": ",".join(d.get("modelUsage") or {}) or "?",
+                                   "cost": d.get("total_cost_usd"), "turns": d.get("num_turns")}
+
+
+def receipts_quoted(text, root):
+    """(quoted, total): how many of the skill's reading receipts the report carries.
+
+    A receipt can be grepped rather than read, so this counts quoting, not reading; but a report
+    with none certainly worked from the index, which is the failure the count makes visible."""
+    path = root / "tools" / "receipts.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("skill_receipts", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    found = mod.scan()[0]
+    return sum(1 for phrase in found.values() if phrase in text), len(found)
 
 
 EGM_REVIEWERS = ("comprehension", "structural", "style", "design", "codebase-details",
@@ -209,7 +242,7 @@ ARM_TOOLS = ["Read(./**)"] + [t for t in READ_TOOLS if t not in ("Read", "Skill"
 
 def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None):
     if runtime == "claude":
-        cmd = ["claude", "-p", prompt, "--output-format", "text"]
+        cmd = ["claude", "-p", prompt, "--output-format", "json"]
         if model:
             cmd += ["--model", model]
         if mode == "egm":
@@ -297,7 +330,7 @@ def main(argv=None, runbook=None):
         tag += f"arm-{args.arm}-"
     label = "" if args.arm == "cia" else f"arm {args.arm} | "
     return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
-                   traces=args.arm != "cia")
+                   traces=args.arm != "cia", receipts=args.arm == "cia")
 
 
 def run_egm(args, skill_root):
@@ -317,10 +350,10 @@ def run_egm(args, skill_root):
         print(f"cwd: {skill_root}")
         return 0
     return execute(cmd, prompt, str(skill_root), "claude", args.model, f"egm-{doc.stem}-{args.reviewer}",
-                   f"egm {rel} | reviewer {args.reviewer} | ", skill_root)
+                   f"egm {rel} | reviewer {args.reviewer} | ", skill_root, receipts=False)
 
 
-def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False):
+def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, receipts=True):
     """Run the CLI with the prompt on stdin, save stdout under tests/harness/out/, print the path."""
     # Trap 1: on Windows the CLIs are npm .CMD shims, which subprocess cannot start by bare name.
     exe = shutil.which(cmd[0])
@@ -345,9 +378,14 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False):
     path = OUT_DIR / f"{day}-{stamp}-{os.getpid()}-{name}-{runtime}.md"
     # Trap 3: a failed run must not be saved as an empty report and exit 0 - that is the fail-open
     # this skill audits for. Keep stderr in the artefact and return non-zero.
-    out_text = res.stdout
+    out_text, facts = (claude_result(res.stdout) if runtime == "claude" else (res.stdout, {}))
     if last_msg and os.path.exists(last_msg):
         out_text = Path(last_msg).read_text(encoding="utf-8")
+    if facts:
+        label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
+    rq = receipts_quoted(out_text, root) if receipts else None
+    if rq:
+        label += f"receipts {rq[0]}/{rq[1]} | "
     if traces:
         label += f"cia-traces {', '.join(cia_traces(out_text)) or 'none'} | "
     header = (
