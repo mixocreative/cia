@@ -86,7 +86,9 @@ def egm_due(changed, threshold=EGM_MIN_LINES):
 # ---- git: thin wrappers ----------------------------------------------------------------------
 
 def git(*args):
-    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True).stdout
+    # UTF-8, not the console code page: keys and commit text carry non-ASCII, and cp950 crashed on them.
+    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace").stdout
 
 
 def numstat(rev, *paths):
@@ -97,6 +99,30 @@ def numstat(rev, *paths):
         if a != "-":
             out[p] = (int(a), int(r))
     return out
+
+
+PIN_MARKER = "<!-- site-pins (tools/check_key_lines.py) -->"
+
+
+def key_text_changed(then: str, now: str) -> bool:
+    """The scored part of a key (above its site pins), compared without line endings."""
+    def body(text):
+        return text.split(PIN_MARKER)[0].replace("\r\n", "\n").strip()
+    return body(then) != body(now)
+
+
+def scored_key_changed(rev):
+    """Did anything an arm is scored against change: the key above its site pins, or the fixture's code?
+
+    A re-pin rewrites only digests below the marker, and a line-ending change rewrites no content;
+    counting either made the arms due on 2026-11-09 for a change no arm could score differently."""
+    for path in KEY_PATHS:
+        if path.endswith(".md"):
+            if key_text_changed(git("show", f"{rev}:{path}"), (REPO / path).read_text(encoding="utf-8")):
+                return True
+        elif git("diff", "--ignore-cr-at-eol", "--stat", rev, "--", path):
+            return True
+    return False
 
 
 def doctrine_files():
@@ -114,7 +140,7 @@ def main():
     if last:
         diff = numstat(last, *DOCTRINE)
         size_then = size_now - sum(a for a, _ in diff.values()) + sum(r for _, r in diff.values())
-        key_changed = bool(numstat(last, *KEY_PATHS))
+        key_changed = scored_key_changed(last)
     for reason in arms_reasons(last, size_then, size_now, key_changed):
         lines.append(f"ARMS due: {reason}\n  python tests/harness/cold_run.py --mode audit --arm none --model sonnet   (twice)"
                      f"\n  python tests/harness/cold_run.py --mode audit --arm ponytail --model sonnet   (twice)")

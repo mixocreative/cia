@@ -48,5 +48,17 @@ class DueTests(unittest.TestCase):
         self.assertEqual(got, [("c.md", 80), ("b.md", 20)])
 
 
+
+class KeyChangeTests(unittest.TestCase):
+    KEY = "| 1 | S5 | `a.py:3` | row |\n\n" + due.PIN_MARKER + "\n- `a.py` 1111\n"
+
+    def test_a_re_pin_or_line_endings_are_not_a_key_change(self):
+        self.assertFalse(due.key_text_changed(self.KEY, self.KEY.replace("1111", "2222")))
+        self.assertFalse(due.key_text_changed(self.KEY, self.KEY.replace("\n", "\r\n")))
+
+    def test_a_changed_row_is_a_key_change(self):
+        self.assertTrue(due.key_text_changed(self.KEY, self.KEY.replace("S5", "S13")))
+
+
 if __name__ == "__main__":
     unittest.main()
