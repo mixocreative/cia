@@ -33,11 +33,9 @@ HARD_LIMIT = 1000   # over this, the cut is taken in the same change
 DEBT_LIMIT = 600    # over this, the file is named as debt below, with its next cut
 
 # file (relative to HERE) -> the next cut, written down. Empty when nothing is over DEBT_LIMIT.
-DEBT = {
-    "tools/route.py": "move the pattern and constant tables (SURFACE regexes, STATE_WORD/QLIST/CLIST, "
-                      "PY_IMPORT/JS_REL, the *_DEPS word lists, SCHEMA_RES) to tools/route_patterns.py: "
-                      "pure data, importable and testable without a scan",
-}
+# tools/route.py (843 lines) was cut on 2026-11-09 by job: route_tree.py (the walk), route_companions.py,
+# route_render.py; output byte-identical before and after.
+DEBT: dict[str, str] = {}
 
 # Named, not yet debt: SKILL.md sits at the limit. A file AT the limit cannot carry a DEBT entry
 # (the stale-entry check below refuses it), so its next cut lives here. When an edit would cross

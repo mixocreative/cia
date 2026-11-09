@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from route import walk, TEST_DIRS  # noqa: E402  one tree reader, one set of skip and secret rules
+from route_tree import walk, TEST_DIRS  # noqa: E402  one tree reader, one set of skip and secret rules
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -103,7 +103,7 @@ def unrestored(recs) -> list[tuple[str, int, str]]:
     for r in recs:
         if r.lines is None or not is_test(r.rel):
             continue
-        file_restores = any(re.search(r"tearDown|afterEach|afterAll", l) for l in r.lines)
+        file_restores = any(re.search(r"tearDown|afterEach|afterAll", ln) for ln in r.lines)
         for i, line in enumerate(r.lines, 1):
             m = GLOBAL_WRITE.search(line)
             if not m or file_restores:
@@ -114,7 +114,7 @@ def unrestored(recs) -> list[tuple[str, int, str]]:
             end = i
             while end < len(r.lines) and not re.match(r"\s*(def |async def |it\(|test\(|class )", r.lines[end]):
                 end += 1
-            if not any(RESTORE.search(l) for l in r.lines[start:end]):
+            if not any(RESTORE.search(ln) for ln in r.lines[start:end]):
                 out.append((r.rel, i, m.group(0).rstrip("=( ").strip()))
     return out
 

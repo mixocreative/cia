@@ -37,118 +37,25 @@ FILES_THRESHOLD = 200      # "more than about 200 source files"
 LINES_THRESHOLD = 50_000   # "or about 50,000 lines"
 PACKAGES_THRESHOLD = 3     # "three or more top-level packages with cross-imports"
 
-SKIP_DIRS = frozenset(
-    ".git node_modules dist build vendor __pycache__ .venv venv graphify-out target .next "
-    "coverage .ruff_cache .pytest_cache".split())
-MAX_BYTES = 2 * 1024 * 1024
-TEST_DIRS = frozenset({"tests", "test", "__tests__", "spec", "specs"})
 
-SRC_EXTS = frozenset(
-    ".py .js .mjs .cjs .jsx .ts .tsx .go .rb .php .java .kt .rs .c .cc .cpp .h .hpp .cs "
-    ".swift .vue .svelte".split())
-STR_PAGE_EXTS = frozenset({".py", ".php", ".js", ".ts", ".go", ".rb"})
-TEXT_EXTS = SRC_EXTS | frozenset(
-    ".html .htm .jinja .jinja2 .twig .tpl .md .txt .toml .json .yaml .yml .cfg .ini .sql "
-    ".xml .mod .lock .gradle .sum".split())
-TEMPLATE_RE = re.compile(r"\.(html?|jinja\w*|twig|tpl|vue|svelte)$|\.blade\.php$", re.I)
-
-UNKNOWN_TEXT = ("not scanned: callers outside the tree (cron, systemd, CI of another repo), "
-                "dynamic route registration, templates outside "
-                "*.html/*.jinja/*.twig/*.tpl/*.vue/*.svelte  (evidence.md §E5 boundary)")
-
-
-# --------------------------------------------------------------------------- reading the tree
-
-class Rec:
-    """One non-skipped file. `lines` is None when unreadable, binary, secret or over 2 MB."""
-    __slots__ = ("rel", "name", "ext", "lines", "mtime")
-
-    def __init__(self, rel, name, ext, lines, mtime):
-        self.rel, self.name, self.ext, self.lines, self.mtime = rel, name, ext, lines, mtime
-
-
-def is_secret(name: str) -> bool:
-    low = name.lower()
-    if low.startswith(".env") or low.endswith((".pem", ".key", ".p12", ".pfx")):
-        return True
-    # `id_rsa`, `id_ed25519.pub` — but not `id_helper.py`, which is source, not a key.
-    return low.startswith("id_") and os.path.splitext(low)[1] in ("", ".pub")
-
-
-def _is_link(path: str) -> bool:
-    junction = getattr(os.path, "isjunction", None)  # Windows junctions are links too (3.12+)
-    return os.path.islink(path) or bool(junction and junction(path))
-
-
-def _wants_text(name: str, ext: str) -> bool:
-    return (ext in TEXT_EXTS or name in ("Makefile", "Procfile", "Gemfile", "Pipfile", "Dockerfile")
-            or name.startswith(("requirements", "README")))
-
-
-def _read_lines(path: str):
-    try:
-        if os.path.getsize(path) > MAX_BYTES:
-            return None
-        with open(path, "rb") as fh:
-            data = fh.read()
-    except OSError:
-        return None
-    if b"\0" in data[:2048]:
-        return None
-    return data.decode("utf-8", "replace").splitlines()
-
-
-def walk(root: str):
-    """Return (records, all_paths, dir_paths, skipped_dir_names); deterministic order."""
-    recs, paths, dirs, skipped = [], set(), set(), set()
-    for cur, dnames, fnames in os.walk(root, followlinks=False):
-        keep = []
-        for d in sorted(dnames):
-            full = os.path.join(cur, d)
-            if d in SKIP_DIRS:
-                skipped.add(d)
-            elif not _is_link(full):
-                keep.append(d)
-                dirs.add(os.path.relpath(full, root).replace(os.sep, "/"))
-        dnames[:] = keep
-        for f in sorted(fnames):
-            full = os.path.join(cur, f)
-            if _is_link(full):
-                continue
-            rel = os.path.relpath(full, root).replace(os.sep, "/")
-            paths.add(rel)
-            ext = os.path.splitext(f)[1].lower()
-            lines = None
-            if not is_secret(f) and _wants_text(f, ext):
-                lines = _read_lines(full)
-            try:
-                mtime = os.path.getmtime(full)
-            except OSError:
-                mtime = 0.0
-            recs.append(Rec(rel, f, ext, lines, mtime))
-    return recs, paths, dirs, sorted(skipped)
-
-
-def ev(rel, ln, tok):
-    return {"at": f"{rel}:{ln}", "tok": " ".join(str(tok).split())[:80]}
-
-
-def evs(items, n=2):
-    return " , ".join(f"{e['at']} `{e['tok']}`" for e in items[:n])
-
-
-def _first(pattern: re.Pattern, recs):
-    """First match per file of `pattern`, as evidence rows, in path order."""
-    out = []
-    for r in recs:
-        if r.lines is None:
-            continue
-        for i, line in enumerate(r.lines, 1):
-            m = pattern.search(line)
-            if m:
-                out.append(ev(r.rel, i, m.group(0)))
-                break
-    return out
+# The tree reader, the companion probe and the renderer are their own modules (split 2026-11-09); their
+# names are re-exported here because tests and runs call route.walk, route.is_secret, route.render.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from route_tree import (  # noqa: E402,F401  (re-exported: route.walk, route.is_secret)
+    MAX_BYTES,
+    Rec,
+    SKIP_DIRS,
+    SRC_EXTS,
+    STR_PAGE_EXTS,
+    TEMPLATE_RE,
+    TEST_DIRS,
+    ev,
+    is_secret,
+    walk,
+)
+from route_tree import _first, _is_link, _read_lines, _wants_text  # noqa: E402,F401
+from route_companions import resolve_home, scan_companions  # noqa: E402,F401
+from route_render import render  # noqa: E402,F401
 
 
 # --------------------------------------------------------------------------- SURFACE
@@ -597,110 +504,6 @@ def scan_bindings(recs, paths, dirs):
     }
 
 
-# --------------------------------------------------------------------------- COMPANIONS
-
-CLI_NAMES = "graphify cgc gh docker npx playwright stitch codex claude".split()
-
-
-def companion_names():
-    """Backticked tokens of the Companion column (2nd) of the §2 table — read at run time so the
-    doctrine stays the one list; a copy here would drift the day the table changes."""
-    f = SKILL_ROOT / "references" / "companion-skills.md"
-    try:
-        text = f.read_text(encoding="utf-8")
-    except OSError:
-        return []
-    names, in_table = [], False
-    for line in text.splitlines():
-        if re.match(r"\|\s*When\s*\|\s*Companion\b", line):
-            in_table = True
-        elif in_table:
-            if not line.startswith("|"):
-                break
-            cells = line.split("|")
-            if len(cells) > 2 and not set(cells[2].strip()) <= set("-: "):
-                for t in re.findall(r"`([^`\s]+)`", cells[2]):
-                    t = t.lstrip("/")
-                    if t not in names:
-                        names.append(t)
-    return names
-
-
-def _subdirs(p: Path):
-    try:
-        return {c.name for c in p.iterdir() if c.is_dir()}
-    except OSError:
-        return set()
-
-
-def _marketplace_names(home: Path):
-    """Skill dirs (parent named `skills`) and command stems (parent named `commands`) under
-    ~/.claude/plugins/marketplaces; depth- and count-capped so a huge plugin tree cannot stall step 0."""
-    base, out, seen = home / ".claude" / "plugins" / "marketplaces", set(), 0
-    if not base.is_dir():
-        return out
-    for cur, dnames, fnames in os.walk(base, followlinks=False):
-        seen += 1
-        if seen > 20000 or len(Path(cur).relative_to(base).parts) > 6:
-            dnames[:] = []
-            continue
-        parent = Path(cur).name
-        if parent == "skills":
-            out |= set(dnames)
-        if parent == "commands":
-            out |= {os.path.splitext(f)[0] for f in fnames if f.endswith(".md")}
-    return out
-
-
-def _plugin_ids(home: Path):
-    """Keys of ~/.claude/plugins/installed_plugins.json (`name@marketplace`); {} if absent/unreadable."""
-    try:
-        data = json.loads((home / ".claude" / "plugins" / "installed_plugins.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    plugins = data.get("plugins", data) if isinstance(data, dict) else {}
-    return plugins if isinstance(plugins, dict) else {}
-
-
-def scan_companions(home: Path):
-    table = companion_names()
-    dirs = set()
-    for sub in (".claude/skills", ".codex/skills", ".agents/skills"):
-        dirs |= _subdirs(home / sub)
-    avail = dirs | _marketplace_names(home)
-
-    def part(t):  # `design:ux-copy` lives in a directory called `ux-copy`
-        return t.split(":")[-1]
-
-    plugins = _plugin_ids(home)
-
-    def present(t):
-        # `plugin:skill` is installed when the plugin is: its skill folders may be named
-        # differently (egm:egm-review lives in egm_review), so a folder-name probe alone
-        # would report an installed plugin "missing" and push the AI to reinstall it.
-        if ":" in t:
-            plug = t.split(":")[0]
-            pdir = home / ".claude" / "plugins"
-            return ((pdir / "marketplaces" / plug).exists() or (pdir / "cache" / plug).exists()
-                    or any(k.startswith(plug + "@") for k in plugins))
-        return t in avail
-
-    return {"installed": [t for t in table if present(t) or part(t) in avail],
-            "other": len(dirs - {part(t) for t in table}),
-            "missing": [t for t in table if not (present(t) or part(t) in avail)],
-            "clis": [c for c in CLI_NAMES if shutil.which(c)], "table_read": bool(table)}
-
-
-def resolve_home():
-    """HOME/USERPROFILE override exists for tests. On Windows prefer USERPROFILE: Git-Bash exports
-    HOME as /c/Users/x, which Python-for-Windows cannot open."""
-    order = ("USERPROFILE", "HOME") if os.name == "nt" else ("HOME", "USERPROFILE")
-    for k in order:
-        if os.environ.get(k):
-            return Path(os.environ[k])
-    return Path.home()
-
-
 # --------------------------------------------------------------------------- assembling and rendering
 
 def scan(root: str, home: Path | None = None) -> dict:
@@ -733,89 +536,6 @@ def scan(root: str, home: Path | None = None) -> dict:
         "companions": scan_companions(home or resolve_home()),
         "elapsed": round(time.perf_counter() - t0, 3),
     }
-
-
-def _list(items, none="none"):
-    return ", ".join(items) if items else none
-
-
-def render(F: dict) -> list[str]:
-    """Text report. `elapsed` absent from F (--no-timing) makes the output byte-deterministic."""
-    S, G, B = F["surface"], F["graph"], F["bindings"]
-    out = []
-    t = f"{F['elapsed']:.1f} s" if "elapsed" in F else "timing off"
-    out.append(f"ROUTE tools/route.py {F['version']} · root {F['root']} · {F['source_files']} source files / "
-               f"{F['source_lines']} lines · {t} · skipped dirs: {_list(F['skipped'])}"
-               + ("" if F["recognised"] else " · stack not recognised"))
-    if not F["recognised"]:
-        out.append("SURFACE stack not recognised (no source file with a known extension, no template)  "
-                   "→ load surface-map.md §3 and ask the owner what the system is")
-    else:
-        form = f"http routes={len(S['routes'])}" + (f" ({evs(S['routes'], 1)})" if S["routes"] else "")
-        form += f", form targets={len(S['targets'])}"
-        if S["unresolved"]:
-            form += f" ({evs(S['unresolved'], 1)} — no handler in tree)"
-        elif S["targets"]:
-            form += f" ({evs(S['targets'], 1)} — handler found)"
-        out.append("SURFACE " + " · ".join([
-            f"page={len(S['pages'])}" + (f" ({evs(S['pages'])})" if S["pages"] else ""),
-            f"cli={len(S['cli'])}" + (f" ({evs(S['cli'])})" if S["cli"] else ""),
-            form, "server=" + (evs(S["server"], 1) if S["server"] else "none")]))
-        walk_note = ("rendering walk possible" if S["server"]
-                     else "no rendering walk: no server" if (S["pages"] or S["cli"] or S["routes"] or S["targets"])
-                     else "no surface found")
-        out.append(f"  → load surface-map.md §3, journey-map.md §2; browser-walks.md §12 by CLI/API observers ({walk_note})")
-    st = F["state"]
-    if st["enums"]:
-        e, rd = st["enums"][0], st["renderers"]
-        vals = "|".join(e["values"][:6]) + ("|…" if len(e["values"]) > 6 else "")
-        rtxt = f"renderers for {rd['k']} of {rd['n']}" + (f" ({rd['at']})" if rd["at"] else " (none found)")
-        out.append(f"STATE enums={len(st['enums'])} ({e['at']} {vals}) · {rtxt}  → design-tools.md §4; S16/S22 lead, not a finding")
-    else:
-        out.append("STATE enums=0 (no list of >= 3 lowercase identifiers within 2 lines of status|state|mode|step|phase, "
-                   "no CHECK (status IN (…)))  → design-tools.md §4 not triggered")
-    out.append(f"GRAPH files={G['files']} lines={G['lines']} packages={len(G['packages'])} cross-imports={G['cross']}"
-               + (f" ({G['cross_pairs'][0]})" if G["cross_pairs"] else "")
-               + f" · signals held {G['held']} of 2 scanned (code-graph-tools.md §1) → "
-               + ("grep" if not G["held"] else "code graph (graphify, else cgc)")
-               + f" · graphify-out/: {G['graphify_out']} · graphify: {'PATH' if G['graphify'] else 'not on PATH'}"
-               + f" · cgc: {'PATH' if G['cgc'] else 'not on PATH'}")
-    D = F["design"]
-    out.append(f"DESIGN top-level modules={D['modules']} · ui framework=" + (evs([D["ui"]], 1) if D["ui"] else "none")
-               + ("  → design-tools.md §1–§3" if D["modules"] >= 2 or D["ui"]
-                  else "  → design-tools.md not triggered (needs modules >= 2 or a UI dependency)"))
-    C = F["commerce"]
-    crit = [("payment dep", "payment"), ("orders/cart/products schema", "schema"),
-            ("/checkout|/cart route", "route"), ("commerce framework", "framework")]
-    hits = [(i + 1, n, C[k]) for i, (n, k) in enumerate(crit) if C[k]]
-    if hits:
-        out.append(f"COMMERCE criteria {len(hits)} of 4 ("
-                   + " · ".join(f"{i} {n}: {evs([e], 1)}" for i, n, e in hits)
-                   + ")  → suggest /ecommerce-cia (SKILL §0.3); cia still runs in full")
-    else:
-        out.append("COMMERCE none (criteria 1–4 of SKILL §0.3: " + " · ".join(f"{n} no" for n, _ in crit) + ")")
-    M = F["medical_ai"]
-    med = (f"MEDICAL {evs([M['medical']], 1)}  → companion-skills.md meddev row" if M["medical"] else
-           "MEDICAL none (deps pydicom|hl7|fhir|dcmtk: no · headings patient|clinical|dental|IEC 62304|FDA|MDR: no)")
-    ai_ev = M["ai_dep"] or M["ai_path"]
-    out.append(f"{med} · " + (f"AI on (§0.10: {evs([ai_ev], 1)})" if ai_ev
-                              else "AI none (§0.10 off: no LLM dep, no prompt dir)"))
-    tests = B["tests"]
-    ttxt = (f"tests={len(tests)} file{'s' if len(tests) != 1 else ''} ({tests[0]}, {_list(B['test_styles'], 'style unknown')})"
-            if tests else "tests=none")
-    out.append("BINDINGS " + " · ".join([
-        ttxt, f"runner config={_list(B['runner_config'])}", f"ci={_list(B['ci'])}",
-        f"lockfile={_list(B['lockfile'])}", f"linter config={_list(B['linter'])}",
-        f".env={'present' if B['env'] else 'none'} .env.example={'present' if B['env_example'] else 'none'}",
-        f"docs: {_list(B['docs'])}", f"handoff={_list(B['handoff'])}",
-        f"gap-register={_list(B['gap_register'])}", f"contract files={_list(B['contract'])}"])
-        + "  → §0.5 resolves the commands from these")
-    K = F["companions"]
-    out.append(f"COMPANIONS installed: {_list(K['installed'])} · other skills {K['other']} · CLIs: {_list(K['clis'])}"
-               f" · missing: {_list(K['missing'])}" + ("" if K["table_read"] else " (table unreadable)")
-               + "  → companion-skills.md §3")
-    out.append("UNKNOWN " + UNKNOWN_TEXT)
-    return out
 
 
 def main(argv=None) -> int:
