@@ -234,6 +234,8 @@ should keep their specifics, because no run is scored against them.
 | 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run Y; resolved claude-sonnet-5-5, $1.48, 45 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 4.3 | **11.5. Receipts 9/19, every core reference quoted.** Near: row 5 (RUN-17 S20 MEDIUM). RUN-13 (enqueue's catch also swallows NOT NULL) is the known true extra, not the control. 30 of 30 trials double-claimed. |
 | 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run Z; resolved claude-sonnet-5-5, $1.29, 39 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 2 | 0 | 0 | 2.8 | **11. Receipts 9/19.** Row 5 a hit at last (CIA-009 S20.1 `scheduler.py:99-105`, 'read by nobody'). Near: 10 (S21 LOW), 12 (S3 MEDIUM). Row 8's severity cell says 'HIGH-CONF'; the report's own tally (4 MEDIUM) makes it MEDIUM, scored a hit. **Fence leak:** its line 7 ran `tools/score.py`, which reads RUNS.md and printed run Y's count line (counts only, no row text); judged harmless to discovery, and the harness gap is recorded in the note below. |
 | 2026-11-09 | `db6fd0f` | Claude **Sonnet** (harness, audit run AA; resolved claude-sonnet-5-5, $1.36, 45 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 7 | 5 | 0 | 0 | 4.4 | **9.5. Receipts 9/19.** Grades one low: 2 and 12 (one S3 finding at MEDIUM), 9 (S21 MEDIUM), 8 (`with_backoff` as LOW / an unswept MEDIUM doc note). Unanchored: 5 (no outermost check at `monitor.py`, the file never named). F11 (D5's 'CLI reaches any job by id' has no command) is a true extra about the doc; the 200-row cap itself is kept as deliberate. |
+| 2026-11-09 | `b058b61` (reverted in `1913add`) | Claude **Sonnet** (harness, audit run AD; resolved claude-sonnet-5-5, $1.35, 43 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 1 | 3.4 | **10.5. Receipts 9/19.** Unanchored: row 7 (stuck at `db.py:10` / `status_page.py`, the fifth run with that slip). **False positive:** F16 adds 'the status page silently drops everything past row 200 with no truncation notice' to D5's true CLI contradiction, filing control 6. Row 5 a hit (F9 S20 `scheduler.py:99-105`). Line 7 says `not run (harness fence)`: the new fence holds. |
+| 2026-11-09 | `b058b61` (reverted in `1913add`) | Claude **Sonnet** (harness, audit run AE; resolved claude-sonnet-5-5, $1.39, 40 turns) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 1 | 0 | 0 | 3.6 | **11.5. Receipts 9/19.** Near: row 6 (stuck renderer under S16/S13b; S22 named only on the sweep line). Kept the 200-row window as a verified control. Mean of AD and AE 11, with a false positive: reverted under the pre-registered rule. |
 
 **The reading collapse (2026-11-09, runs O-W).** Runs K and L read every core reference and scored
 12. Six hours later, on byte-identical doctrine, nine runs read the references three times, and the
@@ -263,6 +265,17 @@ model's history and no longer skips a model's first commit. What the fix costs: 
 What remains is grading, not discovery: rows 2, 12 (S3) and 5 (S20) are the ones still filed a
 grade low. **Fence leak, closed:** run Z obeyed report line 7 and ran `tools/score.py`, which reads
 this file, and printed run Y's count line; the RUNBOOK's HARD RULES now forbid it on the fixture.
+
+**Answer-key debt, named not fixed (2026-11-09, runs AA and AD).** Control 6 says the status page's
+200-row cap is correct because ADR D5 cites alternative surfaces, one being "the operator CLI
+reaches any single job by id". The CLI has `cancel <id>`, `digest` and `drain`; nothing shows a
+job. Two runs found that independently, and AD went on to file the cap itself (scored a false
+positive, `b058b61` reverted). The key's verdict on the cap still holds by its own rule (D5 is a
+recorded decision), but the reason it gives leans on a capability the fixture lacks. Two ways out,
+both an owner decision because each changes the instrument: add `cli show <id>` to the fixture and
+re-pin, or reword the control so it rests on the digest and the ADR alone. Until then a run that
+reports the D5 contradiction without filing the cap is right twice, and one that files the cap is
+a false positive.
 
 ## Build-mode runs (2026-11-09 onward)
 
