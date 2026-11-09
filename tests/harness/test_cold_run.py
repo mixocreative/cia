@@ -201,6 +201,15 @@ class PartialReadTests(unittest.TestCase):
             "theory.md read in full."), 2)
         self.assertEqual(cold_run.partial_reads("Reference receipts: sweeps/ \"the channel is the finding\""), 0)
 
+    def test_refs_opened_names_each_reference_once(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        import cold_run
+        log = ("exec Get-Content S:\\ai\\skills\\cia\\references\\reporting.md\n"
+               "exec cat references/sweeps/04-enumeration-environment-liveness.md\n"
+               "exec rg receipt references/reporting.md\n")
+        self.assertEqual(cold_run.refs_opened(log),
+                         ["reporting.md", "sweeps/04-enumeration-environment-liveness.md"])
+
 
 class EgmTests(unittest.TestCase):
     def test_egm_runs_one_read_only_goldfish(self):

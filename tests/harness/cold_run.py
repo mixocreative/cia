@@ -158,6 +158,15 @@ def partial_reads(text):
     return sum(1 for line in text.splitlines() if PARTIAL_READ.search(line))
 
 
+REF_PATH = re.compile(r"references[\\/]((?:sweeps[\\/])?[\w.-]+\.md)")
+
+
+def refs_opened(transcript):
+    """The reference files a transcript names (any separator), as a sorted list. A name in the log means a
+    command touched it - a cat, a grep, a sed of the last lines - so this bounds reading from above."""
+    return sorted({m.replace("\\", "/") for m in REF_PATH.findall(transcript)})
+
+
 EGM_REVIEWERS = ("comprehension", "structural", "style", "design", "codebase-details",
                  "implementation-readiness", "zoom-out")
 
@@ -399,6 +408,10 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
     out_text, facts = (claude_result(res.stdout) if runtime == "claude" else (res.stdout, {}))
     if last_msg and os.path.exists(last_msg):
         out_text = Path(last_msg).read_text(encoding="utf-8")
+        # Codex's -o keeps only its final message; its stdout is the event log of what it opened and ran.
+        # Kept beside the report because "did it read the references?" is otherwise unanswerable.
+        path.with_suffix(".transcript.log").write_text(res.stdout + "\n" + res.stderr, encoding="utf-8")
+        label += f"refs-opened {len(refs_opened(res.stdout + res.stderr))} | "
     if facts:
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
     rq = receipts_quoted(out_text, root) if receipts else None
