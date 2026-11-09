@@ -104,6 +104,13 @@ class ScoreTests(unittest.TestCase):
         reverted = ("ccccccc` (reverted in `ddddddd", [(10, 0, 0), (12, 0, 0)])
         self.assertEqual(self.gate_on([base, ("bbbbbbb", [(11, 1, 0), (11, 1, 0)]), reverted]), 0)  # judged: bbbbbbb
 
+    def test_floor_follows_recent_median_and_cannot_drift_more_than_a_row(self):
+        lucky = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(11, 1, 0), (11, 1, 0)]) for c in "bcde"]
+        self.assertEqual(self.gate_on(lucky + [("fffffff", [(11, 1, 0), (11, 0, 0)])]), 0)  # 11.25 >= median 11.5 - 0.5
+        self.assertEqual(self.gate_on(lucky + [("fffffff", [(11, 0, 0), (10, 1, 0)])]), 1)  # 10.75 < 11
+        drift = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(10, 1, 0), (10, 1, 0)]) for c in "bcde"]
+        self.assertEqual(self.gate_on(drift + [("fffffff", [(10, 1, 0), (10, 1, 0)])]), 1)  # 10.5 < best 12 - DRIFT
+
     def test_resolved_model_pools_apart_from_its_alias(self):
         # An alias row cannot be compared with a row that names what answered; a resolved id can.
         self.assertEqual(score.model_of("Claude Sonnet (harness; resolved claude-sonnet-5-5, $1)"), "claude-sonnet-5-5")

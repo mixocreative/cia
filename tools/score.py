@@ -149,12 +149,20 @@ def commit_of(cell: str) -> str:
 # fixture-service read 11, 12, 12, 10.5, 11.5, 11.5 - the instrument's noise is about this size, and
 # every half-row so far was a reporting slip, never a discovery miss.
 NOISE = 0.5
+# The floor's baseline is the MEDIAN of the last RECENT live per-commit means, not the best ever. Changed
+# 2026-11-09: "best ever" is the maximum of noisy two-run means, so it ratchets up on luck - one commit
+# at 12 set a floor of 11.5 that commits scoring 11-12 on unchanged reading then failed about half the
+# time (run AS, 11). The median does not chase the luckiest pair. The trap it opens is slow drift
+# down, so DRIFT bounds it: the floor never sits more than one row (two slips) under the best ever.
+# Misses and false positives stay zero-tolerance either way; this rule only sizes the noise.
+RECENT = 5
+DRIFT = 1.0
 
 
 def audit_gate(rs: list[dict]) -> int:
     """Per-commit gate. Misses and false positives are doctrine: zero tolerance. Half-rows are noise:
-    the mean of at least two runs on the commit under test must stay within NOISE of the best earlier
-    per-commit mean, and that floor is taken against the best ever, so it can never drift down."""
+    the mean of at least two runs on the commit under test must stay within NOISE of the median of the
+    last RECENT live per-commit means, and never more than DRIFT under the best ever."""
     live = [r for r in rs if not r.get("reverted")]
     if not live:
         print("gate: every scored run is on a reverted commit - nothing under test.")
@@ -185,19 +193,36 @@ def audit_gate(rs: list[dict]) -> int:
         print(f"GATE: {last['token']} has one scored run on {last['fixture']} with {last['model']}. One run is a "
               f"sample - run again, then gate on the mean (RUNBOOK step 6).", file=sys.stderr)
         return 1
+    best, baseline = floor_parts(earlier)
+    floor = max(baseline - NOISE, best - DRIFT)
+    mean = sum(r["score"] for r in group) / len(group)
+    why = f"median of the last {RECENT} live per-commit means {baseline:g}, best ever {best:g}"
+    if mean < floor:
+        print(f"GATE: {last['token']} scores a mean of {mean:g} over {len(group)} runs, below the floor "
+              f"{floor:g} ({why}). Fix the doctrine or the fixture, run again, then push.", file=sys.stderr)
+        return 1
+    print(f"gate: {last['token']} mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
+          f"no miss, no false positive.")
+    return 0
+
+
+def floor_parts(earlier: list[dict]) -> tuple[float, float]:
+    """(best per-commit mean ever, median of the last RECENT live per-commit means), in row order.
+
+    Reverted commits count toward the best (a lucky pair on reverted doctrine still bounds drift) but
+    not toward the median: the baseline is what the shipped doctrine scores."""
     means: dict[str, list[float]] = {}
+    live: list[str] = []
     for r in earlier:
         means.setdefault(r["token"], []).append(r["score"])
-    best = max(sum(v) / len(v) for v in means.values())
-    mean = sum(r["score"] for r in group) / len(group)
-    if mean < best - NOISE:
-        print(f"GATE: {last['token']} scores a mean of {mean:g} over {len(group)} runs, below the floor "
-              f"{best - NOISE:g} (best earlier per-commit mean {best:g}, less half a row). Fix the doctrine or "
-              f"the fixture, run again, then push.", file=sys.stderr)
-        return 1
-    print(f"gate: {last['token']} mean {mean:g} over {len(group)} runs, floor {best - NOISE:g} "
-          f"(best earlier per-commit mean {best:g}); no miss, no false positive.")
-    return 0
+        if not r.get("reverted") and r["token"] not in live:
+            live.append(r["token"])
+    avg = {t: sum(v) / len(v) for t, v in means.items()}
+    best = max(avg.values())
+    recent = sorted(avg[t] for t in live[-RECENT:]) or [best]
+    mid = len(recent) // 2
+    median = recent[mid] if len(recent) % 2 else (recent[mid - 1] + recent[mid]) / 2
+    return best, median
 
 
 def _parse(lines) -> list[dict]:
