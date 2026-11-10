@@ -7,6 +7,12 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- **Companion `kubai-icons`:** a build that needs functional icons, or a screen whose icons are
+  missing, placeholders or mixed in style, hands the set to `kubai-icons` (one style from one
+  accent; animated or static SVG). `route.py` lists it when installed. The result is re-walked,
+  never a closed finding; an icon-only control still needs an accessible name.
+- **`code-graph-tools.md` §3, one writer per store:** the embedded CodeGraphContext store takes an
+  exclusive lock, so one store per project; a server that will not start falls back to graphify.
 - `tools/route.py`: the GRAPH line now says which graph answers which question, as
   `code-graph-tools.md` §2 does (CodeGraphContext first for code relationships, graphify first for
   architecture, probe cgc first, refresh a stale `graphify-out/`), and needs two of the six §1
