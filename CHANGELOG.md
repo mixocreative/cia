@@ -7,6 +7,11 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- **SKILL §0.5.3, how a decision's premise is tested:** run the alternative the decision names and see
+  whether it does what the sentence says; a cost the design accepts (what a cap leaves out) is the
+  decision, not a false premise. One run filed a capped list as 'premise false'; the four runs after
+  the rule filed no control. SKILL line 14 also names COMPANIONS, and the gate sentence matches score.py.
+- The harness allows `php`, so a PHP fixture can start its own shop.
 - `tools/route.py`: the COMPANIONS line no longer lists `.svg` and `<img>` as missing skills (it read
   every backticked token of the kubai-icons row as a skill name). The GRAPH line no longer sends code
   questions to graphify because `cgc` is off PATH: `code-graph-tools.md` §3 says a user-scope install
