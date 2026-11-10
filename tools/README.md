@@ -24,7 +24,7 @@ Every file here, grouped by who runs it. Run each from the skill root; each answ
 | `score.py` | the skill's own score from `tests/RUNS.md`, and the push gate |
 | `untested.py` | refuses doctrine (`SKILL.md`, `references/`) with no scored run |
 | `due.py` | which comparison arms and EGM reviews are due, with the command for each |
-| `check_structure.py` | the skill's files agree: nothing loose, S1-S24 once, size debt named, versions, this map |
+| `check_structure.py` | the skill's files agree: nothing loose, S1-S24 once, size debt named, versions, this map, no line the Read tool cuts |
 | `check_key_lines.py` | the answer keys still point at the fixture lines they cite |
 | `receipts.py` | every reference has one unique reading receipt |
 | `zh_check.py` | Chinese text uses Taiwanese, not mainland, usage |
