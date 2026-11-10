@@ -1,4 +1,6 @@
 """Guard tests for tools/inventory.py, on a made-up project that is not a fixture."""
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -44,6 +46,12 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(len([x for x in out.splitlines() if x[:5].strip() in ("def", "test", "key", "write")]), 3)
         self.assertIn("more not listed", out)
         self.assertIn("UNVERIFIED", out)
+
+    def test_max_without_a_number_is_usage_not_a_traceback(self):
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(inventory.main([self.root, "--max"]), 2)
+            self.assertEqual(inventory.main([self.root, "--max", "many"]), 2)
+        self.assertIn("usage:", err.getvalue())
 
 
 if __name__ == "__main__":

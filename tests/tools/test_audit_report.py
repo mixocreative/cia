@@ -1,4 +1,6 @@
 """Guard tests for tools/audit_report.py: receipts are checked against the references, leads and inventory answered."""
+import contextlib
+import io
 import sys
 import unittest
 from pathlib import Path
@@ -57,6 +59,11 @@ class AuditReportTests(unittest.TestCase):
                "test   tests/t.py:1  `test_x`\n\n")
         self.assertIn("every inventory item answered", missing(report(extra=inv)))
         self.assertEqual(missing(report(extra=inv + "tests/t.py:1 read, nothing\n")), [])
+
+    def test_an_unreadable_report_is_bad_input_not_a_failed_report(self):
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(ar.main(["check", "no-such-report.md"]), 2)   # 1 means parts missing
+        self.assertIn("cannot read", err.getvalue())
 
 
 if __name__ == "__main__":

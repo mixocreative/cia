@@ -100,7 +100,10 @@ def main(argv: list[str] | None = None) -> int:
     cap = 150
     if "--max" in argv:
         i = argv.index("--max")
-        cap, argv = int(argv[i + 1]), argv[:i] + argv[i + 2:]
+        try:
+            cap, argv = int(argv[i + 1]), argv[:i] + argv[i + 2:]
+        except (IndexError, ValueError):   # --max with no number: usage, not a traceback
+            argv = []
     if len(argv) != 1 or not Path(argv[0]).is_dir():
         print("usage: python tools/inventory.py <project-root> [--max N]", file=sys.stderr)
         return 2

@@ -98,7 +98,12 @@ def main(argv: list[str] | None = None) -> int:
         print(__doc__.split("\n\n")[1], file=sys.stderr)
         return 2
     src = argv[1]
-    text = sys.stdin.read() if src == "-" else Path(src).read_text(encoding="utf-8")
+    try:
+        text = sys.stdin.read() if src == "-" else Path(src).read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as e:
+        # exit 2, never 1: 1 means "blocks missing", and a mistyped path must not read as a report that failed
+        print(f"build_report: cannot read the report: {e}", file=sys.stderr)
+        return 2
     results = checks(text)
     for name, ok, hint in results:
         print(f"{'ok     ' if ok else 'MISSING'}  {name}" + ("" if ok else f" - add {hint}"))

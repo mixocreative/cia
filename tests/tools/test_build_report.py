@@ -82,6 +82,8 @@ class BuildReportTests(unittest.TestCase):
         self.assertIn("Evidence ledger row", out.getvalue())
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(br.main([]), 2)
+            # 2, not 1: a path that cannot be read must not look like a report with blocks missing
+            self.assertEqual(br.main(["check", "no-such-report.md"]), 2)
 
 
 if __name__ == "__main__":
