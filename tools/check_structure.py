@@ -157,7 +157,7 @@ def check_tools_map() -> None:
     if not (tools / "README.md").is_file():
         fail("tools/README.md is missing: the folder map (one row per file, saying its job)")
         return
-    files ={p.name for p in tools.iterdir() if p.is_file() and p.name != "README.md"}
+    files = {p.name for p in tools.iterdir() if p.is_file() and p.name != "README.md"}
     named = set(re.findall(r"^\| `([^`]+)` \|", read(tools / "README.md"), re.M))
     for name in sorted(files - named):
         fail(f"tools/README.md does not name tools/{name}: add a row saying its job")
