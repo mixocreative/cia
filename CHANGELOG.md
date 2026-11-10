@@ -7,6 +7,18 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-11-10
+
+- **The plugin loads again.** `plugin.json` listed `./agents`, a folder; Claude Code's manifest schema wants
+  each agents entry to be a `.md` file and refused the whole plugin ("agents.0: must end with .md"), so no
+  agent, skill or hook of an install loaded. Each agent file is listed, and the guard test checks that.
+- **The Stop hook guards a report written outside the working directory:** it also checks every file named
+  `cia-audit-report.md` that a Write or Edit in the turn touched.
+- **The hook command survives a `python3` that is not Python** (the Windows Store stub): it probes
+  `python3 -c ''` with stdin closed, then runs one interpreter; a test runs the shipped command under `sh`
+  with a stub that eats stdin.
+- RUNBOOK: a plugin smoke step before every release, the check that found the two above.
+
 ## [2.6.0] - 2026-11-10
 
 - **A Stop hook holds Step 6.** The plugin ships `hooks/hooks.json`: a session that wrote `cia-audit-report.md`

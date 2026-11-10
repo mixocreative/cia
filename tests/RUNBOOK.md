@@ -217,3 +217,17 @@ that, the prompt is the finding.
 ## Paired run
 
 Once per release of either skill, run this fixture with `run /cia and /ecommerce-cia, Screen tier`. Expected here (non-commerce): this skill is the spine, `ecommerce-cia` reports no gateway, no commerce schema and no checkout route in one line, and no commerce doctrine appears in the report. The commerce-side paired run lives in `../../ecommerce-cia/tests/RUNBOOK.md`. Record it as a separate row with runtime `paired`.
+
+## Plugin smoke — before every release of either skill (2026-11-10)
+
+Load the plugin the way an install does and watch the Stop hook fire. Copy the repo without `.git`, `tests`
+and `graphify-out` to `<scratch>/mk/<plugin>/<version>/` (an installed plugin's folder is its version), then in
+an empty folder:
+
+    claude -p --debug hooks --plugin-dir <scratch>/mk/<plugin>/<version> --setting-sources project,local       --model haiku --max-turns 4 --allowedTools Write       "Create <plugin>-audit-report.md here containing only: draft. Then reply done."
+
+Pass: `~/.claude/debug/<session>.txt` has no "invalid manifest" line and has a `Hook Stop ... success` line with
+`"decision": "block"`. Why it is a step and not a hope: the unit tests ran green while the manifest listed
+`./agents` (a folder) and Claude Code refused the whole plugin, and while the hook named its report after the
+install folder. Both were found only by loading the plugin like this.
+
