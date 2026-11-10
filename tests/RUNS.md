@@ -449,6 +449,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-10 | `798ee54` (as C20) | **Codex** (as above, audit run C21) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 9.2 | **9.5 on its file (6/6), receipts 9/19, refs opened 16/26, sweep-sites 23/24.** missed: row 9 (its S21 line checks the cancel test's sibling and never reaches `:25-28`). Near: row 5 (F4 'no outer liveness check', the table's heartbeat row at `:99` not the file). Row 12 F11 HIGH. F2 (a late `finish` turns `done` back into `queued`; no owner or state predicate) is a true extra, not the bounded-retry control, which is about the loop ending. **Report form held in both: 6/6, every part present. Over four runs on `798ee54` the file was written 3 of 4 times (C16 none) and row 9 was found 2 of 4.** |
 | 2026-11-10 | `798ee54` (HEAD `37905ba`, doctrine unchanged) | **Codex** (as above, `--effort high`, audit run C22) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 11.2 | **12 on its file (6/6), receipts 12/19, refs opened 19/26, sweep-sites 21/24: the first Codex run to find every row.** Row 5 filed CIA-08 HIGH (`scheduler.py:104-105` 'writes a heartbeat file, with no reader', 'an outer dead-man check'); row 9 CIA-13 HIGH. True extras: CIA-11 (late `finish` overwrites `cancelled`) and CIA-15 (every `IntegrityError` read as a duplicate - run Y's RUN-13, not the idempotency control, which it lists as verified). |
 | 2026-11-10 | `798ee54` (as C22) | **Codex** (as above, `--effort high`, audit run C23) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 10.0 | **10 on its file (6/6), receipts 9/19, refs opened 18/26, sweep-sites 24/24.** missed: row 5 - its lead dispositions call `scheduler.py:99` 'also orphaned ... not a liveness proof until a detector reads it' and S20 says 'no outer watchdog', never filed or graded (C12's rule). Row 9 CIA-13 HIGH. **The high-effort pair: 12 and 10, mean 11, against 10.5 for the four medium runs on the same doctrine; row 9 filed in both (2 of 4 at medium), and the pair read together misses nothing.** |
+| 2026-11-10 | `798ee54` (HEAD `853773a`, doctrine unchanged) | **Codex** (as above, `--effort high`, audit run C26) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 14.4 | **12 on its file (6/6), receipts 13/19, refs opened 20/26, sweep-sites 23/24: the second Codex run to find every row.** Row 5 FS-09 HIGH (`scheduler.py:99-105` 'writes a heartbeat, but no allowed source reads it'; S20 'Outermost product check: NONE'); row 8 FS-06 HIGH. True extras: FS-02 (`drain` strands a claimed job as `running`) and FS-12 (the Retry button has no handler), both judged true in earlier Claude runs. |
+| 2026-11-10 | `798ee54` (as C26) | **Codex** (as above, `--effort high`, audit run C27) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 10 | 1 | 1 | 0 | 17.5 | **9.5 on its file (6/6), receipts 12/19, refs opened 20/26, sweep-sites 21/24.** missed: row 8 - `legacy_retry.py:14` 'unused' only as obligation O11 'OPEN' and on the S13 line 'included in CIA-02/D1', never filed or graded (C1, C6). Near: row 5 (CIA-08 files the monitor's missing schedule and the heartbeat writer's missing caller, and calls the file's reader 'UNKNOWN', not absent: C16, C21). True extras: CIA-03 (late `finish`), CIA-14 (`cancel` with no id raises a traceback). **Four high-effort runs on `798ee54`: 12, 10, 12, 9.5, mean 10.9 against 10.5 at medium; two misses in four runs at either effort, but neither high pair shares one.** |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
@@ -511,8 +513,16 @@ a direction, not a result, so `score.py` gates each effort as its own series (`m
 `codex-high`; `codex_gate` runs per series) and README recommends high effort with the measured
 numbers beside it. The medium series stays gated as it was. C24/C25, the second high pair (HEAD
 `0de4c03`), hit Codex's usage limit after 5 and 8 minutes, mid-report (`report-file none`, exit 1):
-unscored, re-run after the limit resets. Each still stopped only its own `graphify` watcher and left
-five unrelated processes (another session's `npm run walk`, `grep`, Edge) alone.
+unscored. Each still stopped only its own `graphify` watcher and left five unrelated processes
+(another session's `npm run walk`, `grep`, Edge) alone. **C26/C27 re-ran that pair after the limit
+reset: 12 and 9.5.** Over four high runs on `798ee54` against the four medium ones: mean 10.9 against
+10.5; misses per run 0.5 at both efforts (rows 5 and 8 at high, 9 twice at medium); row 5 filed in
+full 2 of 4 against 0 of 4, row 9 4 of 4 against 2 of 4; no high pair shares a miss, one medium pair
+does; time 10-17.5 min against 5-15. **What that settles:** high effort moves which rows a run holds
+and costs about half again the time; it does not lower the miss rate of one run. The second report
+is still what closes the gap, so README recommends two reports at either effort and `high` as a
+small gain, not a fix. `codex-high` now has four runs on `798ee54`, its baseline; the next doctrine
+commit is gated against it like the medium series.
 
 **The sweep-line rule, tested and reverted (C6-C7, AR-AS).** Fable's reading of C4 and C5 was that
 Codex closed a sweep with a finding ref instead of a site list (SKILL.md 2a allowed either) and so
@@ -545,3 +555,5 @@ stand). Test: `test_a_detached_grandchild_whose_parent_exited_is_still_marked_as
 **Verified live on C22/C23 (run in parallel):** C22 started `graphify watch .` (no copy in its command
 line) and stopped it as its own; C23, ending first, saw that same watcher, left it running as not
 its own, and stopped its own `graphify watch <tmp copy>`. No `graphify` process was alive after both.
+**And on C26/C27 (parallel):** C26, ending first, saw C27's `graphify watch runner` (pid 83948) and left
+it running; C27 stopped that same pid as its own at its end. None alive afterwards.
