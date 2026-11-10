@@ -109,8 +109,8 @@ def arm_line(arm):
     raise ValueError(f"unknown arm {arm!r}")
 
 
-from run_facts import (  # noqa: E402  re-exported: the tests and execute() use them by these names
-    cia_traces, claude_result, SHORT_RESULT, longest_reply, transcript_of, receipts_quoted,
+from run_facts import (  # noqa: E402, F401  re-exported: the tests and execute() use them by these names
+    cia_traces, claude_result, SHORT_RESULT, longest_reply, recovered_reply, transcript_of, receipts_quoted,
     partial_reads, sweep_sites, refs_opened,
 )
 
@@ -447,15 +447,15 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         label += f"refs-opened {len(refs_opened(res.stdout + res.stderr, refs))}/{len(refs)} | "
     if facts:
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
-        tpath = transcript_of(facts["session"], cwd) if facts.get("session") else None
-        if len(out_text) < SHORT_RESULT and tpath and tpath.is_file():
-            longer = longest_reply(tpath.read_text(encoding="utf-8", errors="replace"))
-            if len(longer) > len(out_text):
-                out_text = longer
-                label += "report from transcript (final turn was a late notification) | "
     collected = ""
     if report_file:
         label, collected = collect_report(Path(cwd) / report_file, root, label)
+    tpath = transcript_of(facts["session"], cwd) if facts.get("session") else None
+    if tpath and tpath.is_file():
+        longer = recovered_reply(out_text, collected, tpath.read_text(encoding="utf-8", errors="replace"))
+        if longer:
+            out_text = longer
+            label += "report from transcript (final turn was a late notification) | "
     # The report is the collected file when there is one; the reply is then a summary, and counting
     # receipts in it printed "receipts 0/19" on runs whose report quoted all nine.
     report = collected or out_text

@@ -397,6 +397,13 @@ class BuildReportCollectionTests(unittest.TestCase):
                  json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "The server stopped."}]}})]
         self.assertTrue(self.cr.longest_reply("\n".join(lines)).startswith("# Report"))
         self.assertEqual(self.cr.longest_reply(""), "")
+
+    def test_a_hooked_run_keeps_its_final_reply_when_the_report_file_was_collected(self):
+        # Under the Stop hook the longest earlier reply is the draft the hook blocked, not the report.
+        draft = json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "draft " * 900}]}})
+        self.assertIsNone(self.cr.recovered_reply("Checker passes.", "# collected report", draft))
+        self.assertTrue(self.cr.recovered_reply("Checker passes.", "", draft).startswith("draft"))
+        self.assertIsNone(self.cr.recovered_reply("r" * self.cr.SHORT_RESULT, "", draft))
         self.assertIn("Stop every server you started", self.cr.SHELL_LINE)
 
     def test_transcript_path_encodes_the_cwd_as_claude_code_does(self):

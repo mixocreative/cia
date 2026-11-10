@@ -59,6 +59,18 @@ def longest_reply(jsonl_text):
     return best
 
 
+def recovered_reply(out_text, collected, transcript_text):
+    """The earlier, longer reply to save in place of a short final one, or None to keep the final reply.
+
+    The trap: under the skill's Stop hook the final reply is short BECAUSE the run went on to fix its
+    report, and the longest earlier reply is the draft the hook blocked. So only a run with no collected
+    report file falls back (the hooked batch of 2026-11-10 saved ten stale drafts before this)."""
+    if collected or len(out_text) >= SHORT_RESULT:
+        return None
+    longer = longest_reply(transcript_text)
+    return longer if len(longer) > len(out_text) else None
+
+
 def transcript_of(session, cwd, home=None):
     """Where Claude Code keeps a session's transcript: ~/.claude/projects/<cwd, non-alphanumerics as ->/<id>.jsonl."""
     enc = re.sub(r"[^A-Za-z0-9]", "-", str(Path(cwd).resolve()))
