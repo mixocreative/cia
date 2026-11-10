@@ -373,6 +373,13 @@ class BuildReportCollectionTests(unittest.TestCase):
         egm = self.cr.build_command("claude", "p", "sonnet", mode="egm", reviewer="comprehension")
         self.assertNotIn("--setting-sources", egm)   # the Goldfish reviewer is a user-level plugin agent
 
+    def test_an_audit_run_carries_the_skills_stop_hook(self):
+        cmd = self.cr.build_command("claude", "p", "sonnet", mode="audit", skill_root=self.cr.REPO)
+        hook = json.loads(cmd[cmd.index("--settings") + 1])["hooks"]["Stop"][0]["hooks"][0]["command"]
+        self.assertIn("tools/stop_check.py", hook)
+        none = self.cr.build_command("claude", "p", "sonnet", mode="audit", arm="none", skill_root=self.cr.REPO)
+        self.assertNotIn("--settings", none)   # a comparison arm must not get the skill's hook
+
     def test_each_skill_names_its_own_audit_report(self):
         self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/cia")), self.cr.AUDIT_REPORT)
         self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/ecommerce-cia")), "ecommerce-cia-audit-report.md")

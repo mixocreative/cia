@@ -224,7 +224,14 @@ ALLOWED_TOOLS = {
 ARM_TOOLS = ["Read(./**)"] + [t for t in READ_TOOLS if t not in ("Read", "Skill")]
 
 
-def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None, effort=None):
+def stop_hook_settings(skill_root):
+    """The skill's own Stop hook (hooks/hooks.json, tools/stop_check.py) as a --settings value. A hermetic run
+    loads no plugins, so the hook a real user's session gets with the plugin is passed in explicitly."""
+    script = (Path(skill_root) / "tools" / "stop_check.py").as_posix()
+    return json.dumps({"hooks": {"Stop": [{"hooks": [{"type": "command", "command": f'python "{script}"'}]}]}})
+
+
+def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None, effort=None, skill_root=None):
     if runtime == "claude":
         cmd = ["claude", "-p", prompt, "--output-format", "json"]
         if mode != "egm":
@@ -240,6 +247,8 @@ def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None, e
             cmd += ["--disable-slash-commands", "--allowedTools", *ARM_TOOLS]
         elif mode in ALLOWED_TOOLS:
             cmd += ["--allowedTools", *ALLOWED_TOOLS[mode]]
+        if mode == "audit" and arm == "cia" and skill_root and (Path(skill_root) / "tools" / "stop_check.py").is_file():
+            cmd += ["--settings", stop_hook_settings(skill_root)]
     else:
         # codex: flags checked against `codex exec --help` (codex-cli 0.157). Codex sandboxes the whole
         # run rather than single tools. On Windows its workspace-write sandbox denies CreateProcessAsUserW
@@ -312,7 +321,8 @@ def main(argv=None, runbook=None):
     if args.scope:
         prompt += f"\nScope for this audit: {args.scope}\n"
 
-    cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm, effort=args.effort)
+    cmd = build_command(args.runtime, prompt, args.model, args.mode, args.arm, effort=args.effort,
+                        skill_root=skill_root)
 
     # Every run works on a throwaway copy of the fixture: build edits it, codex sandboxes the whole run,
     # and an audit's runtime walk (node server.js --reset, a probe) writes the fixture's own state. The
