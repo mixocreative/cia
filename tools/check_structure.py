@@ -17,9 +17,12 @@ Checks:
   6. Size: no file over HARD_LIMIT lines (the cut is taken); a file over DEBT_LIMIT lines needs an
      entry in DEBT with its next cut written down (code principle 5). An entry for a file that is
      now under the limit fails too, so a paid-off debt is removed rather than left to rot.
+  7. Version: plugin.json, marketplace.json and CITATION.cff carry one version, and CHANGELOG.md has an
+     entry for it. Three hand-edited copies drift; a release with no entry is a release nobody can read.
 
 Usage: python tools/check_structure.py
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -147,6 +150,19 @@ def check_size() -> None:
             fail(f"DEBT entry {key} is no longer over {DEBT_LIMIT} lines: remove the entry")
 
 
+def check_version() -> None:
+    plugin = json.loads(read(HERE / ".claude-plugin" / "plugin.json"))["version"]
+    market = json.loads(read(HERE / ".claude-plugin" / "marketplace.json"))["plugins"][0]["version"]
+    # ^version, not cff-version: that line is the citation format's own version (1.2.0), and a bump by
+    # search-and-replace once rewrote it to the skill's.
+    cff = re.search(r"^version: (\S+)", read(HERE / "CITATION.cff"), re.M)
+    found = {"plugin.json": plugin, "marketplace.json": market, "CITATION.cff": cff.group(1) if cff else "none"}
+    if len(set(found.values())) != 1:
+        fail("version: " + ", ".join(f"{k} says {v}" for k, v in found.items()))
+    if f"## [{plugin}]" not in read(HERE / "CHANGELOG.md"):
+        fail(f"CHANGELOG.md has no entry for {plugin}, the version in plugin.json")
+
+
 def main() -> int:
     skill_text = read(SKILL)
     check_frontmatter(skill_text)
@@ -155,6 +171,7 @@ def main() -> int:
     check_sweeps()
     check_stale_paths()
     check_size()
+    check_version()
     if failures:
         print(f"check_structure: {len(failures)} failure(s)")
         for msg in failures:

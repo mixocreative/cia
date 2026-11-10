@@ -186,9 +186,9 @@ Tested on Claude Code (plugin or skill directory), where the harness scores ever
 
 ## About｜關於
 
-**New in this release — evidence discipline borrowed from reverse engineering.** Every claim is tagged OBSERVED / INFERRED / UNKNOWN; every promise the owner made becomes an **obligation** with exactly one owner in the code and a verifier that names it; a test can only close a claim at its own strength (a mocked gateway never proves a real callback); "nothing reads it" must state where it looked; cut-off output is never counted; contradictions between manual, sandbox and code are recorded instead of resolved by preference; and a new **reverse-trace mode** starts from what the system visibly does and traces inward. See `references/evidence.md`. Ideas adapted from [REA](https://github.com/morluto/rea).
+**Since v2.1 — evidence discipline borrowed from reverse engineering** (every version's changes: [`CHANGELOG.md`](CHANGELOG.md)). Every claim is tagged OBSERVED / INFERRED / UNKNOWN; every promise the owner made becomes an **obligation** with exactly one owner in the code and a verifier that names it; a test can only close a claim at its own strength (a mocked gateway never proves a real callback); "nothing reads it" must state where it looked; cut-off output is never counted; contradictions between manual, sandbox and code are recorded instead of resolved by preference; and a new **reverse-trace mode** starts from what the system visibly does and traces inward. See `references/evidence.md`. Ideas adapted from [REA](https://github.com/morluto/rea).
 
-> **本版新增：從逆向工程借來的證據紀律。** 每一條結論都標記「實測 / 推論 / 未知」；老闆說過的每一個承諾都變成一條**義務（Obligation）**，在程式裡必須剛好有一個負責者、一個點名它的驗證；測試只能證明與自己同等強度的事（用假金流的測試，永遠證明不了真的 Callback）；「沒有程式在讀」必須說清楚找過哪裡；被截斷的輸出不算數；手冊、測試環境與程式碼互相矛盾時，記錄下來而不是挑方便的那邊相信；新增**反向追蹤模式**：從系統看得見的行為出發，一路追到程式碼裡。詳見 `references/evidence.md`。概念改編自 [REA](https://github.com/morluto/rea)。
+> **自 v2.1 起：從逆向工程借來的證據紀律**（各版本的變更見 [`CHANGELOG.md`](CHANGELOG.md)）。每一條結論都標記「實測 / 推論 / 未知」；老闆說過的每一個承諾都變成一條**義務（Obligation）**，在程式裡必須剛好有一個負責者、一個點名它的驗證；測試只能證明與自己同等強度的事（用假金流的測試，永遠證明不了真的 Callback）；「沒有程式在讀」必須說清楚找過哪裡；被截斷的輸出不算數；手冊、測試環境與程式碼互相矛盾時，記錄下來而不是挑方便的那邊相信；新增**反向追蹤模式**：從系統看得見的行為出發，一路追到程式碼裡。詳見 `references/evidence.md`。概念改編自 [REA](https://github.com/morluto/rea)。
 
 **Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push whose two-run mean falls more than half a row below the median of the last five shipped commits (and never more than a row below the best ever), or that misses a planted defect or files a control (RUNBOOK step 6).
 
@@ -569,6 +569,7 @@ It also auto-selects on pre-launch vocabulary: "run the tests", "prepare for han
 | `tools/inventory.py` | every function, test, config key and write with its line, for a reviewer to answer item by item; tried as a Codex step and taken out of SKILL because both Codex runs skipped it｜列出每個函式、測試、設定鍵與寫入點及其行號，供審查者逐項交代；曾作為 Codex 的步驟試用，但兩次 Codex 執行都略過，已從 SKILL 移除 |
 | `tools/design_check.py` | design checks an AI can run without installing anything: `deps` (cycles, layer and forbidden-import violations), `adr` (record fields and supersedes links), `states` (transition tables) — stdlib only｜設計檢查，AI 可直接執行：`deps`（循環、分層與禁止相依）、`adr`（欄位與取代連結）、`states`（轉移表），僅用標準函式庫 |
 | `tools/check_structure.py` | structure guard, run in CI: nothing loose, nothing missing, S1–S24 each once, file-size debt named｜結構守衛，CI 執行：無鬆散檔、無遺漏、S1–S24 各一次、檔案大小債務需具名 |
+| `CHANGELOG.md` | what changed in each version; the version lives in `.claude-plugin/*.json` and `CITATION.cff`, and `check_structure.py` fails when they disagree｜各版本的變更；版本號寫在 `.claude-plugin/*.json` 與 `CITATION.cff`，三者不一致時 `check_structure.py` 會失敗 |
 | `tools/sweep-diff.py`, `tests/` | drift check against the sibling; the fixture service, answer key, run book and ledger｜與兄弟專案的比對工具；測試專案（Fixture Service）、標準答案、Runbook 與紀錄帳冊 |
 
 ## More skills by MixoCreative｜更多 MixoCreative 的 Skill
