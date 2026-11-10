@@ -252,6 +252,11 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
     floor = max(baseline - NOISE, best - DRIFT)
     mean = sum(r["score"] for r in group) / len(group)
     why = f"median of the last {RECENT} live per-commit means {baseline:g}, best ever {best:g}"
+    if len(group) == 4 and floor - sum(r["score"] for r in group[:2]) / 2 > SECOND_STAGE:
+        # Only a pair within one row earns the second stage; four runs after a worse pair are sampling.
+        print(f"{name.upper()}: {token}'s first two runs on {fixture} were more than one row under the floor "
+              f"{floor:g}, so no second stage was due; the four-run mean is not read (RUNBOOK step 6).", file=sys.stderr)
+        return 1
     if mean < floor:
         second = len(group) == 2 and floor - mean <= SECOND_STAGE
         print(f"{name.upper()}: {token} scores a mean of {mean:g} over {len(group)} runs on {fixture}, below the "

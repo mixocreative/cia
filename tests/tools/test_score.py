@@ -164,6 +164,10 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(self.run_score(runs_text(six, []), "--gate")[0], 1)       # no third stage
         far = base + [row("2026-11-02", 9, commit="bbbbbbb"), row("2026-11-02", 9, commit="bbbbbbb")]
         self.assertNotIn("Within one row", self.run_score(runs_text(far, []), "--gate")[2])
+        far4 = far + [row("2026-11-03", 12, commit="bbbbbbb"), row("2026-11-03", 12, commit="bbbbbbb")]
+        code, _, err = self.run_score(runs_text(far4, []), "--gate")    # 10.5 over four, but no stage was due
+        self.assertEqual(code, 1)
+        self.assertIn("no second stage was due", err)
 
     def test_floor_follows_recent_median_and_cannot_drift_more_than_a_row(self):
         lucky = [("aaaaaaa", [(12, 0, 0), (12, 0, 0)])] + [(c * 7, [(11, 1, 0), (11, 1, 0)]) for c in "bcde"]
