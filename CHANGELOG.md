@@ -7,10 +7,22 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-11-10
+
 - **A Stop hook holds Step 6.** The plugin ships `hooks/hooks.json`: a session that wrote `cia-audit-report.md`
   cannot finish while `tools/audit_report.py` fails on it; the hook hands back the MISSING lines once, and a
   retry is never blocked. About half the cold runs had replied past a failing checker. The harness runs hermetic
   (no user-level settings) and passes the hook in, so runs measure what a plugin user gets.
+  Fixed before release (Fable's review): the report name is the literal `cia-audit-report.md`, not taken from
+  the install folder (an installed plugin's folder is its version, and the hook never fired there); the window
+  is the turn now ending, read from the transcript's timestamps, not the file's `st_ctime` (which moves on
+  every append on macOS and Linux), so a later turn or a resumed session is never blocked; a broken install
+  exits quietly; the command tries `python3`, then `python`.
+- **The gate's second stage is checked for eligibility:** four runs on a commit are read only when its first
+  two were within one row of the floor. RUNBOOK step 4 writes down two scoring rulings: a row folded into a
+  neighbouring finding is a hit, a row named only on a sweep line or in a ledger is a miss.
+- The harness keeps a hooked run's final reply when its report file was collected; the longest earlier reply
+  is the draft the hook blocked.
 - **No doctrine line longer than the Read tool shows.** The Read tool cuts a line at 2,000 characters;
   two long lines are wrapped (text unchanged) and `check_structure.py` check 9 fails a new one. The same
   cut had hidden half of ecommerce-cia's Step 3 reading list.
