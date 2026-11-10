@@ -7,6 +7,11 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- **No doctrine line longer than the Read tool shows.** The Read tool cuts a line at 2,000 characters;
+  two long lines are wrapped (text unchanged) and `check_structure.py` check 9 fails a new one. The same
+  cut had hidden half of ecommerce-cia's Step 3 reading list.
+- The harness names each skill's audit report `<skill>-audit-report.md` and counts it with that skill's own
+  checker, so ecommerce-cia's runs are measured the way cia's are.
 - **Reading receipts cannot be copied from SKILL.md.** Its example line quoted six real receipts; it now
   shows placeholders, and `tools/receipts.py --gate` fails any receipt phrase found in SKILL.md.
 - **SKILL §0.5.3, how a decision's premise is tested:** run the alternative the decision names and see
