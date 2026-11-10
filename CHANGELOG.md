@@ -7,6 +7,8 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- **Reading receipts cannot be copied from SKILL.md.** Its example line quoted six real receipts; it now
+  shows placeholders, and `tools/receipts.py --gate` fails any receipt phrase found in SKILL.md.
 - **SKILL §0.5.3, how a decision's premise is tested:** run the alternative the decision names and see
   whether it does what the sentence says; a cost the design accepts (what a cap leaves out) is the
   decision, not a false premise. One run filed a capped list as 'premise false'; the four runs after
