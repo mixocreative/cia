@@ -48,3 +48,19 @@ jobs:
         run: python -m unittest discover -s tests/plugin -t tests/plugin
       - name: Scorer tests (build rows never move the audit gate)
         run: python -m unittest discover -s tests/tools -t tests/tools
+
+  hook:
+    # The Stop hook ships to every platform a plugin user has: its window logic and its shipped command
+    # (run under sh with a python3 stub) are tested on each, not only on the ubuntu job above.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Stop hook tests on ${{ matrix.os }}
+        shell: bash
+        run: python -m unittest discover -s tests/tools -t tests/tools -p test_stop_check.py -v
