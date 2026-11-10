@@ -26,21 +26,19 @@ if hasattr(sys.stdout, "reconfigure"):  # Windows consoles default to cp950/cp12
 
 HERE = Path(__file__).resolve().parent.parent
 SKILLS = HERE.parent
-CIA_SWEEPS = SKILLS / "cia" / "references" / "sweeps"   # split from sweeps.md on 2026-11-09
-ECOM = SKILLS / "ecommerce-cia" / "references" / "sweeps.md"
+CIA = SKILLS / "cia" / "references"
+ECOM = SKILLS / "ecommerce-cia" / "references"
 
 
-def cia_sweeps_text() -> str:
-    """All of cia's sweep files, joined in name order. The section parser then sees one document."""
-    return "\n".join(p.read_text(encoding="utf-8") for p in sorted(CIA_SWEEPS.glob("*.md")))
-
-
-def cia_text(name: str) -> "str | None":
-    """cia's copy of a shared reference file; sweeps.md is the folder on this side."""
-    if name == "sweeps.md":
-        return cia_sweeps_text() if CIA_SWEEPS.is_dir() else None
-    p = SKILLS / "cia" / "references" / name
-    return p.read_text(encoding="utf-8") if p.exists() else None
+def ref_text(refs: Path, name: str) -> "str | None":
+    """One side's copy of a shared reference file. sweeps.md is a folder on both sides now (cia split it
+    on 2026-11-09, ecommerce-cia on 2026-11-10): its files are joined in name order, so the section parser
+    sees one document. The trap: a hard-coded path to one side's old sweeps.md made this report print
+    "missing" for a month on the side that had already split, and nobody read the line."""
+    if name == "sweeps.md" and (refs / "sweeps").is_dir():
+        return "\n".join(f.read_text(encoding="utf-8") for f in sorted((refs / "sweeps").glob("*.md")))
+    f = refs / name
+    return f.read_text(encoding="utf-8") if f.exists() else None
 
 
 def sections(source) -> dict[str, str]:
@@ -74,13 +72,11 @@ def file_table() -> None:
     print(f"{'file':22} {'cia':>7} {'ecom':>7}  state")
     print("-" * 100)
     for name in SHARED:
-        ct = cia_text(name)
-        e = SKILLS / "ecommerce-cia" / "references" / name
-        if ct is None or not e.exists():
+        ct, et = ref_text(CIA, name), ref_text(ECOM, name)
+        if ct is None or et is None:
             print(f"{name:22} {'-':>7} {'-':>7}  MISSING ON ONE SIDE "
                   f"({'cia' if ct is None else 'ecommerce-cia'})")
             continue
-        et = e.read_text(encoding="utf-8")
         cw, ew = len(ct.split()), len(et.split())
         if ct == et:
             state = ("identical - a duplicate, so an edit to one is a silent drift in the other; "
@@ -95,11 +91,11 @@ def main() -> None:
     file_table()
     if "--files" in sys.argv:
         return
-    for p in (CIA_SWEEPS, ECOM):
-        if not (p.is_dir() if p == CIA_SWEEPS else p.exists()):
-            print(f"missing: {p}")
-            sys.exit(0)
-    c, e = sections(cia_sweeps_text()), sections(ECOM)
+    ct, et = ref_text(CIA, "sweeps.md"), ref_text(ECOM, "sweeps.md")
+    if ct is None or et is None:
+        print(f"missing: the sweeps of {'cia' if ct is None else 'ecommerce-cia'}")
+        sys.exit(0)
+    c, e = sections(ct), sections(et)
     keys = sorted(set(c) | set(e), key=lambda k: int(k[1:]))
 
     if len(sys.argv) == 3 and sys.argv[1] == "--full":
