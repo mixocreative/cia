@@ -5,6 +5,14 @@ What changed for someone who uses the skill, newest first. The version is the on
 `tools/check_structure.py` fails when the three disagree or the newest one has no entry here.
 Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
+## [Unreleased]
+
+- `tools/route.py`: the GRAPH line now says which graph answers which question, as
+  `code-graph-tools.md` §2 does (CodeGraphContext first for code relationships, graphify first for
+  architecture, probe cgc first, refresh a stale `graphify-out/`), and needs two of the six §1
+  signals, naming the four it cannot scan. It used to print "graphify, else cgc" on one signal.
+  Two guard tests read both rules back from the doctrine.
+
 ## [2.5.0] - 2026-11-10
 
 - **S3:** a fallback on a config read that is logged only at debug is HIGH, never MEDIUM.
