@@ -11,6 +11,44 @@ def _list(items, none="none"):
     return ", ".join(items) if items else none
 
 
+# code-graph-tools.md §1: six signals, any two bring a graph in. route.scan_graph measures the first two
+# (size, mutual imports); the other four (roles/surfaces, blast-radius greps, design checks, delegation)
+# need judgement. tests/tools/test_route.py reads all three numbers back from the doctrine.
+SIGNALS_TOTAL, SIGNALS_SCANNED, SIGNALS_NEEDED = 6, 2, 2
+
+
+def graph_route(G: dict) -> str:
+    """§1 (is a graph needed) and §2 (which graph answers which question) applied to what the scan saw.
+
+    The trap this replaces: the line once said "graphify, else cgc", the reverse of §2, which puts
+    CodeGraphContext first for code relationships and graphify first for architecture. Neither the
+    scan nor this line can tell a working cgc from a broken one (a locked KuzuDB store fails the
+    same way as a missing one), so it says "probe first" instead of claiming cgc works.
+    """
+    left = SIGNALS_TOTAL - SIGNALS_SCANNED
+    need = SIGNALS_NEEDED - G["held"]
+    if need <= 0:
+        verdict = "code graph"
+    elif need == 1:
+        verdict = f"code graph if one of the {left} judged signals holds, else grep"
+    else:
+        verdict = f"grep unless {need} of the {left} judged signals hold"
+    if G["cgc"]:
+        code = "cgc (probe `cgc --help` first; failed probe, locked or stale store → graphify explain/path)"
+    elif G["graphify"]:
+        code = "graphify explain/path (cgc not on PATH)"
+    else:
+        code = "grep (no graph tool on PATH)"
+    if not G["graphify"]:
+        arch = "grep (graphify not on PATH)"
+    else:
+        arch = {"fresh": "graphify", "stale": "graphify after `graphify update .` (graphify-out/ is stale)",
+                "absent": "graphify after `graphify update .` (graphify-out/ absent)"}[G["graphify_out"]]
+    return (f"signals held {G['held']} of {SIGNALS_SCANNED} scanned, {left} judged by hand "
+            f"(code-graph-tools.md §1: any {SIGNALS_NEEDED} of {SIGNALS_TOTAL}) → {verdict} · "
+            f"if a graph (§2, one graph per question): code relationships → {code}; architecture → {arch}")
+
+
 def render(F: dict) -> list[str]:
     """Text report. `elapsed` absent from F (--no-timing) makes the output byte-deterministic."""
     S, G, B = F["surface"], F["graph"], F["bindings"]
@@ -48,8 +86,7 @@ def render(F: dict) -> list[str]:
                    "no CHECK (status IN (…)))  → design-tools.md §4 not triggered")
     out.append(f"GRAPH files={G['files']} lines={G['lines']} packages={len(G['packages'])} cross-imports={G['cross']}"
                + (f" ({G['cross_pairs'][0]})" if G["cross_pairs"] else "")
-               + f" · signals held {G['held']} of 2 scanned (code-graph-tools.md §1) → "
-               + ("grep" if not G["held"] else "code graph (graphify, else cgc)")
+               + " · " + graph_route(G)
                + f" · graphify-out/: {G['graphify_out']} · graphify: {'PATH' if G['graphify'] else 'not on PATH'}"
                + f" · cgc: {'PATH' if G['cgc'] else 'not on PATH'}")
     D = F["design"]

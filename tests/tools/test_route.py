@@ -147,6 +147,39 @@ class PinningTests(unittest.TestCase):
         self.assertEqual(route.PACKAGES_THRESHOLD,
                          words[re.search(r"(\w+) or more top-level packages", text).group(1)])
 
+    def test_graph_signal_counts_match_the_doctrine(self):
+        import route_render as rr
+        text = (ROOT / "references" / "code-graph-tools.md").read_text(encoding="utf-8")
+        sec1 = text.split("## 1.", 1)[1].split("## 2.", 1)[0]
+        rows = [x for x in sec1.splitlines() if x.startswith("| ") and not x.startswith("| Signal")]
+        self.assertEqual(rr.SIGNALS_TOTAL, len(rows))
+        words = {"two": 2, "three": 3}
+        self.assertEqual(rr.SIGNALS_NEEDED, words[re.search(r"when \*\*any (\w+)\*\*", sec1).group(1)])
+
+    def test_graph_routing_matches_the_doctrine_table(self):
+        """§2 says which graph is asked FIRST for each kind of question; the GRAPH line must say the same.
+        Once printed "graphify, else cgc" for code questions, the reverse of §2, and nothing caught it."""
+        import route_render as rr
+        text = (ROOT / "references" / "code-graph-tools.md").read_text(encoding="utf-8")
+        first = {row.split("|")[1]: row.split("|")[2] for row in text.splitlines() if row.startswith("| **")}
+        code_first = next(v for k, v in first.items() if "Code relationships" in k)
+        arch_first = next(v for k, v in first.items() if "Architectural context" in k)
+        self.assertIn("CodeGraphContext", code_first)
+        self.assertIn("graphify", arch_first)
+        both = {"held": 2, "cgc": True, "graphify": True, "graphify_out": "fresh"}
+        line = rr.graph_route(both)
+        self.assertIn("code relationships → cgc", line)
+        self.assertIn("architecture → graphify", line)
+        self.assertIn("→ code graph ·", line)
+        # cgc missing: code questions fall back to graphify, architecture unchanged
+        self.assertIn("code relationships → graphify", rr.graph_route({**both, "cgc": False}))
+        # stale or absent graphify-out/ is refreshed before it is asked
+        self.assertIn("after `graphify update .`", rr.graph_route({**both, "graphify_out": "stale"}))
+        # one or no scanned signal: the four judged signals decide, never a bare "code graph"
+        self.assertIn("if one of the 4 judged signals holds, else grep", rr.graph_route({**both, "held": 1}))
+        self.assertIn("grep unless 2 of the 4 judged signals hold", rr.graph_route({**both, "held": 0}))
+        self.assertIn("grep (no graph tool on PATH)", rr.graph_route({**both, "cgc": False, "graphify": False}))
+
     def test_commerce_criteria_match_skill(self):
         text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         for phrase in ("payment-gateway code", "orders/cart/product schema",
