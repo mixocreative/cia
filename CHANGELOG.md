@@ -7,6 +7,8 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- `tools/README.md` maps every tool by who runs it; `check_structure.py` fails when the map and
+  the folder disagree. README's Objections section and gate line are in Chinese too.
 - **Companion `kubai-icons`:** a build that needs functional icons, or a screen whose icons are
   missing, placeholders or mixed in style, hands the set to `kubai-icons` (one style from one
   accent; animated or static SVG). `route.py` lists it when installed. The result is re-walked,

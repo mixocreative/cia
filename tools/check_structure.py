@@ -19,6 +19,8 @@ Checks:
      now under the limit fails too, so a paid-off debt is removed rather than left to rot.
   7. Version: plugin.json, marketplace.json and CITATION.cff carry one version, and CHANGELOG.md has an
      entry for it. Three hand-edited copies drift; a release with no entry is a release nobody can read.
+  8. Tools map: every file in tools/ is named in tools/README.md, and the map names no file that is gone.
+     A map that lags the folder sends the next reader to the wrong file.
 
 Usage: python tools/check_structure.py
 """
@@ -150,6 +152,19 @@ def check_size() -> None:
             fail(f"DEBT entry {key} is no longer over {DEBT_LIMIT} lines: remove the entry")
 
 
+def check_tools_map() -> None:
+    tools = HERE / "tools"
+    if not (tools / "README.md").is_file():
+        fail("tools/README.md is missing: the folder map (one row per file, saying its job)")
+        return
+    files ={p.name for p in tools.iterdir() if p.is_file() and p.name != "README.md"}
+    named = set(re.findall(r"^\| `([^`]+)` \|", read(tools / "README.md"), re.M))
+    for name in sorted(files - named):
+        fail(f"tools/README.md does not name tools/{name}: add a row saying its job")
+    for name in sorted(named - files):
+        fail(f"tools/README.md names tools/{name}, which does not exist: remove the row")
+
+
 def check_version() -> None:
     plugin = json.loads(read(HERE / ".claude-plugin" / "plugin.json"))["version"]
     market = json.loads(read(HERE / ".claude-plugin" / "marketplace.json"))["plugins"][0]["version"]
@@ -172,6 +187,7 @@ def main() -> int:
     check_stale_paths()
     check_size()
     check_version()
+    check_tools_map()
     if failures:
         print(f"check_structure: {len(failures)} failure(s)")
         for msg in failures:
