@@ -203,6 +203,16 @@ class CompanionTests(unittest.TestCase):
         self.assertIn("gemini", missing)
         self.assertNotIn("impeccable", missing)
 
+    def test_only_skill_shaped_tokens_are_companions(self):
+        """The kubai-icons row backticks what it delivers (`.svg`, `<img>`); the line once listed
+        both as missing companions, which routes the run to install a file type."""
+        import route_companions as rc
+        names = rc.companion_names()
+        self.assertIn("kubai-icons", names)
+        self.assertIn("egm:egm-review", names)   # the leading slash of a command is dropped, the name kept
+        for n in names:
+            self.assertRegex(n, r"^[A-Za-z][\w-]*(:[\w-]+)?$")
+
     def test_plugin_namespaced_names(self):
         t = Tree(self, {"a.py": "x = 1\n"})
         out = line_of(t.run(), "COMPANIONS")

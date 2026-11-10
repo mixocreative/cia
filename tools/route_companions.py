@@ -14,6 +14,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
 CLI_NAMES = "graphify cgc gh docker npx playwright stitch codex claude".split()
+SKILL_NAME = re.compile(r"[A-Za-z][\w-]*(?::[\w-]+)?")   # `name` or `plugin:name`
 
 
 def companion_names():
@@ -35,6 +36,11 @@ def companion_names():
             if len(cells) > 2 and not set(cells[2].strip()) <= set("-: "):
                 for t in re.findall(r"`([^`\s]+)`", cells[2]):
                     t = t.lstrip("/")
+                    # A row may backtick what the companion delivers (`.svg`, `<img>`): only a
+                    # skill-shaped token is a name, or the COMPANIONS line reports a file type
+                    # as a missing skill and sends the run to "find, vet, install" it.
+                    if not SKILL_NAME.fullmatch(t):
+                        continue
                     if t not in names:
                         names.append(t)
     return names
