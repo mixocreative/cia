@@ -65,9 +65,12 @@ class AgentTests(unittest.TestCase):
         for p in AGENTS:
             self.assertIsNone(re.search(r"(?m)^##\s*S\d", p.read_text(encoding="utf-8")), p.name)
 
-    def test_plugin_json_lists_agents(self):
+    def test_plugin_json_lists_every_agent_file(self):
+        # Claude Code's manifest schema wants each agents entry to be a .md file: "./agents" (a folder) made the
+        # whole plugin fail to load ("agents.0: must end with .md"), found by an end-to-end --plugin-dir run.
         data = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        self.assertIn("./agents", data["agents"])
+        self.assertTrue(all(a.endswith(".md") for a in data["agents"]), data["agents"])
+        self.assertEqual(sorted(data["agents"]), [f"./agents/{p.name}" for p in AGENTS])
 
 
 if __name__ == "__main__":
