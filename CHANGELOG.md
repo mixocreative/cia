@@ -4,6 +4,9 @@ What changed for someone who uses the skill, newest first. The version is the on
 `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and `CITATION.cff`;
 `tools/check_structure.py` fails when the three disagree or the newest one has no entry here.
 Every scored run behind a doctrine change is in `tests/RUNS.md`.
+A version ships when `main` carries it: the marketplace entry's source is `./`, so an install or update
+takes `main` at that version. A GitHub release is optional, a page for readers, never the delivery; most
+versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main`.
 
 ## [Unreleased]
 
@@ -15,8 +18,11 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
   first reads the payload, the second reads nothing and stays silent, and `exit 0` keeps a missing `python`
   (stock macOS) from turning the answer into exit 127, which Claude Code would discard (Fable's review). Shown end to end: Claude Code ran it through
   PowerShell 7.6 (a marker the hook wrote) and it blocked a failing report. Tests run the shipped command
-  under `sh` and PowerShell; CI runs them on Linux, macOS and Windows. Not covered: a `python3` stub that
-  reads stdin would leave the payload empty, and the hook would allow.
+  under `sh` and PowerShell; CI runs them on Linux, macOS and Windows. Windows' own `python3` placeholder
+  (App Installer's `AppInstallerPythonRedirector.exe`, run through its alias) was measured: it writes its
+  message to stderr only, leaves stdin unread and exits non-zero, and with python.org's `python` behind it
+  the shipped command printed the block and exited 0 under bash, PowerShell 7 and Windows PowerShell 5.1.
+  It matters: any text on stdout beside the JSON makes Claude Code read the answer as plain text, no block.
 - **A hook that cannot run says so.** With the command ending `exit 0`, a crash would have turned the guard
   off silently; it is now shown to the user as a `systemMessage` (never a block), and only in a session whose
   turn wrote a report, because the checker is loaded only then.
