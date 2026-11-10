@@ -29,7 +29,8 @@ from receipts import scan  # noqa: E402  the receipt of each reference, read fro
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Read on every Screen audit (SKILL Step 2 order); surface-map and journey-map join when the ROUTE
+# Read on every Screen audit: the Step 2 files of SKILL's receipt rule, plus browser-walks.md, which the
+# Step 4 walk needs at every tier; surface-map and journey-map join when the ROUTE
 # block shows a page, a CLI or a route.
 ALWAYS = ("theory.md", "sweeps/", "wiring-walk.md", "doctrine.md", "reporting.md", "evidence.md", "browser-walks.md")
 WITH_SURFACE = ("surface-map.md", "journey-map.md")
@@ -64,7 +65,7 @@ ITEM = re.compile(r"^(def|test|key|write)\s+([\w./-]+:\d+)\s+`([^`]*)`", re.M)
 
 
 def inventory_left(report: str) -> list[str]:
-    """When the run pasted an INVENTORY block (Codex, SKILL §0.5), every item must be named again
+    """When the run pasted an INVENTORY block (optional: no SKILL step asks for one), every item must be named again
     outside it: a finding, a control, or 'read, nothing'. An item named only in the block was listed,
     not read."""
     block = report.split("INVENTORY (tools/inventory.py", 1)

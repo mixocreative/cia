@@ -3,19 +3,19 @@
 Every file here, grouped by who runs it. Run each from the skill root; each answers `--help`.
 `check_structure.py` fails when a file in this folder is missing from this map.
 
-## An audit or a build runs these (SKILL steps 0 and 6)
+## An audit or a build runs these
 
 | File | Job |
 |---|---|
-| `route.py` | Step 0 scan: facts with path:line that route the run to references, graphs and companions; leads, never verdicts |
+| `route.py` | SKILL §0.5, every run. Step 0 scan: facts with path:line that route the run to references, graphs and companions; leads, never verdicts |
 | `route_tree.py` | route.py's tree walk under the skip, secret and symlink rules |
 | `route_companions.py` | route.py's COMPANIONS line: which companion skills and CLIs are installed |
 | `route_render.py` | route.py's text output, including which graph answers which question |
-| `sweep_leads.py` | the S13 and S21 sites a script can list, each needing a finding or a reason |
-| `inventory.py` | every function, test, config key and write, for item-by-item answers |
-| `design_check.py` | dependency rules, ADR hygiene, state-transition tables; stdlib only |
-| `audit_report.py` | checks an audit report's shape: blocks, receipts, sweep lines, Step 6 lines |
-| `build_report.py` | prints the build report form and checks a build report's shape |
+| `sweep_leads.py` | SKILL §0.5, after route.py: the S13 and S21 sites a script can list, each needing a finding or a reason |
+| `inventory.py` | optional, no SKILL step calls it (tried as a Codex step and taken out): every function, test, config key and write, for item-by-item answers |
+| `design_check.py` | `references/design-tools.md`: dependency rules, ADR hygiene, state-transition tables; stdlib only |
+| `audit_report.py` | SKILL Step 6: checks an audit report's shape: blocks, receipts, sweep lines, Step 6 lines |
+| `build_report.py` | SKILL §0.10a: prints the build report form and checks a build report's shape |
 
 ## The maintainer runs these (push gate, CI)
 

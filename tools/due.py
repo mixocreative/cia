@@ -2,10 +2,12 @@
 
 Usage: python tools/due.py      (advisory: always exits 0; prints what to run, or "nothing due")
 
-Who runs it: the AI, at the end of every edit to SKILL.md or references/ (SKILL.md "Testing this
-skill", RUNBOOK step 7), and then runs what it lists. That is how these checks are triggered
+Who runs it: the AI, at the end of every edit to SKILL.md or references/ (RUNBOOK step 7; tools/pre-push
+prints it too), and then runs what it lists. That is how these checks are triggered
 "whenever appropriate" without a hook: a hook fires in every session on this machine, and each of
 these runs costs minutes of a model, so the trigger is a rule with a threshold the AI reads.
+SKILL.md does not name this tool, on purpose: every audit run reads SKILL.md, so a sentence there
+is doctrine under test (tests/ARMS.md).
 
 What makes each due
     Arms (tests/ARMS.md): no arm row yet; or the doctrine (SKILL.md + references/) grew by
