@@ -31,6 +31,14 @@ jobs:
           PY
       - name: Skill structure guard (nothing loose, S1-S24 once each, file-size debt named)
         run: python tools/check_structure.py
+      # The next three run in tools/pre-push too, but a hook is per clone and optional: a contributor
+      # who never ran install-hooks.sh would otherwise push past them unseen.
+      - name: Reading receipts (every reference has one, none shared)
+        run: python tools/receipts.py --gate
+      - name: Answer keys still point at their fixtures (cited lines exist, pinned files unchanged)
+        run: python tools/check_key_lines.py
+      - name: Taiwanese Chinese, not mainland usage
+        run: python tools/zh_check.py --gate
       - name: Design-check guard tests (each rule fails on a planted defect)
         run: python -m unittest discover -s tests/design-check -t tests/design-check
       - name: Harness launcher tests (prompts read from RUNBOOK, build runs on a copy)
