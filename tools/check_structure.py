@@ -21,6 +21,8 @@ Checks:
      entry for it. Three hand-edited copies drift; a release with no entry is a release nobody can read.
   8. Tools map: every file in tools/ is named in tools/README.md, and the map names no file that is gone.
      A map that lags the folder sends the next reader to the wrong file.
+  9. Line length: no line of SKILL.md or a reference over READ_LIMIT characters. The trap: the Read tool
+     cuts a longer line, and on 2026-11-10 ecommerce-cia's Step 3 lost half its reading list that way.
 
 Usage: python tools/check_structure.py
 """
@@ -178,6 +180,16 @@ def check_version() -> None:
         fail(f"CHANGELOG.md has no entry for {plugin}, the version in plugin.json")
 
 
+READ_LIMIT = 2000   # characters per line the Read tool shows; past it, a run never sees the rest
+
+
+def check_line_length() -> None:
+    for f in [SKILL, *REFS.glob("*.md"), *SWEEPS.glob("*.md")]:
+        for i, line in enumerate(read(f).splitlines(), 1):
+            if len(line) > READ_LIMIT:
+                fail(f"{rel(f)}:{i} is {len(line)} characters; the Read tool cuts it at {READ_LIMIT}: wrap it")
+
+
 def main() -> int:
     skill_text = read(SKILL)
     check_frontmatter(skill_text)
@@ -186,6 +198,7 @@ def main() -> int:
     check_sweeps()
     check_stale_paths()
     check_size()
+    check_line_length()
     check_version()
     check_tools_map()
     if failures:
