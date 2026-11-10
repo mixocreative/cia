@@ -17,6 +17,9 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
   PowerShell 7.6 (a marker the hook wrote) and it blocked a failing report. Tests run the shipped command
   under `sh` and PowerShell; CI runs them on Linux, macOS and Windows. Not covered: a `python3` stub that
   reads stdin would leave the payload empty, and the hook would allow.
+- **A hook that cannot run says so.** With the command ending `exit 0`, a crash would have turned the guard
+  off silently; it is now shown to the user as a `systemMessage` (never a block), and only in a session whose
+  turn wrote a report, because the checker is loaded only then.
 - RUNBOOK's plugin smoke step also runs once with the hook forced to `"shell": "powershell"`.
 
 ## [2.6.1] - 2026-11-10
