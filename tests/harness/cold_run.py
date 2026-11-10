@@ -84,7 +84,7 @@ SKILL_LINE = (
 # permission shape, not doctrine: it names no defect and no method.
 SHELL_LINE = (
     "Shell commands in this session are pre-approved only when the command itself starts with python, py, "
-    "node, curl, ls, wc, ruff or pytest, run from the working directory: no `cd ... &&`, no `VAR=value` "
+    "node, php, curl, ls, wc, ruff or pytest, run from the working directory: no `cd ... &&`, no `VAR=value` "
     "prefix, no pipes into other programs. Set environment variables inside your own script "
     "(process.env / os.environ), and start a server with the Bash tool's run_in_background option."
 )
@@ -292,12 +292,14 @@ def build_prompt(mode, runbook_text, skill_line=SKILL_LINE):
 # list enforces that rather than trusting the HARD RULES text. Build mode edits, but only ever on the
 # throwaway copy main() makes.
 # The project's own linter and test runner are part of Step 1; a run that cannot call them reports NOT RUN.
-# node and curl are the runtime walk of a Node fixture (ecommerce-cia's fixture-shop-node): without them
+# node, php and curl are the runtime walk of a Node or PHP fixture (ecommerce-cia's fixture-shop-node and
+# fixture-shop-live, which the audit must start itself with `php -S`): without them
 # the run cannot fire a probe, so it grades every race from reading, one level low. Measured 2026-11-09:
-# two runs blocked this way scored 3.5 and 3.0 where probing runs score 4. They add no write power that
+# two runs blocked this way scored 3.5 and 3.0 where probing runs score 4. php was missing until 2026-11-10,
+# when both fixture-shop-live runs asked the owner to 'approve php' and stopped at a reading. They add no write power that
 # python does not already have; the planted code is protected by running on a copy (see main).
 READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "Bash(ls:*)", "Bash(wc:*)",
-              "Bash(ruff:*)", "Bash(pytest:*)", "Bash(node:*)", "Bash(curl:*)"]
+              "Bash(ruff:*)", "Bash(pytest:*)", "Bash(node:*)", "Bash(php:*)", "Bash(curl:*)"]
 ALLOWED_TOOLS = {
     # An audit writes exactly one file, its report (SKILL Step 6); `Edit(./path)` is the rule Claude Code
     # honours for a single file (checked 2026-11-09: `Write(path)` patterns did not grant it headless).

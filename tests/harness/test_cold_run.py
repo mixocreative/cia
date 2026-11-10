@@ -372,6 +372,13 @@ class BuildReportCollectionTests(unittest.TestCase):
         self.assertIn("Edit(./cia-audit-report.md)", tools)
         self.assertFalse({"Write", "Edit"} & set(tools))
 
+    def test_every_fixture_runtime_can_start_its_own_shop(self):
+        # A fixture the run must start itself needs its runtime on the list, and named in the prompt line:
+        # php was missing, and two live-fixture runs stopped to ask the owner (2026-11-10).
+        for runtime in ("python", "node", "php"):
+            self.assertIn(f"Bash({runtime}:*)", self.cr.READ_TOOLS)
+            self.assertIn(runtime, self.cr.SHELL_LINE)
+
 
 if __name__ == "__main__":
     unittest.main()
