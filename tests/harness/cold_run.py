@@ -86,7 +86,8 @@ SHELL_LINE = (
     "Shell commands in this session are pre-approved only when the command itself starts with python, py, "
     "node, php, curl, ls, wc, ruff or pytest, run from the working directory: no `cd ... &&`, no `VAR=value` "
     "prefix, no pipes into other programs. Set environment variables inside your own script "
-    "(process.env / os.environ), and start a server with the Bash tool's run_in_background option."
+    "(process.env / os.environ), and start a server with the Bash tool's run_in_background option. "
+    "Stop every server you started before your final reply: your final reply is the report."
 )
 
 
@@ -130,7 +131,37 @@ def claude_result(stdout):
     if not isinstance(d, dict):
         return stdout, {}
     return d.get("result") or "", {"resolved": ",".join(d.get("modelUsage") or {}) or "?",
-                                   "cost": d.get("total_cost_usd"), "turns": d.get("num_turns")}
+                                   "cost": d.get("total_cost_usd"), "turns": d.get("num_turns"),
+                                   "session": d.get("session_id")}
+
+
+SHORT_RESULT = 2000  # characters; a report is never this short, a reply to a late notification always is
+
+
+def longest_reply(jsonl_text):
+    """The longest assistant text in a Claude Code session transcript (one JSON object per line).
+
+    Why: `claude -p` returns only the LAST turn. A run that left a background server up got one more
+    turn when that task was killed at its time limit, and the result was a two-line note about the
+    server; the 13,788-character report was the turn before (both fixture-shop-live runs, 2026-11-10)."""
+    best = ""
+    for line in jsonl_text.splitlines():
+        try:
+            d = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(d, dict) or d.get("type") != "assistant":
+            continue
+        for c in (d.get("message") or {}).get("content") or []:
+            if isinstance(c, dict) and c.get("type") == "text" and len(c.get("text", "")) > len(best):
+                best = c["text"]
+    return best
+
+
+def transcript_of(session, cwd, home=None):
+    """Where Claude Code keeps a session's transcript: ~/.claude/projects/<cwd, non-alphanumerics as ->/<id>.jsonl."""
+    enc = re.sub(r"[^A-Za-z0-9]", "-", str(Path(cwd).resolve()))
+    return Path(home or Path.home()) / ".claude" / "projects" / enc / f"{session}.jsonl"
 
 
 def receipts_quoted(text, root):
@@ -514,6 +545,12 @@ def execute(cmd, prompt, cwd, runtime, model, name, label, root, traces=False, r
         label += f"refs-opened {len(refs_opened(res.stdout + res.stderr, refs))}/{len(refs)} | "
     if facts:
         label += f"resolved {facts['resolved']} | cost {facts['cost']} | turns {facts['turns']} | "
+        tpath = transcript_of(facts["session"], cwd) if facts.get("session") else None
+        if len(out_text) < SHORT_RESULT and tpath and tpath.is_file():
+            longer = longest_reply(tpath.read_text(encoding="utf-8", errors="replace"))
+            if len(longer) > len(out_text):
+                out_text = longer
+                label += "report from transcript (final turn was a late notification) | "
     collected = ""
     if report_file:
         label, collected = collect_report(Path(cwd) / report_file, root, label)

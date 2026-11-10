@@ -185,7 +185,7 @@ class HeaderFactTests(unittest.TestCase):
         text, facts = self.cr.claude_result(json.dumps(
             {"result": "report", "modelUsage": {"claude-sonnet-5-5": {}}, "total_cost_usd": 0.4, "num_turns": 9}))
         self.assertEqual(text, "report")
-        self.assertEqual(facts, {"resolved": "claude-sonnet-5-5", "cost": 0.4, "turns": 9})
+        self.assertEqual(facts, {"resolved": "claude-sonnet-5-5", "cost": 0.4, "turns": 9, "session": None})
 
     def test_non_json_output_is_kept_whole(self):
         self.assertEqual(self.cr.claude_result("plain report"), ("plain report", {}))
@@ -371,6 +371,21 @@ class BuildReportCollectionTests(unittest.TestCase):
         tools = self.cr.ALLOWED_TOOLS["audit"]
         self.assertIn("Edit(./cia-audit-report.md)", tools)
         self.assertFalse({"Write", "Edit"} & set(tools))
+
+    def test_a_late_notification_does_not_replace_the_report(self):
+        # claude -p returns only the last turn; the report is the longest reply in the transcript.
+        lines = [json.dumps({"type": "user", "message": {"content": "x" * 9000}}),
+                 json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "# Report\n" + "f" * 5000}]}}),
+                 "not json",
+                 json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "The server stopped."}]}})]
+        self.assertTrue(self.cr.longest_reply("\n".join(lines)).startswith("# Report"))
+        self.assertEqual(self.cr.longest_reply(""), "")
+        self.assertIn("Stop every server you started", self.cr.SHELL_LINE)
+
+    def test_transcript_path_encodes_the_cwd_as_claude_code_does(self):
+        p = self.cr.transcript_of("abc", "S:/ai/x y/cia-audit-n8", home="S:/h")
+        self.assertEqual(p.name, "abc.jsonl")
+        self.assertEqual(p.parent.name, "S--ai-x-y-cia-audit-n8")
 
     def test_every_fixture_runtime_can_start_its_own_shop(self):
         # A fixture the run must start itself needs its runtime on the list, and named in the prompt line:
