@@ -367,6 +367,12 @@ class BuildReportCollectionTests(unittest.TestCase):
             label, _ = self.cr.collect_report(p, self.root, "")
         self.assertRegex(label, r"^report-file \d+/6 \| $")   # audit_report has six parts, build_report 13
 
+    def test_a_cold_run_does_not_load_the_owners_user_settings(self):
+        cmd = self.cr.build_command("claude", "p", "sonnet", mode="audit")
+        self.assertEqual(cmd[cmd.index("--setting-sources") + 1], "project,local")
+        egm = self.cr.build_command("claude", "p", "sonnet", mode="egm", reviewer="comprehension")
+        self.assertNotIn("--setting-sources", egm)   # the Goldfish reviewer is a user-level plugin agent
+
     def test_each_skill_names_its_own_audit_report(self):
         self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/cia")), self.cr.AUDIT_REPORT)
         self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/ecommerce-cia")), "ecommerce-cia-audit-report.md")

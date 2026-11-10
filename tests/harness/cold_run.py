@@ -227,6 +227,11 @@ ARM_TOOLS = ["Read(./**)"] + [t for t in READ_TOOLS if t not in ("Read", "Skill"
 def build_command(runtime, prompt, model, mode=None, arm="cia", reviewer=None, effort=None):
     if runtime == "claude":
         cmd = ["claude", "-p", prompt, "--output-format", "json"]
+        if mode != "egm":
+            # Hermetic since 2026-11-10: without this a cold run loads the owner's user-level settings, whose
+            # SessionStart hook told every audit to do the least work and list what it skipped, and runs
+            # replied past a failing report checker. An EGM run keeps them: its reviewer is a user plugin.
+            cmd += ["--setting-sources", "project,local"]
         if model:
             cmd += ["--model", model]
         if mode == "egm":
