@@ -2,13 +2,13 @@
 """The skill's own score, read from tests/RUNS.md - and the gate the RUNBOOK states in prose.
 
     python tools/score.py            # print the newest scored row as one line
-    python tools/score.py --gate     # exit 1 when the newest row scores below the row before it
+    python tools/score.py --gate     # exit 1 when the commit under test fails the gate (commit_gate below)
     python tools/score.py --badge    # a Markdown badge line for the README
     python tools/score.py --runtime  # print the newest runtime row (what the run RAN, not found)
     python tools/score.py --corpus   # the corpus table: ground truth nobody planted
 
-A doctrine change ships only if the fixture run scores no worse than the last one (RUNBOOK
-step 6). Written down, that rule was skipped the first day seven edits landed before the run
+A doctrine change ships only if its runs score no worse than what shipped before (RUNBOOK step 6:
+the mean of two runs against a floor, no row every run missed, no false positive). Written down, that rule was skipped the first day seven edits landed before the run
 started; a rule a hook can run is a rule that holds (S8: a written test is not a run test).
 The score is hits minus misses, on the same fixture; "near" counts half and a false positive
 counts against. Rows with no numbers (the placeholder row) are ignored.
@@ -259,8 +259,11 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
               + ("Within one row: run it twice more, once, and gate on the four-run mean (RUNBOOK step 6)."
                  if second else "Fix the doctrine or the fixture, run again, then push."), file=sys.stderr)
         return 1
+    # Say what was checked: a row one run missed and its pair found passes (doctrine_misses), and
+    # printing "no miss" over such a pair claimed more than the gate knows.
+    misses = "no row missed by every run" if any(r["miss"] for r in group_any) else "no miss"
     print(f"{name}: {token} on {fixture}: mean {mean:g} over {len(group)} runs, floor {floor:g} ({why}); "
-          f"no miss, no false positive.")
+          f"{misses}, no false positive.")
     return 0
 
 
@@ -403,8 +406,17 @@ def build_gate(bs: list[dict]) -> int:
     return commit_gate(bs, "build gate")
 
 
+FLAGS = ("--gate", "--badge", "--runtime", "--corpus")
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv if argv is None else argv
+    unknown = [a for a in argv[1:] if a not in FLAGS]
+    if unknown:
+        # The trap: flags are matched by `in argv`, so a mistyped --gate printed the score and exited 0,
+        # which a hook reads as the gate passing.
+        print(f"score: unknown argument {' '.join(unknown)}; known: {' '.join(FLAGS)}", file=sys.stderr)
+        return 2
     rs = rows()
     if not rs:
         print("score: no scored run in tests/RUNS.md - the gate has nothing to hold", file=sys.stderr)

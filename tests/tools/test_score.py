@@ -120,7 +120,11 @@ class ScoreTests(unittest.TestCase):
         base = [row("2026-11-01", 11, commit="aaaaaaa"), row("2026-11-01", 11, commit="aaaaaaa")]
         pair = base + [row("2026-11-02", 12, commit="bbbbbbb"),
                        row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="**11.** missed: E8. rest")]
-        self.assertEqual(self.run_score(runs_text(pair, []), "--gate")[0], 0)    # mean 11 >= floor 10.5, E8 found by the pair
+        code, out, _ = self.run_score(runs_text(pair, []), "--gate")
+        self.assertEqual(code, 0)    # mean 11 >= floor 10.5, E8 found by the pair
+        # ...and the pass line must not claim "no miss" over a pair that has one
+        self.assertIn("no row missed by every run", out)
+        self.assertNotIn("no miss,", out)
         both = base + [row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: E8"),
                        row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: E8, row 3")]
         code, _, err = self.run_score(runs_text(both, []), "--gate")
@@ -130,6 +134,12 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(self.run_score(runs_text(untagged, []), "--gate")[0], 1)   # no tag: cannot tell, blocks
         false = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 12, false=1, commit="bbbbbbb")]
         self.assertEqual(self.run_score(runs_text(false, []), "--gate")[0], 1)      # a false positive always blocks
+
+    def test_a_mistyped_flag_is_an_error_not_a_pass(self):
+        # flags are matched by `in argv`: before this, `--gat` printed the score and exited 0
+        code, _, err = self.run_score(runs_text(self.AUDIT, []), "--gat")
+        self.assertEqual(code, 2)
+        self.assertIn("unknown argument --gat", err)
 
     def test_second_stage_is_two_more_runs_once(self):
         base = [row("2026-11-01", 11, commit="aaaaaaa"), row("2026-11-01", 11, commit="aaaaaaa")]   # floor 10.5
