@@ -488,6 +488,13 @@ findings). On sound Claude reports it flagged about nine sites (BN alone five). 
 than signal, so it was reverted uncommitted. **What this closes:** Codex's misses are not a
 filing-form gap that a shape check can see; they are rows its single pass did not judge, which
 only a second, independent run catches.
+**A seventh, measured the same way and not shipped: "an OPEN or FAILED register row cites a finding"
+(2026-11-10, after C27).** C27's miss sat in its obligation register (O11 '`legacy_retry.py:14`
+unused ... OPEN') with no finding id, so the rule flagged any OPEN/FAILED table row that names none of
+the report's own finding ids. On the saved reports it caught that one miss and none of the other three
+on `798ee54` (C20, C21 row 9 and C23 row 5 never appear as an open register row), and flagged 13 rows
+of a sound Claude report whose register cites no ids by design. One real miss in four for that noise:
+the sixth mechanism's result again, so the checker is unchanged.
 
 **Two Codex runs, read together: the measurement behind "run it twice" (2026-11-10).** Each pair
 of Codex audits on one commit, with the rows each run missed: C4/C5 12 | 10; C6/C7 8 | 10; C8/C9
