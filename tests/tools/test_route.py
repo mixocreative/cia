@@ -172,7 +172,12 @@ class PinningTests(unittest.TestCase):
         self.assertIn("architecture → graphify", line)
         self.assertIn("→ code graph ·", line)
         # cgc missing: code questions fall back to graphify, architecture unchanged
-        self.assertIn("code relationships → graphify", rr.graph_route({**both, "cgc": False}))
+        off_path = rr.graph_route({**both, "cgc": False})
+        self.assertIn("code relationships → graphify", off_path)
+        # ...but off PATH is not uninstalled: §3 item 1 says a user-scope install may need its full path
+        probe = text.split("## 3.", 1)[1].split("1. **Probe.**", 1)[1].splitlines()[0]
+        self.assertIn("may not be on PATH (call it by full path)", probe)
+        self.assertIn("probe it by full path or its MCP tools first", off_path)
         # stale or absent graphify-out/ is refreshed before it is asked
         self.assertIn("after `graphify update .`", rr.graph_route({**both, "graphify_out": "stale"}))
         # one or no scanned signal: the four judged signals decide, never a bare "code graph"

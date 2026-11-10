@@ -36,7 +36,11 @@ def graph_route(G: dict) -> str:
     if G["cgc"]:
         code = "cgc (probe `cgc --help` first; failed probe, locked or stale store → graphify explain/path)"
     elif G["graphify"]:
-        code = "graphify explain/path (cgc not on PATH)"
+        # §3.1: a user-scope install often sits off PATH and an MCP entry needs no PATH at all, so
+        # "not on PATH" is not "not installed". Saying only "graphify" here re-creates the old
+        # contradiction on exactly the machines that have cgc.
+        code = ("graphify explain/path (cgc not on PATH; §3.1: probe it by full path or its MCP tools "
+                "first, and it comes first if it answers)")
     else:
         code = "grep (no graph tool on PATH)"
     if not G["graphify"]:
