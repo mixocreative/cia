@@ -12,6 +12,10 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
   decision, not a false premise. One run filed a capped list as 'premise false'; the four runs after
   the rule filed no control. SKILL line 14 also names COMPANIONS, and the gate sentence matches score.py.
 - The harness allows `php`, so a PHP fixture can start its own shop.
+- `tools/score.py`: a `missed:` tag is read as row ids, so `E8 (noted, not filed)` in one run's note and
+  `E8` in its pair's are the same row. Compared as whole strings they shared nothing, and a row both
+  runs lost would have passed the gate. A tag that names no row blocks like a missing tag.
+- The harness test for the transcript path passes on Linux (CI), not only on Windows.
 - `tools/route.py`: the COMPANIONS line no longer lists `.svg` and `<img>` as missing skills (it read
   every backticked token of the kubai-icons row as a skill name). The GRAPH line no longer sends code
   questions to graphify because `cgc` is off PATH: `code-graph-tools.md` §3 says a user-scope install

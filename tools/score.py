@@ -268,6 +268,7 @@ def _gate_one(rs: list[dict], name: str, token: str, fixture: str, first: int) -
 
 
 MISSED = re.compile(r"missed:\s*([^.;|*]+)", re.I)
+ROW_ID = re.compile(r"row\s+\d+|#?\w+")   # `row 10`, `E8`, `#15`: what a key calls a row
 
 
 def missed_of(note: str):
@@ -275,7 +276,11 @@ def missed_of(note: str):
     m = MISSED.search(note)
     if not m:
         return None
-    return {" ".join(x.split()).lower() for x in m.group(1).split(",") if x.strip()}
+    # The id alone: `E8 (the overlap is noted, not filed)` and `E8` are one row. Compared as whole
+    # strings, two runs that both missed it shared nothing, and the gate passed a row every run lost.
+    # shortcut: a comma inside a parenthesis leaves a stray word as an id, which can only add a block.
+    ids = (ROW_ID.match(x.strip().lower()) for x in m.group(1).split(","))
+    return {" ".join(i.group().split()) for i in ids if i}
 
 
 def doctrine_misses(group: list[dict]) -> str:
@@ -292,7 +297,7 @@ def doctrine_misses(group: list[dict]) -> str:
     dirty = [r for r in group if r["miss"]]
     if not dirty:
         return ""
-    if any(r.get("missed") is None for r in dirty):
+    if any(not r.get("missed") for r in dirty):   # no tag, or a tag naming no row: both are unreadable
         return f"a run has {dirty[-1]['miss']} miss with no `missed:` tag naming the rows"
     common = set.intersection(*[(r.get("missed") or set()) for r in group])
     return f"every run missed {', '.join(sorted(common))}" if common else ""

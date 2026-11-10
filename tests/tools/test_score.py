@@ -130,6 +130,15 @@ class ScoreTests(unittest.TestCase):
         code, _, err = self.run_score(runs_text(both, []), "--gate")
         self.assertEqual(code, 1)
         self.assertIn("every run missed e8", err)
+        # However each note words it: compared as whole strings, `E8 (noted, ...)` and `E8)` shared
+        # nothing, and a row both runs lost passed. A tag naming no row is no tag.
+        worded = base + [row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: E8 (the overlap is noted but not filed). x"),
+                         row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="(tracked E12; missed: E8). y")]
+        code, _, err = self.run_score(runs_text(worded, []), "--gate")
+        self.assertEqual((code, "every run missed e8" in err), (1, True))
+        empty = base + [row("2026-11-02", 12, commit="bbbbbbb"),
+                        row("2026-11-02", 11, miss=1, commit="bbbbbbb", note="missed: .")]
+        self.assertEqual(self.run_score(runs_text(empty, []), "--gate")[0], 1)
         untagged = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 11, miss=1, commit="bbbbbbb")]
         self.assertEqual(self.run_score(runs_text(untagged, []), "--gate")[0], 1)   # no tag: cannot tell, blocks
         false = base + [row("2026-11-02", 12, commit="bbbbbbb"), row("2026-11-02", 12, false=1, commit="bbbbbbb")]
