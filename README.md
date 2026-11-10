@@ -192,6 +192,8 @@ Tested on Claude Code (plugin or skill directory), where the harness scores ever
 
 **Last scored fixture run:** see `tests/RUNS.md` — `python tools/score.py` prints it, `--gate` refuses a push whose two-run mean falls more than half a row below the median of the last five shipped commits (and never more than a row below the best ever), or in which every run misses the same planted defect, or any run files a control (RUNBOOK step 6; a row one run missed and its pair found costs the mean and does not block).
 
+> **最近一次評分的測試專案執行：**見 `tests/RUNS.md`，`python tools/score.py` 會印出來。`--gate` 會擋下這些推送：兩次執行的平均分數比最近五個已推送 commit 的中位數低超過半項（而且永遠不能比歷史最佳低超過一項）、每次執行都漏掉同一個預埋缺陷，或任何一次把對照組列為發現（RUNBOOK 第 6 步；只有一次漏掉、另一次找到的項目只會拉低平均，不會擋下推送）。
+
 A skill for Claude Code and OpenAI Codex that audits a codebase as a **viable system** in Stafford Beer's sense, and hunts the defect class that only such a view can see: **cross-boundary invariant violations**, also called **integration-level** or **emergent defects**.
 
 > 這是給 Claude Code 與 OpenAI Codex 使用的 Skill。它將整套程式碼視為 Stafford Beer 所定義的「可存活系統」（Viable System）來進行稽核，專門抓出只有從這個視野才能發現的 bug：**跨邊界不變量違反**（cross-boundary invariant violations），亦即**整合層級缺陷**或**湧現缺陷**。這類 bug 不會單獨存在於任何一個函式中，而是藏在兩個「各自運作正常」的函式交界處。
@@ -250,34 +252,19 @@ What it does, in order: draws the org chart of your code first (who does the wor
 
 Three objections engineers raise when they first meet this skill, and the honest answer to each.
 
-**1. "You are mixing code review with testing. They are separate stages for a reason."**
-They stay separate here too: tests run in Step 1 and again in full in Step 3; review is a person or
-a review tool. This skill is a *third* thing — a **cross-boundary invariant audit** — for the defect
-that neither stage asks about: every function correct on its own, the failure in the channel
-between two of them. A setting nothing reads, a watchdog that reports "0 problems" whether or not
-it looked, a page that throws on every request while its guard test sits 4,500 tests deep in a
-seven-hour suite. Review checks style and logic; tests check behaviour; neither asks *"who reads
-this value?"* S21 ("the suite is an instrument too") is not a merge of the two — it audits the
-tests for passes that prove nothing. **This skill does not replace review or tests, and says so.**
+> 工程師第一次接觸這個 Skill 時最常提出的三個質疑，以及誠實的回答。
 
-**2. "This is prompting dressed up in academic words."**
-Prompting does not produce a numbered sweep list with an answer key. The fixture harness
-(`tests/`) plants twelve defects under a green suite and scores each cold run: hits, near-misses,
-misses, false positives. That number moves when the doctrine moves; a prompting habit cannot be
-scored. Where the objection is right is the vocabulary: `S5`, `System 3*`, `S22.8` are noise to a
-reader who has not seen the map, which is why §0.15 / §0.16 bind every user-facing message to plain
-words, and why this README says it in plain engineering terms first:
-*this is a checklist of ways a system fails between its parts, walked along a map of who
-controls what, with a test that proves the checklist still finds what it was written to find.*
+**1. "You are mixing code review with testing. They are separate stages for a reason."** They stay separate here too: tests run in Step 1 and again in full in Step 3; review is a person or a review tool. This skill is a *third* thing — a **cross-boundary invariant audit** — for the defect that neither stage asks about: every function correct on its own, the failure in the channel between two of them. A setting nothing reads, a watchdog that reports "0 problems" whether or not it looked, a page that throws on every request while its guard test sits 4,500 tests deep in a seven-hour suite. Review checks style and logic; tests check behaviour; neither asks *"who reads this value?"* S21 ("the suite is an instrument too") is not a merge of the two — it audits the tests for passes that prove nothing. **This skill does not replace review or tests, and says so.**
 
-**3. "Day-to-day coding does not need a systems model. CI/CD and discipline are enough."**
-For a script, yes — which is why the audit has tiers, and Screen is two to four hours, not a
-week. The case for it is code written *with* an AI: a day of agentic development creates ten
-times the boundaries a person would, and "write a bit, test a bit" fails exactly at the
-boundaries. CI catches regressions; it does not catch a feature that was designed and never
-wired (S13), a control that reaches no decision (S5), or a detector that went blind (S20).
-Invariants written at the source are what make AI-generated code *checkable* — the auditor has
-something to hold the output to, instead of reading it and hoping.
+> **1.「你把 Code Review 和測試混在一起了，它們分成兩個階段是有原因的。」** 在這裡它們依然分開：測試在 Step 1 跑一次、Step 3 再完整跑一次；Review 交給人或 Review 工具。這個 Skill 是**第三件事**，也就是**跨邊界不變量稽核**，專抓兩個階段都不會問的缺陷：每個函式單獨看都正確，錯卻出在兩者之間的通道。沒有程式在讀的設定、不管有沒有檢查都回報「0 個問題」的看門狗、每次請求都會出錯的頁面，而它的防護測試埋在要跑七小時的測試套件第 4,500 個。Review 看風格與邏輯，測試看行為，兩者都不問「這個值誰在讀？」S21（「測試套件本身也是儀器」）不是把兩者合併，而是稽核那些什麼都沒證明卻顯示通過的測試。**這個 Skill 不取代 Review 或測試，也清楚這樣說。**
+
+**2. "This is prompting dressed up in academic words."** Prompting does not produce a numbered sweep list with an answer key. The fixture harness (`tests/`) plants twelve defects under a green suite and scores each cold run: hits, near-misses, misses, false positives. That number moves when the doctrine moves; a prompting habit cannot be scored. Where the objection is right is the vocabulary: `S5`, `System 3*`, `S22.8` are noise to a reader who has not seen the map, which is why §0.15 / §0.16 bind every user-facing message to plain words, and why this README says it in plain engineering terms first: *this is a checklist of ways a system fails between its parts, walked along a map of who controls what, with a test that proves the checklist still finds what it was written to find.*
+
+> **2.「這只是換上學術用語的 Prompt。」** Prompt 產生不出附標準答案的編號掃描清單。測試框架（`tests/`）在全綠的測試底下埋了十二個缺陷，為每次冷啟動執行評分：命中、接近、漏報、誤報。準則一改，分數就會跟著變；Prompt 習慣沒辦法被評分。這個質疑說對的是用語：`S5`、`System 3*`、`S22.8` 對沒看過地圖的讀者只是雜訊，所以 §0.15／§0.16 規定每則給使用者的訊息都要用白話，這份 README 也先用工程白話講一次：*這是一份「系統在各部分之間會怎麼出錯」的檢查清單，沿著「誰控制什麼」的地圖逐項走過，再用一個測試證明清單仍找得到它當初要找的東西。*
+
+**3. "Day-to-day coding does not need a systems model. CI/CD and discipline are enough."** For a script, yes — which is why the audit has tiers, and Screen is two to four hours, not a week. The case for it is code written *with* an AI: a day of agentic development creates ten times the boundaries a person would, and "write a bit, test a bit" fails exactly at the boundaries. CI catches regressions; it does not catch a feature that was designed and never wired (S13), a control that reaches no decision (S5), or a detector that went blind (S20). Invariants written at the source are what make AI-generated code *checkable* — the auditor has something to hold the output to, instead of reading it and hoping.
+
+> **3.「日常寫程式不需要系統模型，CI/CD 加上紀律就夠了。」** 對一支腳本來說確實如此，所以稽核分成不同層級，Screen 只要兩到四小時，不是一週。真正需要它的是*和 AI 一起*寫的程式：一天的 Agent 開發產生的邊界是人工的十倍，而「寫一點、測一點」偏偏就在邊界上失效。CI 抓得到退化，卻抓不到設計好卻從未接上的功能（S13）、影響不了任何決策的控制項（S5），或已經失明的偵測器（S20）。在源頭寫下不變量，才讓 AI 產生的程式*可以被檢查*：稽核者有東西可以對照，而不是讀完之後只能祈禱。
 
 ## Watch it run｜實際執行示範
 
