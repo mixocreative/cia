@@ -13,7 +13,8 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
   each agents entry to be a `.md` file and refused the whole plugin ("agents.0: must end with .md"), so no
   agent, skill or hook of an install loaded. Each agent file is listed, and the guard test checks that.
 - **The Stop hook guards a report written outside the working directory:** it also checks every file named
-  `cia-audit-report.md` that a Write or Edit in the turn touched.
+  `cia-audit-report.md` that any tool call in the turn named (a Write, an Edit, a Bash redirect); a malformed
+  tool input is skipped, never an error.
 - **The hook command survives a `python3` that is not Python** (the Windows Store stub): it probes
   `python3 -c ''` with stdin closed, then runs one interpreter; a test runs the shipped command under `sh`
   with a stub that eats stdin.
