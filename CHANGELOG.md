@@ -7,6 +7,12 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- `tools/route.py`: the COMPANIONS line no longer lists `.svg` and `<img>` as missing skills (it read
+  every backticked token of the kubai-icons row as a skill name). The GRAPH line no longer sends code
+  questions to graphify because `cgc` is off PATH: `code-graph-tools.md` §3 says a user-scope install
+  may need its full path, so the line says to probe that, or its MCP tools, first.
+- `tools/check_structure.py` check 8 (the tools map) has a guard test. `tools/README.md` names who
+  calls each tool; `inventory.py` is optional and no SKILL step calls it.
 - `tools/untested.py` decodes git output as UTF-8; on a Traditional Chinese Windows a commit message
   with an em dash crashed the gate instead of answering it.
 - `tools/README.md` maps every tool by who runs it; `check_structure.py` fails when the map and
