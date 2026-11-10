@@ -16,9 +16,11 @@ a resumed session, or a later turn that did not touch the report is never blocke
 replaced: the transcript file's st_ctime is its creation time only on Windows; on macOS and Linux it
 moves on every append, so every report looked older than the session and the hook never fired.
 
-hooks/hooks.json's command is `python3 <this>; python <this>`, which bash, sh and PowerShell all parse:
+hooks/hooks.json's command is `python3 <this>; python <this>; exit 0`, which bash, sh and PowerShell all parse:
 Claude Code runs hooks in bash where it can and in PowerShell on Windows without Git Bash. Whichever
 interpreter runs first reads the payload; the second reads an empty stdin, and main() then allows silently.
+The trailing `exit 0` matters: Claude Code reads the JSON only on exit 0, and where `python` is missing
+(stock macOS) the last statement's 127 would have discarded the block.
 """
 from __future__ import annotations
 

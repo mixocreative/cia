@@ -11,8 +11,9 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 - **The Stop hook runs where there is no Git Bash.** Claude Code runs hook commands in PowerShell on Windows
   without Git Bash, where 2.6.1's `if ...; then ...; fi` was a syntax error on every Stop. The command is now
-  `python3 <hook>; python <hook>`, which bash, sh and PowerShell all parse: whichever interpreter runs first
-  reads the payload, the second reads nothing and stays silent. Shown end to end: Claude Code ran it through
+  `python3 <hook>; python <hook>; exit 0`, which bash, sh and PowerShell all parse: whichever interpreter runs
+  first reads the payload, the second reads nothing and stays silent, and `exit 0` keeps a missing `python`
+  (stock macOS) from turning the answer into exit 127, which Claude Code would discard (Fable's review). Shown end to end: Claude Code ran it through
   PowerShell 7.6 (a marker the hook wrote) and it blocked a failing report. Tests run the shipped command
   under `sh` and PowerShell; CI runs them on Linux, macOS and Windows. Not covered: a `python3` stub that
   reads stdin would leave the payload empty, and the hook would allow.
