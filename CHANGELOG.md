@@ -7,6 +7,10 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+- **A Stop hook holds Step 6.** The plugin ships `hooks/hooks.json`: a session that wrote `cia-audit-report.md`
+  cannot finish while `tools/audit_report.py` fails on it; the hook hands back the MISSING lines once, and a
+  retry is never blocked. About half the cold runs had replied past a failing checker. The harness runs hermetic
+  (no user-level settings) and passes the hook in, so runs measure what a plugin user gets.
 - **No doctrine line longer than the Read tool shows.** The Read tool cuts a line at 2,000 characters;
   two long lines are wrapped (text unchanged) and `check_structure.py` check 9 fails a new one. The same
   cut had hidden half of ecommerce-cia's Step 3 reading list.

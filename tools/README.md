@@ -15,6 +15,7 @@ Every file here, grouped by who runs it. Run each from the skill root; each answ
 | `inventory.py` | optional, no SKILL step calls it (tried as a Codex step and taken out): every function, test, config key and write, for item-by-item answers |
 | `design_check.py` | `references/design-tools.md`: dependency rules, ADR hygiene, state-transition tables; stdlib only |
 | `audit_report.py` | SKILL Step 6: checks an audit report's shape: blocks, receipts, sweep lines, Step 6 lines |
+| `stop_check.py` | the plugin's Stop hook (`hooks/hooks.json`): a session that wrote this skill's audit report cannot finish while the checker fails; blocks once, never loops |
 | `build_report.py` | SKILL §0.10a: prints the build report form and checks a build report's shape |
 
 ## The maintainer runs these (push gate, CI)
