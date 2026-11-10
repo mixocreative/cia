@@ -7,6 +7,17 @@ Every scored run behind a doctrine change is in `tests/RUNS.md`.
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-11-10
+
+- **The Stop hook runs where there is no Git Bash.** Claude Code runs hook commands in PowerShell on Windows
+  without Git Bash, where 2.6.1's `if ...; then ...; fi` was a syntax error on every Stop. The command is now
+  `python3 <hook>; python <hook>`, which bash, sh and PowerShell all parse: whichever interpreter runs first
+  reads the payload, the second reads nothing and stays silent. Shown end to end: Claude Code ran it through
+  PowerShell 7.6 (a marker the hook wrote) and it blocked a failing report. Tests run the shipped command
+  under `sh` and PowerShell; CI runs them on Linux, macOS and Windows. Not covered: a `python3` stub that
+  reads stdin would leave the payload empty, and the hook would allow.
+- RUNBOOK's plugin smoke step also runs once with the hook forced to `"shell": "powershell"`.
+
 ## [2.6.1] - 2026-11-10
 
 - **The plugin loads again.** `plugin.json` listed `./agents`, a folder; Claude Code's manifest schema wants

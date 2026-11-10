@@ -229,5 +229,6 @@ an empty folder:
 Pass: `~/.claude/debug/<session>.txt` has no "invalid manifest" line and has a `Hook Stop ... success` line with
 `"decision": "block"`. Why it is a step and not a hope: the unit tests ran green while the manifest listed
 `./agents` (a folder) and Claude Code refused the whole plugin, and while the hook named its report after the
-install folder. Both were found only by loading the plugin like this.
+install folder. Both were found only by loading the plugin like this. Run it a second time with `"shell": "powershell"` added to the copy's hook entry, which is how Claude Code
+runs hooks on Windows without Git Bash; 2.6.1's command did not parse there.
 
