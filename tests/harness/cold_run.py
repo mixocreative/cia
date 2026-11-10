@@ -334,7 +334,8 @@ READ_TOOLS = ["Read", "Grep", "Glob", "Skill", "Bash(python:*)", "Bash(py:*)", "
 ALLOWED_TOOLS = {
     # An audit writes exactly one file, its report (SKILL Step 6); `Edit(./path)` is the rule Claude Code
     # honours for a single file (checked 2026-11-09: `Write(path)` patterns did not grant it headless).
-    "audit": READ_TOOLS + ["Edit(./cia-audit-report.md)"],
+    # One entry per skill the launcher runs (`audit_report_name`): ecommerce-cia writes its own report file.
+    "audit": READ_TOOLS + ["Edit(./cia-audit-report.md)", "Edit(./ecommerce-cia-audit-report.md)"],
     "run-tests": READ_TOOLS,
     "build": READ_TOOLS + ["Write", "Edit"],
     "egm": ["Read", "Grep", "Glob"],  # a Goldfish only reads; the list enforces it
@@ -455,7 +456,7 @@ def main(argv=None, runbook=None):
         label += f"effort {args.effort} | "
     return execute(cmd, prompt, cwd, args.runtime, args.model, f"{tag}{args.mode}", label, skill_root,
                    traces=args.arm != "cia", receipts=args.arm == "cia",
-                   report_file={"build": BUILD_REPORT, "audit": AUDIT_REPORT}.get(args.mode))
+                   report_file={"build": BUILD_REPORT, "audit": audit_report_name(skill_root)}.get(args.mode))
 
 
 def run_egm(args, skill_root):
@@ -484,6 +485,12 @@ AUDIT_REPORT = "cia-audit-report.md"
 CHECKERS = {BUILD_REPORT: "build_report", AUDIT_REPORT: "audit_report"}
 
 
+def audit_report_name(skill_root):
+    """The audit report a skill's SKILL.md names: `<skill folder>-audit-report.md` (cia-audit-report.md,
+    ecommerce-cia-audit-report.md). Each is counted by that skill's own tools/audit_report.py."""
+    return f"{Path(skill_root).name}-audit-report.md"
+
+
 def collect_report(path, root, label):
     """The report is a file the run writes in the project (SKILL Step 6, §0.10a), not its reply: build
     replies (2 of 8) and audit replies (BC, BE) were summaries of a checked report that dropped parts.
@@ -496,7 +503,8 @@ def collect_report(path, root, label):
     if tools not in sys.path:
         sys.path.insert(0, tools)
     try:
-        checker = importlib.import_module(CHECKERS.get(path.name, "build_report"))
+        checker = importlib.import_module("audit_report" if path.name.endswith("-audit-report.md")
+                                          else CHECKERS.get(path.name, "build_report"))
         results = checker.checks(text)
         label += f"report-file {sum(ok for _, ok, _ in results)}/{len(results)} | "
     except ImportError:

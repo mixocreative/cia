@@ -367,6 +367,10 @@ class BuildReportCollectionTests(unittest.TestCase):
             label, _ = self.cr.collect_report(p, self.root, "")
         self.assertRegex(label, r"^report-file \d+/6 \| $")   # audit_report has six parts, build_report 13
 
+    def test_each_skill_names_its_own_audit_report(self):
+        self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/cia")), self.cr.AUDIT_REPORT)
+        self.assertEqual(self.cr.audit_report_name(Path("S:/ai/skills/ecommerce-cia")), "ecommerce-cia-audit-report.md")
+
     def test_an_audit_may_write_its_report_and_nothing_else(self):
         tools = self.cr.ALLOWED_TOOLS["audit"]
         self.assertIn("Edit(./cia-audit-report.md)", tools)
