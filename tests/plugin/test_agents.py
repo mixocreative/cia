@@ -57,7 +57,7 @@ class AgentTests(unittest.TestCase):
             self.assertEqual(duplicated_lines(p.read_text(encoding="utf-8"), self.refs), [], p.name)
 
     def test_duplication_guard_can_fail(self):
-        long = next(l.strip() for r in self.refs for l in r.splitlines() if len(l.strip()) >= MIN_DUP)
+        long = next(ln.strip() for r in self.refs for ln in r.splitlines() if len(ln.strip()) >= MIN_DUP)
         fake = "---\nname: x\n---\nok line\n" + long + "\n"
         self.assertEqual(duplicated_lines(fake, self.refs), [long])
 
