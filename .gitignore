@@ -3,3 +3,5 @@ __pycache__/
 .vendor-docs/
 graphify-out/
 tests/harness/out/
+# CodeGraphContext writes this when it indexes the repo; the index itself lives outside (code-graph-tools.md §3)
+.cgcignore
