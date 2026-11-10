@@ -16,8 +16,9 @@ a resumed session, or a later turn that did not touch the report is never blocke
 replaced: the transcript file's st_ctime is its creation time only on Windows; on macOS and Linux it
 moves on every append, so every report looked older than the session and the hook never fired.
 
-hooks/hooks.json's command is POSIX shell (probe python3, else python): Claude Code ran it through bash on
-Windows with PowerShell as the primary shell (debug log, 2026-11-10 plugin smoke), and through sh in the test.
+hooks/hooks.json's command is `python3 <this>; python <this>`, which bash, sh and PowerShell all parse:
+Claude Code runs hooks in bash where it can and in PowerShell on Windows without Git Bash. Whichever
+interpreter runs first reads the payload; the second reads an empty stdin, and main() then allows silently.
 """
 from __future__ import annotations
 
