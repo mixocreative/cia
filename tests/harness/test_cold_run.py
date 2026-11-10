@@ -385,7 +385,8 @@ class BuildReportCollectionTests(unittest.TestCase):
     def test_transcript_path_encodes_the_cwd_as_claude_code_does(self):
         p = self.cr.transcript_of("abc", "S:/ai/x y/cia-audit-n8", home="S:/h")
         self.assertEqual(p.name, "abc.jsonl")
-        self.assertEqual(p.parent.name, "S--ai-x-y-cia-audit-n8")
+        # endswith, not equal: off Windows "S:/..." is a relative path and resolve() puts the cwd in front (CI is Linux).
+        self.assertTrue(p.parent.name.endswith("S--ai-x-y-cia-audit-n8"), p.parent.name)
 
     def test_every_fixture_runtime_can_start_its_own_shop(self):
         # A fixture the run must start itself needs its runtime on the list, and named in the prompt line:
