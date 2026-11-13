@@ -46,8 +46,10 @@ DATED_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 DATA_FOLDER_RE = re.compile(r"(^|/)(fixtures?|golden|goldens|snapshots?|__snapshots__|"
                             r"corpus|samples?|locales?|assets)(/|$)")
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)")
-# A leading comment in any of the supported languages.
-LEAD_COMMENT_RE = re.compile(r"^\s*(//|/\*|#|\*)")
+# Prose in any of the supported languages. A Python module docstring counts: it is THE idiomatic
+# way to say a module's job, and omitting it reported tests/consumers.py -- which opens with a
+# six-line docstring -- as undocumented.
+LEAD_COMMENT_RE = re.compile(r"^\s*(//|/\*|#|\*|\"\"\"|''')")
 
 
 def git(root: str, *args: str) -> list[str]:
@@ -170,8 +172,33 @@ def m3_job_line(root: str, files: list[str]) -> list[dict]:
     return gaps
 
 
+def imported_docs(root: str, files: list[str]) -> set[str]:
+    """Markdown files the application imports as CONTENT (`import x from '../TERMS.md?raw'`).
+
+    Their links are resolved against the app's URL at runtime, not against the repo, so M4 must
+    not judge them: mixoDental's TERMS.md correctly links to a file that only exists in the built
+    output, and reporting it was this rule's first false positive.
+    """
+    names = {PurePosixPath(f).name: f for f in files if f.endswith(".md")}
+    if not names:
+        return set()
+    found: set[str] = set()
+    for f in files:
+        if PurePosixPath(f).suffix not in CODE_EXT:
+            continue
+        try:
+            text = open(os.path.join(root, f), encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        for name, path in names.items():
+            if name in text and re.search(r"(import|require|from)[^\n]*" + re.escape(name), text):
+                found.add(path)
+    return found
+
+
 def m4_living_links(root: str, files: list[str]) -> list[dict]:
     """A markdown link in a living doc that resolves to nothing. Dated docs are records: skipped."""
+    served = imported_docs(root, files)
     tracked_set = set(files)
     dirs: set[str] = set()
     for t in tracked_set:
@@ -180,7 +207,7 @@ def m4_living_links(root: str, files: list[str]) -> list[dict]:
             dirs.add("/".join(parts[:i]))
     gaps = []
     for f in files:
-        if not f.endswith(".md") or DATED_RE.search(f):
+        if not f.endswith(".md") or DATED_RE.search(f) or f in served:
             continue
         base = str(PurePosixPath(f).parent)
         try:
