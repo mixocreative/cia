@@ -118,7 +118,13 @@ def m2_size_debt(root: str, files: list[str]) -> list[dict]:
         n = line_count(os.path.join(root, f))
         if n <= DEBT_LIMIT:
             continue
-        named = f in corpus or PurePosixPath(f).name in corpus
+        # Matched by PATH, not by basename. Accepting a bare basename let a 778-line
+        # `supports/plan/mod.rs` count as named because some doc somewhere says "mod.rs" --
+        # and the same hole swallows every index.ts, main.js and __init__.py in a repo.
+        # The last two segments are enough for a doc to write `plan/mod.rs` as shorthand.
+        p = PurePosixPath(f)
+        tail = "/".join(p.parts[-2:]) if len(p.parts) > 1 else p.name
+        named = f in corpus or tail in corpus
         if n > CUT_LIMIT:
             gaps.append({"rule": "M2", "path": f,
                          "detail": "%d lines, over the %d cut limit%s" % (
