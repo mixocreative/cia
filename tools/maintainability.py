@@ -311,6 +311,13 @@ TITLES = {"M1": "folder maps (over %d files)" % MAP_LIMIT,
 
 def main() -> int:
     args = [a for a in sys.argv[1:]]
+    # `--help` prints what this is and exits 0, doing no work. A stranger's first command is --help,
+    # and this tool answered it by treating `-h` as a PATH and failing to enumerate it -- caught by
+    # tests/tools/test_cli_help.py in CI, which the pre-push hook does not run. Exit 0 here is the
+    # contract; exit 2 below, for no arguments at all, is a usage error and stays 2.
+    if any(a in ("-h", "--help") for a in args):
+        print(__doc__)
+        return 0
     as_json = "--json" in args
     args = [a for a in args if a != "--json"]
     wanted = list(RULES)

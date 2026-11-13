@@ -19,6 +19,11 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 - **Enumeration failure is now exit 2, kept distinct from exit 1 "found gaps"**, with `gaps: null`
   in JSON rather than `[]`. `git ls-files` failing *inside* a worktree is a failure, not a cue to
   fall back quietly, and an empty file list never reads as clean.
+- **`maintainability.py --help` works.** It treated `-h` as a path and tried to enumerate it, so a
+  stranger's first command returned exit 2. `tests/tools/test_cli_help.py` guards exactly this for
+  every tool and had been failing since the tool landed -- invisible until CI got past the earlier
+  `untested.py` gate, because CI stops at the first failing step. The pre-push hook does not run the
+  tool tests; only CI does, which is why the push went through.
 - **2.7.0 has scored runs at last, and CI is green again.** The `--no-verify` push had turned CI red
   on every commit, because CI runs the same `untested.py` gate as the pre-push hook -- a consequence
   that was not flagged when the bypass was taken. The Codex runtime authenticates where `claude -p`
