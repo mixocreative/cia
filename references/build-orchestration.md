@@ -68,15 +68,18 @@ An increment that skips step 2 has written unowned behaviour, even when the auth
 
 ## 4. Modules and size — the maintainability rules this build must meet
 
-These are the rules every build increment is checked against. They come from the project's code principle; restated here so the build cannot be run without them.
+**One source of truth: `maintainability.md`.** It holds the owner's code principle in full — the
+nine decision rules, M1–M4 with the tool that measures them, and the two rules no tool can see.
+Read it before the first increment; this section only says what the BUILD path adds on top.
 
-- **Extract jobs, not hubs.** A new module whose input is nearly as large as its output is a hub; moving code into it makes the code worse.
-- **Pure before stateful.** Derived values and rules with no framework go in a plain module and get tests with no framework.
-- **One job per module,** named in its first line. A folder over ~20 files gets a README map.
-- **Comments say why and name the trap.** Never restate the code.
-- **Size is debt with a date.** Over ~600 lines the file is named as debt with its next cut written down. Over ~1000 the cut is taken in the same change, not scheduled.
-- **Guard tests, not good intentions.** A rule worth keeping has a test that fails when it is broken. `tools/check_structure.py` is the example for this skill's own repo.
-
+- Every increment is checked against it, not just the finished build. "Extract jobs, not hubs"
+  decides whether a module is created at all, so it is a decision at increment time, not a review
+  note afterwards.
+- `tools/maintainability.py <project-root>` runs on the build's own repo at each closure gate, and
+  its gaps are closed inside the increment that opened them (principle 6: docs move with the code,
+  in the same commit).
+- `tools/check_structure.py` is the worked example of principle 7 for a repo of this skill's own
+  shape: nothing loose, nothing missing, file-size debt named.
 ---
 
 ## 5. The cascade check — after every change

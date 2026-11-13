@@ -10,6 +10,28 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-14
+
+- **The owner's code principle is now part of every audit, not only of a build**
+  (`references/maintainability.md`, new). It was already written down -- in `build-orchestration.md`
+  §4 -- but only on the BUILD path, so an audit could report a repo green while a 43-file folder had
+  no README map and six files sat over a thousand lines with no seam written down. Measured on three
+  real repos the day this shipped: 10 missing folder maps and 13 files past the cut limit, none of
+  them visible to any sweep. §4 now points at the one copy instead of restating the rules, because
+  two copies of a principle is how a principle starts contradicting itself.
+- **`tools/maintainability.py <repo-root>` is the instrument**, and works on any git repo: M1 folder
+  maps past ~20 files, M2 size debt (over ~600 named, over ~1000 cut), M3 the module's job said in
+  its first lines, M4 links in LIVING docs that resolve. Vendored and generated trees are excluded;
+  a folder is exempt from M1 by its CONTENTS, never by its name, after the first run exempted
+  `src/core/assets` for having "assets" in the path. Dated documents are skipped by M4 on purpose: a
+  record corrected silently stops being a record.
+- **The tool states the two rules it cannot see,** in its own output: whether a module is a hub
+  rather than a job, and whether a comment says why rather than what. Both need a reader. A clean
+  M1-M4 line does not establish that code is well modularised, and report line `2i.` is refused
+  without the paths a human actually judged -- a blind instrument reporting like a seeing one is
+  S20 filed against the auditor.
+
+
 ## [2.6.2] - 2026-11-10
 
 - **The Stop hook runs where there is no Git Bash.** Claude Code runs hook commands in PowerShell on Windows

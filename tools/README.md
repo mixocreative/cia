@@ -11,6 +11,7 @@ Every file here, grouped by who runs it. Run each from the skill root; each answ
 | `route_tree.py` | route.py's tree walk under the skip, secret and symlink rules |
 | `route_companions.py` | route.py's COMPANIONS line: which companion skills and CLIs are installed |
 | `route_render.py` | route.py's text output, including which graph answers which question |
+| `maintainability.py` | SKILL §0.6 Step 2, every run. M1-M4 of `references/maintainability.md` on any git repo: folder maps, size debt, the module's job line, living-doc links. Says in its own output which two rules it cannot see |
 | `sweep_leads.py` | SKILL §0.5, after route.py: the S13 and S21 sites a script can list, each needing a finding or a reason |
 | `inventory.py` | optional, no SKILL step calls it (tried as a Codex step and taken out): every function, test, config key and write, for item-by-item answers |
 | `design_check.py` | `references/design-tools.md`: dependency rules, ADR hygiene, state-transition tables; stdlib only |
