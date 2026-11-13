@@ -52,17 +52,44 @@ The first three are the load-bearing ones; they decide whether code moves at all
 
 ## 2. Four rules a tool measures, two a tool cannot
 
-`tools/maintainability.py <repo-root>` measures the four mechanical rules on any git repo. It
-excludes vendored and generated trees, and exempts a folder from M1 when its **contents** are
-mostly data — keyed on contents, never on the folder's name, because `src/core/assets` is code
-about assets and `tests/fixtures` is a data store.
+`tools/maintainability.py <path>` measures the four mechanical rules on **any directory, not only a
+checkout**. It excludes vendored and generated trees, and exempts a folder from M1 when its
+**contents** are mostly data — keyed on contents, never on the folder's name, because
+`src/core/assets` is code about assets and `tests/fixtures` is a data store.
+
+**Two scopes, and the tool says which it used.** Inside a git worktree it enumerates with
+`git ls-files`: that is what the repository *contains*, and it honours `.gitignore` for free. Outside
+one — an unpacked archive, an exported snapshot, a vendored subtree, an untracked directory
+sitting inside a parent checkout — it walks the filesystem instead, which is the *directory's*
+contents and a weaker claim: `.gitignore` cannot be applied, so generated files may be counted and
+its gaps are **candidates for review, not findings**. `.gitignore` is deliberately not parsed, because
+doing so would imply a fidelity it could not reliably provide. The two scopes are not equivalent and
+the output never lets them be confused.
+
+**Enumeration failure is not a clean result.** Exit 2 means the tool could not get a file list;
+exit 1 means it measured and found gaps. An empty file list, or `git ls-files` failing *inside* a
+worktree, is reported as failure rather than silently downgraded — a weaker answer there would
+hide a broken repository. In JSON the failure carries `gaps: null`, never `[]`.
+
+**In git mode an unstaged file is invisible**, which is right for a repo check and wrong for
+checking a refactor in progress: stage first, or measure the tree in filesystem mode and accept the
+weaker guarantee.
+
+Both scope rules and the exit-code split came from a Codex review of this tool on 2026-11-14, after
+a cold run of this very skill could not measure a fixture copy and correctly declined to claim a
+clean result.
 
 | ID | Rule | What the gap costs the next reader |
 |---|---|---|
 | **M1** | a folder past ~20 files has a README map | they cannot find the module, so they write a second one |
-| **M2** | past ~600 lines the file is named as debt; past ~1000 the cut is taken | they add to the end, because there is no stated seam |
+| **M2** | a file past ~600 lines is MENTIONED in a doc; past ~1000 the cut is taken | they add to the end, because there is no stated seam |
 | **M3** | a source module says its job in its first lines | they must read the whole file to learn whether it is the right one |
 | **M4** | a link in a **living** doc resolves | they follow it, find nothing, and stop trusting the docs |
+
+**M2 proves less than its name suggests, and the tool says so.** It finds a large file that no
+markdown file *mentions*. It does not check that the mention is a real debt entry carrying a next
+cut and a date, which is what rule 5 actually asks for. So a clean M2 means "nothing large is
+unmentioned", not "the debt is properly recorded" — a reader must open the entry and judge it.
 
 **M4 skips dated documents on purpose.** A dated file is a record of a moment: it is superseded by
 a newer dated file, or corrected in place *with the correction marked*. Silently repointing a

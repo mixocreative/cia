@@ -5,7 +5,7 @@ The principle itself is `references/maintainability.md`; this is its instrument.
 mechanical, so they are measured here rather than judged by eye:
 
   M1  a folder past the map limit has a README map          (navigation)
-  M2  a file past the debt limit is NAMED as debt in a doc   (size is debt with a date)
+  M2  a large file is MENTIONED in a doc                     (size is debt with a date)
   M3  a source module says its job in its first lines        (one job per module)
   M4  a link in a LIVING doc resolves                        (docs move with the code)
 
@@ -13,9 +13,22 @@ Two rules are NOT mechanical and are not faked here: "extract jobs, not hubs" an
 why" need a reader. The report says so rather than printing a clean line that implies otherwise —
 a blind instrument reporting like a seeing one is the thing the audit exists to catch (S20).
 
-Usage:  python maintainability.py <repo-root> [--json] [--rule M1,M2]
+WHAT M2 ACTUALLY PROVES, because it is weaker than its name suggests: it finds a large file that no
+markdown file mentions. It does NOT check that the mention is a real debt entry with a next cut and
+a date, which is what the principle asks for. A reader must open the entry and judge it. Raised by
+a Codex review of this tool, 2026-11-14.
 
-Exit 0 = no gaps. Exit 1 = gaps printed. Exit 2 = could not run (not a git repo).
+Usage:  python maintainability.py <path> [--json] [--rule M1,M2]
+
+Works on any directory, not only a checkout. `git ls-files` is preferred where the path is inside a
+git worktree: it is what the repository actually contains and it respects ignore rules for free.
+Outside a worktree, or with no git, it walks the filesystem instead and SAYS SO — that mode cannot
+apply `.gitignore`, so its gaps are candidates for review rather than findings. `.gitignore` is
+deliberately not parsed here: doing so would imply a fidelity it could not reliably provide.
+
+Exit 0 = no gaps. Exit 1 = gaps printed. Exit 2 = COULD NOT ENUMERATE, which is deliberately not
+the same as "gaps found": a caller must be able to tell a tool that measured and disliked what it
+saw from a tool that never measured at all.
 
 Dated documents are records, not living docs: M4 skips any doc whose name or folder carries a
 date, because correcting a record in place is how it stops being a record.
@@ -52,15 +65,70 @@ LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)")
 LEAD_COMMENT_RE = re.compile(r"^\s*(//|/\*|#|\*|\"\"\"|''')")
 
 
-def git(root: str, *args: str) -> list[str]:
-    out = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
-    if out.returncode:
-        raise SystemExit("not a git repo (or git failed): %s" % root)
-    return out.stdout.split("\n")
+class CannotEnumerate(Exception):
+    """The file list could not be obtained. Reported as exit 2, never as "no gaps"."""
 
 
-def tracked(root: str) -> list[str]:
-    return [f for f in git(root, "ls-files") if f and not SKIP_RE.search(f)]
+def _git(root: str, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
+
+
+def _inside_worktree(root: str) -> bool:
+    """Is `root` inside a git worktree? Decides which enumeration is honest, nothing else."""
+    try:
+        out = _git(root, "rev-parse", "--is-inside-work-tree")
+    except (OSError, FileNotFoundError):
+        return False
+    return out.returncode == 0 and out.stdout.strip() == "true"
+
+
+def _walk(root: str) -> list[str]:
+    """Every file under `root`, skipping vendored and generated trees and `.git` itself."""
+    found = []
+    for base, dirs, names in os.walk(root):
+        rel_base = os.path.relpath(base, root).replace("\\", "/")
+        rel_base = "" if rel_base == "." else rel_base
+        dirs[:] = [d for d in dirs
+                   if d != ".git" and not SKIP_RE.search((rel_base + "/" + d).lstrip("/"))]
+        for name in names:
+            rel = (rel_base + "/" + name).lstrip("/")
+            if not SKIP_RE.search(rel):
+                found.append(rel)
+    return sorted(found)
+
+
+def enumerate_files(root: str) -> tuple[list[str], str, bool]:
+    """The files to measure, how they were found, and whether ignore rules were applied.
+
+    `git ls-files` is preferred INSIDE a worktree: it is what the repository actually contains and
+    it honours `.gitignore` for free. Three guards, all from the Codex review of 2026-11-14:
+
+      * a path OUTSIDE a worktree (an unpacked archive, an exported snapshot, a vendored subtree,
+        or an untracked directory sitting inside a parent checkout) uses the filesystem walk -- the
+        parent's index says nothing about it;
+      * `ls-files` FAILING inside a worktree is an enumeration error, not a cue to fall back
+        quietly: something is wrong with the repository and a weaker answer would hide it;
+      * an EMPTY result must never read as a clean one. Nothing to measure is not nothing wrong.
+    """
+    if _inside_worktree(root):
+        out = _git(root, "ls-files")
+        if out.returncode:
+            raise CannotEnumerate(
+                "inside a git worktree but `git ls-files` failed (%s); refusing to fall back to a "
+                "filesystem walk, because a weaker answer here would hide a broken repository"
+                % (out.stderr.strip() or "no stderr"))
+        files = [f for f in out.stdout.split("\n") if f and not SKIP_RE.search(f)]
+        if not files:
+            raise CannotEnumerate("`git ls-files` returned nothing for %s; an empty file list is "
+                                  "not a clean result" % root)
+        return files, "git ls-files", True
+    if not os.path.isdir(root):
+        raise CannotEnumerate("not a directory: %s" % root)
+    files = _walk(root)
+    if not files:
+        raise CannotEnumerate("no files found under %s; an empty file list is not a clean result"
+                              % root)
+    return files, "filesystem walk (not a git worktree, or git unavailable)", False
 
 
 def line_count(path: str) -> int:
@@ -236,7 +304,7 @@ def m4_living_links(root: str, files: list[str]) -> list[dict]:
 
 RULES = {"M1": m1_folder_maps, "M2": m2_size_debt, "M3": m3_job_line, "M4": m4_living_links}
 TITLES = {"M1": "folder maps (over %d files)" % MAP_LIMIT,
-          "M2": "size debt (over %d named, over %d cut)" % (DEBT_LIMIT, CUT_LIMIT),
+          "M2": "large files no doc mentions (over %d, over %d needs the cut)" % (DEBT_LIMIT, CUT_LIMIT),
           "M3": "a module over %d lines says its job in prose" % JOB_LINE_LIMIT,
           "M4": "living docs link to files that exist"}
 
@@ -254,17 +322,33 @@ def main() -> int:
         print(__doc__)
         return 2
     root = os.path.abspath(args[0])
-    files = tracked(root)
+
+    # Exit 2, kept distinct from exit 1 on purpose: "I could not measure" and "I measured and found
+    # gaps" must not look the same to a caller or to a report.
+    try:
+        files, source, ignored_applied = enumerate_files(root)
+    except CannotEnumerate as err:
+        message = "could not enumerate %s: %s" % (root, err)
+        if as_json:
+            print(json.dumps({"path": root, "error": str(err), "gaps": None}, indent=2))
+        else:
+            print(message, file=sys.stderr)
+        return 2
 
     gaps: list[dict] = []
     for key in wanted:
         gaps.extend(RULES[key](root, files))
 
     if as_json:
-        print(json.dumps({"repo": root, "files": len(files), "gaps": gaps}, indent=2))
+        print(json.dumps({"path": root, "files": len(files), "source": source,
+                          "ignore_rules_applied": ignored_applied, "gaps": gaps}, indent=2))
         return 1 if gaps else 0
 
-    print("%s -- %d tracked files (vendored and generated paths excluded)" % (root, len(files)))
+    print("%s -- %d files via %s" % (root, len(files), source))
+    if not ignored_applied:
+        print("     NOTE: this mode measures the supplied tree and cannot apply .gitignore, so")
+        print("     generated or ignored files may be counted. Treat the gaps below as CANDIDATES")
+        print("     for review, not findings, and re-run inside a checkout to get the real list.")
     for key in wanted:
         rows = [g for g in gaps if g["rule"] == key]
         print("\n%s  %s — %d" % (key, TITLES[key], len(rows)))
@@ -272,6 +356,8 @@ def main() -> int:
             print("   %-58s %s" % (g["path"], g["detail"]))
     print("\nNOT measured here, and not claimed clean: 'extract jobs, not hubs' and 'comments say")
     print("why, not what' need a reader. Judge those by hand; this tool is blind to them.")
+    print("M2 only proves a large file is UNMENTIONED. Whether the mention is a real debt entry,")
+    print("with a next cut and a date, is for a reader to open and judge.")
     print("\n%d gaps" % len(gaps))
     return 1 if gaps else 0
 

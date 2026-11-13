@@ -10,6 +10,20 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 
 ## [Unreleased]
 
+- **`tools/maintainability.py` runs on any directory, not only a checkout**, and says which scope
+  it measured. Raised by a Codex cold run of this skill: auditing a throwaway fixture copy, the tool
+  refused outright because it enumerates with `git ls-files`, and the run correctly reported "no
+  maintainability clearance claimed" rather than a clean result. Inside a worktree it still prefers
+  `git ls-files`; outside one it walks the filesystem and states that `.gitignore` cannot be applied,
+  so those gaps are candidates for review rather than findings.
+- **Enumeration failure is now exit 2, kept distinct from exit 1 "found gaps"**, with `gaps: null`
+  in JSON rather than `[]`. `git ls-files` failing *inside* a worktree is a failure, not a cue to
+  fall back quietly, and an empty file list never reads as clean.
+- **M2's claim is scoped honestly.** It finds a large file that no markdown file MENTIONS; it does
+  not check that the mention is a real debt entry with a next cut and a date. Both the tool's output
+  and the doctrine now say so, so a clean M2 is not read as "the debt is properly recorded".
+
+
 ## [2.7.0] - 2026-11-14
 
 > **Shipped without its scored fixture runs.** The RUNBOOK requires two cold runs per fixture plus
