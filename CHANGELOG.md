@@ -19,6 +19,12 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 - **Enumeration failure is now exit 2, kept distinct from exit 1 "found gaps"**, with `gaps: null`
   in JSON rather than `[]`. `git ls-files` failing *inside* a worktree is a failure, not a cue to
   fall back quietly, and an empty file list never reads as clean.
+- **2.7.0 has scored runs at last, and CI is green again.** The `--no-verify` push had turned CI red
+  on every commit, because CI runs the same `untested.py` gate as the pre-push hook -- a consequence
+  that was not flagged when the bypass was taken. The Codex runtime authenticates where `claude -p`
+  does not, so two cold runs on `df26029` now exist: both reached every one of the twelve planted
+  rows in fixture-service, so the new doctrine did not cost the auditor its findings. Still owed and
+  recorded in `tests/RUNS.md`: fixture-editor on either runtime, and the Claude series.
 - **M2's claim is scoped honestly.** It finds a large file that no markdown file MENTIONS; it does
   not check that the mention is a real debt entry with a next cut and a date. Both the tool's output
   and the doctrine now say so, so a clean M2 is not read as "the debt is properly recorded".

@@ -1,24 +1,24 @@
 # Fixture runs
 
-> ## ⛔ OUTSTANDING: 2.7.0 shipped WITHOUT its scored runs
+> ## ⚠ PARTLY CLEARED: 2.7.0 now has scored runs, on one fixture and one runtime
 >
-> **This is not a row and must not be read as one.** Version 2.7.0 (`references/maintainability.md`,
-> `tools/maintainability.py`, the Step-2 wiring and report line `2i`) was pushed on 2026-11-14 with
-> `git push --no-verify`, **at the owner's explicit instruction**, after the block was explained to
-> them.
+> 2.7.0 was pushed on 2026-11-14 with `git push --no-verify`, at the owner's explicit instruction,
+> because `claude -p` would not authenticate (`OAuth session expired`; a bare `claude -p` failed the
+> same way and no API-key variable was set). That turned CI red, which is the consequence the bypass
+> was always going to have.
 >
-> **Why it could not be scored here:** `tests/harness/cold_run.py` shells out to `claude -p`, and
-> every attempt returned `Failed to authenticate: OAuth session expired and could not be refreshed`.
-> Confirmed to be the CLI and not the harness — a bare `claude -p` failed identically, and
-> `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `ANTHROPIC_AUTH_TOKEN` and `CLAUDE_API_KEY` were
-> all unset.
+> **Cleared since:** the Codex runtime DOES authenticate, so two cold runs now exist on `df26029`
+> (see "Other runtimes" at the foot of this file). Both reached every one of the twelve planted
+> rows, so adding the maintainability doctrine did not cost the auditor its findings. `untested.py`
+> and `score.py --gate` both pass again.
 >
-> **What this doctrine has therefore NOT been measured against:** both fixtures, two runs each, and
-> the two EGM document reviews. No ledger row was invented to cover it, and `tools/untested.py` and
-> `tools/score.py --gate` will keep refusing the next push until real rows exist — which is correct,
-> and is the intended consequence of shipping unscored.
+> **Still owed, and deliberately not papered over:**
+> * **fixture-editor** has no run on this commit, on either runtime.
+> * the **Claude** series owes its two runs per fixture; the rows that exist are Codex.
+> * both Codex runs read 19 of 27 references and quoted 9 of 20 receipts, so they are not
+>   full-protocol runs, and they were scored by the author of the change rather than cold.
 >
-> **To clear it,** from an authenticated session in this repo:
+> To finish it, from a session where `claude -p` works:
 >
 > ```
 > python tests/harness/cold_run.py --mode audit --fixture fixture-service --model sonnet   # x2
@@ -26,9 +26,6 @@
 > python tests/harness/cold_run.py --mode egm --doc references/maintainability.md --reviewer comprehension --model sonnet
 > python tests/harness/cold_run.py --mode egm --doc references/build-orchestration.md --reviewer comprehension --model sonnet
 > ```
->
-> Then record the rows (RUNBOOK steps 4–5) and delete this block. What DID pass before the push:
-> `check_structure`, `check_key_lines`, `zh_check --gate`, `receipts --gate`.
 
 | Date | Skill commit | Runtime | Tier | Hits | Near | Miss | False+ | Minutes | Note |
 |---|---|---|---|---|---|---|---|---|---|
@@ -513,6 +510,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-10 | `365e192` | **Codex** (as above, audit run C29) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7.8 | **12 on its file (6/6), receipts 9/19, refs opened 19/26, sweep-sites 17/24.** Row 5 inside CIA-008 HIGH (`scheduler.py:99-105` 'no reader of `heartbeat_path` exists in the supplied tree'; S20 'outermost check NONE'), credited as E8 was inside F-03. **The first Codex pair with 12 and 12, both at medium effort:** one pair, not a rate. |
 | 2026-11-10 | `cd08269` (HEAD `88a9344`, doctrine unchanged) | **Codex** (as above, audit run C30) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 11 | 0 | 1 | 0 | 9.5 | **10 on its file (6/6), receipts 9/19, refs opened 20/26.** missed: row 9. (The S20 line lists `tests:25-28` and S21 says no test proves the monitor reports a stale job; never filed, C12's rule.) Row 5 F14 HIGH. Run because `cd08269` changed the report form's receipts line. |
 | 2026-11-10 | `cd08269` (HEAD `88a9344`, doctrine unchanged) | **Codex** (as above, audit run C31) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 10.5 | **12 on its file (6/6), receipts 9/19, refs opened 20/26.** Row 9 CIA-14 HIGH; row 5 CIA-06 HIGH. **Mean 11 with C30; row 9 found by the pair.** |
+| 2026-11-14 | `df26029` (2.7.0 + the enumeration fix) | **Codex** (cold, `cold_run.py --runtime codex`, run D1) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 10 | **The 2.7.0 maintainability doctrine, measured at last.** Both runs cite a site or a marker for EVERY one of the twelve planted rows: `alerts_enabled` + monitor sites (1), `scheduler.py:25,30` (2), the TOCTOU at `scheduler.py:70,77` (3), `monitor.py:22,26` (4), `heartbeat` x5 (5), `status_page.py:16,19,28` + `db.py:10` (6), S16 + monitor (7), `with_backoff` + `legacy_retry.py:14` (8), `test_scheduler.py:25` (9), `test_scheduler.py:55` + `FIXTURE_ALERTS` (10), `cli.py:46` + `db_path` (11), `scheduler.py:46` (12). All 24 sweeps cited; the new MAINTAINABILITY line is present. So adding the doctrine did not cost the auditor its planted rows -- the question this rehearsal exists to answer. **THREE CAVEATS, because this row is weaker than the Claude rows above it.** (1) SCORED BY THE AUTHOR OF THE CHANGE, not a cold scorer: I adjudicated by site-and-marker presence, which is a weaker check than grade-by-grade adjudication, so read Hits as 'every planted row was reached' rather than 'every row was filed at or above its floor'. (2) `receipts 9/20` and `refs-opened 19/27`: both runs read two thirds of the references and quoted under half the receipts, so this is not a full-protocol run. An earlier run on `9094e86` quoted 0/20 and is deliberately NOT recorded. (3) These exist because `claude -p` could not authenticate at all (`OAuth session expired`), which is why 2.7.0 shipped with --no-verify and turned CI red; the Claude series still owes its two runs per fixture, and fixture-editor owes both runtimes. Run D1: 619 s, 12 findings (3 critical / 8 high / 1 medium). |
+| 2026-11-14 | `df26029` (2.7.0 + the enumeration fix) | **Codex** (cold, as D1, run D2) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7 | Second run on the same commit, same shape as D1: 426 s, 12 findings, every planted row reached, `receipts 9/20`, `refs-opened 19/27`. The pair is what the RUNBOOK asks for on one fixture; fixture-editor is still unrun on this commit, and the note on D1 carries the caveats for both. |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
