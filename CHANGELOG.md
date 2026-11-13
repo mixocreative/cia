@@ -12,6 +12,14 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 
 ## [2.7.0] - 2026-11-14
 
+> **Shipped without its scored fixture runs.** The RUNBOOK requires two cold runs per fixture plus
+> two document reviews before a doctrine change is pushed. They could not run here: the harness
+> shells out to `claude -p` and the OAuth session had expired. Pushed with `--no-verify` at the
+> owner's explicit instruction. `tests/RUNS.md` carries the outstanding block and the commands to
+> clear it, and the gate will keep refusing the next push until real rows exist. `check_structure`,
+> `check_key_lines`, `zh_check` and `receipts` all passed.
+
+
 - **The owner's code principle is now part of every audit, not only of a build**
   (`references/maintainability.md`, new). It was already written down -- in `build-orchestration.md`
   §4 -- but only on the BUILD path, so an audit could report a repo green while a 43-file folder had

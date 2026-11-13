@@ -121,3 +121,8 @@ MAINTAINABILITY: M1 <n> / M2 <n> / M3 <n> / M4 <n> gaps (tools/maintainability.p
 A line with the four counts and no hand-judged paths is the vacuous half of this check: the tool
 cannot see the two rules that matter most. `0 gaps` with no paths named means the tool ran and
 nobody read anything.
+
+---
+
+**Reading receipt: _a hub wearing a smaller line count_.** Quote this phrase on the Step 6 receipts
+line to show this file was read rather than inferred from the skill's index. It appears nowhere else.

@@ -1,5 +1,35 @@
 # Fixture runs
 
+> ## ⛔ OUTSTANDING: 2.7.0 shipped WITHOUT its scored runs
+>
+> **This is not a row and must not be read as one.** Version 2.7.0 (`references/maintainability.md`,
+> `tools/maintainability.py`, the Step-2 wiring and report line `2i`) was pushed on 2026-11-14 with
+> `git push --no-verify`, **at the owner's explicit instruction**, after the block was explained to
+> them.
+>
+> **Why it could not be scored here:** `tests/harness/cold_run.py` shells out to `claude -p`, and
+> every attempt returned `Failed to authenticate: OAuth session expired and could not be refreshed`.
+> Confirmed to be the CLI and not the harness — a bare `claude -p` failed identically, and
+> `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `ANTHROPIC_AUTH_TOKEN` and `CLAUDE_API_KEY` were
+> all unset.
+>
+> **What this doctrine has therefore NOT been measured against:** both fixtures, two runs each, and
+> the two EGM document reviews. No ledger row was invented to cover it, and `tools/untested.py` and
+> `tools/score.py --gate` will keep refusing the next push until real rows exist — which is correct,
+> and is the intended consequence of shipping unscored.
+>
+> **To clear it,** from an authenticated session in this repo:
+>
+> ```
+> python tests/harness/cold_run.py --mode audit --fixture fixture-service --model sonnet   # x2
+> python tests/harness/cold_run.py --mode audit --fixture fixture-editor  --model sonnet   # x2
+> python tests/harness/cold_run.py --mode egm --doc references/maintainability.md --reviewer comprehension --model sonnet
+> python tests/harness/cold_run.py --mode egm --doc references/build-orchestration.md --reviewer comprehension --model sonnet
+> ```
+>
+> Then record the rows (RUNBOOK steps 4–5) and delete this block. What DID pass before the push:
+> `check_structure`, `check_key_lines`, `zh_check --gate`, `receipts --gate`.
+
 | Date | Skill commit | Runtime | Tier | Hits | Near | Miss | False+ | Minutes | Note |
 |---|---|---|---|---|---|---|---|---|---|
 | — | — | — | — | — | — | — | — | — | no run recorded yet; first run establishes the baseline |
