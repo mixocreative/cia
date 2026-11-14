@@ -19,6 +19,13 @@ versions have none (2.1-2.4, 2.6.x), and the latest release page can trail `main
 - **Enumeration failure is now exit 2, kept distinct from exit 1 "found gaps"**, with `gaps: null`
   in JSON rather than `[]`. `git ls-files` failing *inside* a worktree is a failure, not a cue to
   fall back quietly, and an empty file list never reads as clean.
+- **Both fixtures now have scored runs for 2.7.0, and effort was the variable.** fixture-editor
+  produced `receipts 0/20` twice at default Codex effort -- unscoreable, since a run quoting no
+  receipt cannot be told apart from one that never opened the files. At `--effort high` the same
+  runtime quoted 12/20 and 10/20, opened 21 of 27 references, and recovered two planted rows the
+  default runs had missed. Scores: fixture-service `12 / 0 / 0 / 0` (best in series),
+  fixture-editor `10 / 1 / 0 / 0` twice with the nears on different rows, so no row was missed by
+  both. **Run fixture-editor at `--effort high`** -- recorded in `tests/RUNS.md`.
 - **`maintainability.py --help` works.** It treated `-h` as a path and tried to enumerate it, so a
   stranger's first command returned exit 2. `tests/tools/test_cli_help.py` guards exactly this for
   every tool and had been failing since the tool landed -- invisible until CI got past the earlier

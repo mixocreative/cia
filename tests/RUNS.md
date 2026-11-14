@@ -12,10 +12,20 @@
 > rows, so adding the maintainability doctrine did not cost the auditor its findings. `untested.py`
 > and `score.py --gate` both pass again.
 >
+> **BOTH FIXTURES NOW HAVE SCORED RUNS.** fixture-service: `hits 12 / 0 / 0 / 0`, score 12, the best
+> in that series. fixture-editor: `10 / 1 / 0 / 0` twice at `--effort high`, every planted row
+> reached, the two runs' single nears on *different* rows so none was missed by both. The doctrine
+> shows no sign of having cost the auditor its findings on either fixture.
+>
+> **Effort was the variable, and it is worth knowing:** at default effort this fixture produced
+> `receipts 0/20` twice and those runs are unscoreable (kept below as signal rows). At
+> `--effort high` the same runtime quoted 12/20 and 10/20 and recovered two planted rows the
+> default runs missed. **Run fixture-editor at `--effort high`.**
+>
 > **Still owed, and deliberately not papered over:**
-> * **fixture-editor** was run twice on Codex (rows E1/E2 below) and BOTH quoted `receipts 0/20`,
->   so they are recorded as signal rows and are NOT scored. It still owes a run that follows the
->   receipts protocol, on either runtime.
+> * no run on either fixture has quoted all twenty receipts; 12/20 is the best so far.
+> * every scored row here was adjudicated by the AUTHOR of the doctrine change, by site-and-marker
+>   presence rather than grade-by-grade.
 > * the **Claude** series owes its two runs per fixture; the rows that exist are Codex.
 > * both Codex runs read 19 of 27 references and quoted 9 of 20 receipts, so they are not
 >   full-protocol runs, and they were scored by the author of the change rather than cold.
@@ -516,6 +526,8 @@ the note gives the sweep-free count too, because Codex does not label a sweep pe
 | 2026-11-14 | `df26029` (2.7.0 + the enumeration fix) | **Codex** (cold, as D1, run D2) | Screen - `pre-launch audit, Screen tier` on **fixture-service** | 12 | 0 | 0 | 0 | 7 | Second run on the same commit, same shape as D1: 426 s, 12 findings, every planted row reached, `receipts 9/20`, `refs-opened 19/27`. The pair is what the RUNBOOK asks for on one fixture; fixture-editor is still unrun on this commit, and the note on D1 carries the caveats for both. |
 | 2026-11-14 | `1add06a` (2.7.0 + enumeration + --help) | **Codex** (cold, run E2) | Screen - **fixture-editor** | - | - | - | - | 7 | **SIGNAL ROW, NOT A GATE ROW - `receipts 0/20`.** Hits are left blank on purpose. This run quoted NOT ONE of the twenty reading receipts, and a run with no receipt cannot be told apart from a run that never opened the files -- which is the whole reason receipts exist (`tools/receipts.py`). Scoring it would turn an unverifiable run into a number, so it is not scored. **What it nevertheless shows:** 11 findings against 11 planted rows, with sites cited for E1-E7, E9 and E10 (`store.js:12,16,25,29,31`, `backupCount` + `config.js:10`, `backup.js:7` + `restoreBackup`, `autosave.js:27`, `render.js:8,20`, `titles.js:5,7`, `editor.test.js:56,57` + `maxTitleBytes`). E8 (`autosave.js:34-36`) and E11 (`editor.test.js:49-54`) are not clearly cited. `refs-opened 18/27`, 393 s. **Why these exist at all:** `claude -p` cannot authenticate in this environment, so the Claude series still owes fixture-editor entirely; Codex was the only runtime available. |
 | 2026-11-14 | `1add06a` (as above) | **Codex** (cold, run E1) | Screen - **fixture-editor** | - | - | - | - | 5 | **SIGNAL ROW, NOT A GATE ROW - `receipts 0/20` and `refs-opened 7/27`.** Weaker again than E2: it opened seven of twenty-seven references. Recorded so the pair is visible rather than only the better of the two, which is how a harness starts flattering itself. 278 s. |
+| 2026-11-14 | `9b0b004` (2.7.0 complete) | **Codex** `--effort high` (cold, run EH1) | Screen - **fixture-editor** | 10 | 1 | 0 | 0 | 18 | **EFFORT IS WHAT FIXED THE RECEIPTS, and that is the finding worth keeping.** The two default-effort runs on this fixture (E1/E2 above) quoted `receipts 0/20` and were unscoreable; at `--effort high` this one quotes **12/20** and opens 21/27 references. It also recovers two planted rows the default-effort runs missed entirely: E8 `autosave.js:34,35` and E11 `editor.test.js:49`. Sites cited for E1 (`store.js:29,31`), E2 (`store.js:25-27,29,31`), E3 (`store.js:12-14,16`), E5 (`backup.js:7` + `restoreBackup`), E6 (`autosave.js:27`), E7 (`render.js:8-10,15` + the `conflict` badge), E8, E9 (`titles.js:5,7`), E10 (`editor.test.js:56` + `maxTitleBytes`), E11. **The one near is E4**: `backupCount` is named but `config.js:10` is not, so the dead control is reached by its setting and not by its reader. 1,071 s. **Caveats, unchanged from the fixture-service rows:** scored by the author of the doctrine change, by site-and-marker presence rather than grade-by-grade, so Hits means "the planted row was reached"; `receipts 12/20` is better than anything Codex has managed here but still not the full protocol; and the Claude series owes this fixture entirely, because `claude -p` cannot authenticate in this environment. `codex-high` is its own gate series (`score.py`), so this pair is a baseline for fixture-editor rather than a comparison. |
+| 2026-11-14 | `9b0b004` (as EH1) | **Codex** `--effort high` (cold, run EH2) | Screen - **fixture-editor** | 10 | 1 | 0 | 0 | 10 | Second high-effort run on the same commit: `receipts 10/20`, 21/27 references, 12 findings, 573 s. Same shape as EH1 - every planted row reached, E8 included - with the near on **E11** this time (`editor.test.js:49-54` not cited; E4's `config.js:10` IS cited here). The two runs miss different rows, which is attention variance rather than a doctrine gap: no row was missed by both. |
 
 **What the Codex audits say (C1-C5).** Codex reads cia's doctrine (14-20 of 26 references opened) and
 finds what it teaches: every control kept, no false positive in five runs, and from C3 on the
