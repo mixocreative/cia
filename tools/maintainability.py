@@ -304,7 +304,13 @@ def m4_living_links(root: str, files: list[str]) -> list[dict]:
 
 RULES = {"M1": m1_folder_maps, "M2": m2_size_debt, "M3": m3_job_line, "M4": m4_living_links}
 TITLES = {"M1": "folder maps (over %d files)" % MAP_LIMIT,
-          "M2": "large files no doc mentions (over %d, over %d needs the cut)" % (DEBT_LIMIT, CUT_LIMIT),
+          # The old title said "no doc mentions", which MISDESCRIBED its own output: a file past
+          # CUT_LIMIT is reported whether or not it is named, because rule 5 says the cut is taken
+          # rather than named, and its detail line then carries no mention complaint at all. A
+          # reader who trusted the title went looking for a missing doc entry that was never the
+          # finding -- which is the blind-instrument failure (S20) in the instrument built to catch
+          # it. The title now names BOTH gates, so the heading and the detail say the same thing.
+          "M2": "large files: over %d named as debt, over %d the cut taken" % (DEBT_LIMIT, CUT_LIMIT),
           "M3": "a module over %d lines says its job in prose" % JOB_LINE_LIMIT,
           "M4": "living docs link to files that exist"}
 
@@ -363,8 +369,11 @@ def main() -> int:
             print("   %-58s %s" % (g["path"], g["detail"]))
     print("\nNOT measured here, and not claimed clean: 'extract jobs, not hubs' and 'comments say")
     print("why, not what' need a reader. Judge those by hand; this tool is blind to them.")
-    print("M2 only proves a large file is UNMENTIONED. Whether the mention is a real debt entry,")
-    print("with a next cut and a date, is for a reader to open and judge.")
+    print("M2 is TWO gates, and its rows mean different things. Under %d lines it only proves a" % CUT_LIMIT)
+    print("large file is UNMENTIONED. Past %d it reports the file whether it is named or not," % CUT_LIMIT)
+    print("because rule 5 says the cut is TAKEN there rather than written down -- so such a row is")
+    print("never answered by adding a doc entry. Whether a mention is a real debt entry, with a next")
+    print("cut and a date, is for a reader to open and judge either way.")
     print("\n%d gaps" % len(gaps))
     return 1 if gaps else 0
 
